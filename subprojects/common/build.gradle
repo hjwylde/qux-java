@@ -1,0 +1,6 @@
+dependencies {
+    compile libraries.groovy_all
+    compile libraries.jsr305
+    compile libraries.logback_classic
+}
+

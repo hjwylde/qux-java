@@ -1,0 +1,19 @@
+# Gradle files
+.gradle/
+build/
+
+# Java files
+*.class
+*.war
+
+# Intellij
+.idea/
+*.iml
+*.iws
+
+# Generated files
+gen/
+
+# Temporary files
+archive/
+

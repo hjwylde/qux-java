@@ -1,0 +1,50 @@
+sourceSets {
+    main.java.srcDir 'src/main/gen'
+}
+
+checkstyle {
+    // The generated antlr files cause problems with checkstyle and the 'exclude' pattern does not
+    // seem to work properly, so ignore failures but still report them
+    ignoreFailures = true
+}
+
+task cleanGen(type: Delete) {
+    description "Deletes the 'src/main/gen' source folder."
+
+    delete 'src/main/gen/'
+}
+
+task antlr {
+    description 'Builds the Antlr parse files from the grammar.'
+
+    inputs.dir 'src/main/antlr4/'
+    outputs.dir 'src/main/gen/'
+
+    def inputPath = 'src/main/antlr4/'
+    def outputPath = 'src/main/gen/'
+
+    doLast {
+        def inputDir = file(inputPath)
+        def outputDir = file(outputPath)
+
+        fileTree(inputDir).include('**/*.g4').each {
+            def genPackage = ((it.parent - inputDir.path) - '/').replace('/', '.')
+
+            def proc = ['antlr4', '-o', new File(outputDir, genPackage.replace('.', '/')), '-visitor',
+                    '-package', genPackage, it.path].execute([], inputDir)
+
+            Thread.start { proc.in.eachLine { logger.lifecycle it } }
+            Thread.start { proc.err.eachLine { logger.error it } }
+
+            proc.waitFor()
+
+            if (proc.exitValue() != 0) {
+                throw new InvalidUserDataException("error running antlr4 on '$it.path'")
+            }
+        }
+    }
+}
+
+clean.dependsOn 'cleanGen'
+compileJava.dependsOn 'antlr'
+

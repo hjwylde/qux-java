@@ -1,0 +1,94 @@
+package qux.lang;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+import static qux.lang.Bool.FALSE;
+import static qux.lang.Bool.TRUE;
+
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+
+import java.util.Objects;
+
+/**
+ * TODO: Documentation
+ *
+ * @author Henry J. Wylde
+ */
+public final class Str extends Obj implements Comparable<Str>, Orderable<Str> {
+
+    private static final LoadingCache<String, Str> cache =
+            CacheBuilder.<String, Str>newBuilder().weakKeys().build(new CacheLoader<String, Str>() {
+                                                                        @Override
+                                                                        public Str load(String key)
+                                                                                throws Exception {
+                                                                            return new Str(key);
+                                                                        }
+                                                                    }
+            );
+
+    private final String value;
+
+    private Str(String value) {
+        this.value = checkNotNull(value, "value cannot be null");
+    }
+
+    @Override
+    public Str _desc_() {
+        return this;
+    }
+
+    @Override
+    public Bool _eq_(Str t) {
+        return value.equals(t.value) ? TRUE : FALSE;
+    }
+
+    @Override
+    public Bool _gt_(Str t) {
+        return value.compareTo(t.value) > 0 ? TRUE : FALSE;
+    }
+
+    @Override
+    public Bool _gte_(Str t) {
+        return value.compareTo(t.value) >= 0 ? TRUE : FALSE;
+    }
+
+    @Override
+    public Bool _lt_(Str t) {
+        return value.compareTo(t.value) < 0 ? TRUE : FALSE;
+    }
+
+    @Override
+    public Bool _lte_(Str t) {
+        return value.compareTo(t.value) <= 0 ? TRUE : FALSE;
+    }
+
+    @Override
+    public Bool _neq_(Str t) {
+        return value.equals(t.value) ? FALSE : TRUE;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+
+        return Objects.equals(value, ((Str) obj).value);
+    }
+
+    @Override
+    public int hashCode() {
+        return value.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return value;
+    }
+
+    public static Str valueOf(String value) {
+        return cache.getUnchecked(value);
+    }
+}
+

@@ -1,0 +1,14 @@
+ext {
+    libraries = [:]
+}
+
+libraries.antlr_runtime = 'org.antlr:antlr4-runtime:4.2.1'
+libraries.asm = 'org.ow2.asm:asm-all:5.0.1'
+libraries.commons_cli = 'commons-cli:commons-cli:1.2'
+libraries.groovy_all = 'org.codehaus.groovy:groovy-all:2.2.2'
+libraries.gson = 'com.google.code.gson:gson:2.2.4'
+libraries.guava = 'com.google.guava:guava:16.0.1'
+libraries.junit = 'junit:junit:4.11'
+libraries.jsr305 = 'com.google.code.findbugs:jsr305:2.0.3'
+libraries.logback_classic = 'ch.qos.logback:logback-classic:1.1.2'
+

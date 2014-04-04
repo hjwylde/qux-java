@@ -1,0 +1,8 @@
+apply from: 'antlr.gradle'
+
+dependencies {
+    compile libraries.antlr_runtime
+
+    compile project(':common')
+}
+
