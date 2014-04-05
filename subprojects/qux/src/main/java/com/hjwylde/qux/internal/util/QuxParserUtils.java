@@ -95,6 +95,7 @@ public final class QuxParserUtils {
             return createParser(new StringReader(input));
         } catch (IOException e) {
             logger.error("should never occur", e);
+
             throw new InternalError(e.getMessage());
         }
     }
