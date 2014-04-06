@@ -16,13 +16,13 @@ import javax.annotation.Nullable;
  *
  * @author Henry J. Wylde
  */
-public final class DefiniteAssignmentChecker extends QuxVisitor {
+public final class DefiniteAssignmentChecker extends QuxAdapter {
 
     public DefiniteAssignmentChecker() {
         super();
     }
 
-    public DefiniteAssignmentChecker(@Nullable QuxVisitor next) {
+    public DefiniteAssignmentChecker(QuxVisitor next) {
         super(next);
     }
 
@@ -35,13 +35,13 @@ public final class DefiniteAssignmentChecker extends QuxVisitor {
         return fvc;
     }
 
-    private static final class FunctionDefiniteAssignmentChecker extends FunctionVisitor {
+    private static final class FunctionDefiniteAssignmentChecker extends FunctionAdapter {
 
         private static final String RETURN = "$";
 
         private final Environment<String, Boolean> env = new Environment<>();
 
-        public FunctionDefiniteAssignmentChecker(@Nullable FunctionVisitor next) {
+        public FunctionDefiniteAssignmentChecker(FunctionVisitor next) {
             super(next);
         }
 

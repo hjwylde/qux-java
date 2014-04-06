@@ -5,19 +5,17 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.hjwylde.qux.util.Constants.SUPPORTED_VERSIONS;
 
-import javax.annotation.Nullable;
-
 /**
  * TODO: Documentation
  *
  * @author Henry J. Wylde
  */
-public class CheckQuxAdapter extends QuxVisitor {
+public class CheckQuxAdapter extends QuxAdapter {
 
     private boolean visitedStart = false;
     private boolean visitedEnd = false;
 
-    public CheckQuxAdapter(@Nullable QuxVisitor next) {
+    public CheckQuxAdapter(QuxVisitor next) {
         super(next);
     }
 

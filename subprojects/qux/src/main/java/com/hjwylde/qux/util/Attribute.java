@@ -7,11 +7,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @author Henry J. Wylde
  */
-public abstract class Attribute {
+public interface Attribute {
 
-    public static final class Source {
-
-        // TODO: Make the tree use the source attributes
+    /**
+     * TODO: Documentation
+     *
+     * @author Henry J. Wylde
+     */
+    public static final class Source implements Attribute {
 
         private final String source;
 
@@ -41,6 +44,25 @@ public abstract class Attribute {
 
         public String getSource() {
             return source;
+        }
+    }
+
+    /**
+     * TODO: Documentation
+     *
+     * @author Henry J. Wylde
+     * @since 0.1.1
+     */
+    public static final class Type implements Attribute {
+
+        private final com.hjwylde.qux.util.Type type;
+
+        public Type(com.hjwylde.qux.util.Type type) {
+            this.type = checkNotNull(type, "type cannot be null");
+        }
+
+        public com.hjwylde.qux.util.Type getType() {
+            return type;
         }
     }
 }

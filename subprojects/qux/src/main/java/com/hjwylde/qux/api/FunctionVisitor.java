@@ -8,86 +8,36 @@ import com.hjwylde.qux.util.Type;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
-import javax.annotation.Nullable;
-
 /**
  * TODO: Documentation.
  *
  * @author Henry J. Wylde
  */
-public abstract class FunctionVisitor {
+public interface FunctionVisitor {
 
-    public static final FunctionVisitor NULL_INSTANCE = new NullFunctionVisitor();
+    FunctionVisitor NULL_INSTANCE = new NullFunctionVisitor();
 
-    private final FunctionVisitor next;
+    void visitCode();
 
-    public FunctionVisitor() {
-        this(null);
-    }
+    void visitEnd();
 
-    public FunctionVisitor(@Nullable FunctionVisitor next) {
-        this.next = next;
-    }
+    void visitParameter(String var, Type type);
 
-    public void visitCode() {
-        if (next != null) {
-            next.visitCode();
-        }
-    }
-
-    public void visitEnd() {
-        if (next != null) {
-            next.visitEnd();
-        }
-    }
-
-    public void visitParameter(String var, Type type) {
-        if (next != null) {
-            next.visitParameter(var, type);
-        }
-    }
-
-    public void visitReturnType(Type type) {
-        if (next != null) {
-            next.visitReturnType(type);
-        }
-    }
+    void visitReturnType(Type type);
 
     @Alpha
-    public void visitStmtAssign(String var, ExprNode expr) {
-        if (next != null) {
-            next.visitStmtAssign(var, expr);
-        }
-    }
+    void visitStmtAssign(String var, ExprNode expr);
 
     @Alpha
-    public void visitStmtFunction(String name, ImmutableList<ExprNode> arguments) {
-        if (next != null) {
-            next.visitStmtFunction(name, arguments);
-        }
-    }
+    void visitStmtFunction(String name, ImmutableList<ExprNode> arguments);
 
     @Alpha
-    public void visitStmtIf(ExprNode condition, ImmutableList<StmtNode> trueBlock,
-            ImmutableList<StmtNode> falseBlock) {
-        if (next != null) {
-            next.visitStmtIf(condition, trueBlock, falseBlock);
-        }
-    }
+    void visitStmtIf(ExprNode condition, ImmutableList<StmtNode> trueBlock,
+            ImmutableList<StmtNode> falseBlock);
 
     @Alpha
-    public void visitStmtPrint(ExprNode expr) {
-        if (next != null) {
-            next.visitStmtPrint(expr);
-        }
-    }
+    void visitStmtPrint(ExprNode expr);
 
     @Alpha
-    public void visitStmtReturn(Optional<ExprNode> expr) {
-        if (next != null) {
-            next.visitStmtReturn(expr);
-        }
-    }
-
-    private static final class NullFunctionVisitor extends FunctionVisitor {}
+    void visitStmtReturn(Optional<ExprNode> expr);
 }

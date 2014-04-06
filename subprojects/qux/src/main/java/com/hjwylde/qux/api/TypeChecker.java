@@ -11,6 +11,8 @@ import com.hjwylde.common.error.CompilerErrors;
 import com.hjwylde.qux.internal.builder.Environment;
 import com.hjwylde.qux.tree.ExprNode;
 import com.hjwylde.qux.tree.StmtNode;
+import com.hjwylde.qux.util.Attribute;
+import com.hjwylde.qux.util.Attributes;
 import com.hjwylde.qux.util.Type;
 
 import com.google.common.base.Optional;
@@ -21,20 +23,18 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import javax.annotation.Nullable;
-
 /**
  * TODO: Documentation
  *
  * @author Henry J. Wylde
  */
-public final class TypeChecker extends QuxVisitor {
+public final class TypeChecker extends QuxAdapter {
 
     public TypeChecker() {
         super();
     }
 
-    public TypeChecker(@Nullable QuxVisitor next) {
+    public TypeChecker(QuxVisitor next) {
         super(next);
     }
 
@@ -74,17 +74,18 @@ public final class TypeChecker extends QuxVisitor {
         return merged;
     }
 
+    @SafeVarargs
     private static Environment<String, Type> mergeEnvironments(Environment<String, Type>... envs) {
         return mergeEnvironments(Arrays.asList(envs));
     }
 
-    private static final class FunctionTypeChecker extends FunctionVisitor {
+    private static final class FunctionTypeChecker extends FunctionAdapter {
 
         private static final String RETURN = "$";
 
         private final Environment<String, Type> env = new Environment<>();
 
-        public FunctionTypeChecker(@Nullable FunctionVisitor next) {
+        public FunctionTypeChecker(FunctionVisitor next) {
             super(next);
         }
 
@@ -114,7 +115,8 @@ public final class TypeChecker extends QuxVisitor {
         public void visitStmtAssign(String var, ExprNode expr) {
             visitExpr(expr);
 
-            env.put(var, expr.getType());
+            Attribute.Type attribute = Attributes.getAttributeUnchecked(expr, Attribute.Type.class);
+            env.put(var, attribute.getType());
 
             super.visitStmtAssign(var, expr);
         }
@@ -176,8 +178,11 @@ public final class TypeChecker extends QuxVisitor {
         private void checkEqual(ExprNode expr, Type expected) {
             visitExpr(expr);
 
-            if (!expr.getType().equals(expected)) {
-                throw CompilerErrors.invalidType(expr.getType().toString(), expected.toString());
+            Attribute.Type attribute = Attributes.getAttributeUnchecked(expr, Attribute.Type.class);
+
+            if (!attribute.getType().equals(expected)) {
+                throw CompilerErrors.invalidType(attribute.getType().toString(),
+                        expected.toString());
             }
         }
 
@@ -188,7 +193,8 @@ public final class TypeChecker extends QuxVisitor {
         }
 
         private void visitExpr(ExprNode expr) {
-            if (expr.isTypeResolved()) {
+            // If the type has already been resovled
+            if (Attributes.getAttribute(expr, Attribute.Type.class).isPresent()) {
                 return;
             }
 
@@ -214,24 +220,29 @@ public final class TypeChecker extends QuxVisitor {
             visitExpr(expr.getLhs());
             visitExpr(expr.getRhs());
 
+            Attribute.Type lhsAttribute = Attributes.getAttributeUnchecked(expr.getLhs(),
+                    Attribute.Type.class);
+            Attribute.Type rhsAttribute = Attributes.getAttributeUnchecked(expr.getRhs(),
+                    Attribute.Type.class);
+
             switch (expr.getOp()) {
                 case EQ:
                 case NEQ:
-                    expr.setType(expr.getLhs().getType());
+                    expr.addAttribute(lhsAttribute);
                     break;
                 case ADD:
                 case SUB:
                 case MUL:
                 case DIV:
-                    checkEqual(expr.getRhs(), expr.getLhs().getType());
-                    expr.setType(expr.getLhs().getType());
+                    checkEqual(expr.getRhs(), lhsAttribute.getType());
+                    expr.addAttribute(lhsAttribute);
                     break;
                 case GT:
                 case GTE:
                 case LT:
                 case LTE:
-                    checkEqual(expr.getRhs(), expr.getLhs().getType());
-                    expr.setType(TYPE_BOOL);
+                    checkEqual(expr.getRhs(), lhsAttribute.getType());
+                    expr.addAttributes(new Attribute.Type(TYPE_BOOL));
                 default:
                     throw new InternalError(
                             "visitExprBinary(ExprNode.Binary) not fully implemented: " + expr
@@ -243,19 +254,19 @@ public final class TypeChecker extends QuxVisitor {
         private void visitExprConstant(ExprNode.Constant expr) {
             switch (expr.getValueType()) {
                 case BOOL:
-                    expr.setType(TYPE_BOOL);
+                    expr.addAttributes(new Attribute.Type(TYPE_BOOL));
                     break;
                 case INT:
-                    expr.setType(TYPE_INT);
+                    expr.addAttributes(new Attribute.Type(TYPE_INT));
                     break;
                 case NULL:
-                    expr.setType(TYPE_NULL);
+                    expr.addAttributes(new Attribute.Type(TYPE_NULL));
                     break;
                 case REAL:
-                    expr.setType(TYPE_REAL);
+                    expr.addAttributes(new Attribute.Type(TYPE_REAL));
                     break;
                 case STR:
-                    expr.setType(TYPE_STR);
+                    expr.addAttributes(new Attribute.Type(TYPE_STR));
                     break;
                 default:
                     throw new InternalError(
@@ -282,23 +293,26 @@ public final class TypeChecker extends QuxVisitor {
         private void visitExprUnary(ExprNode.Unary expr) {
             visitExpr(expr.getTarget());
 
+            Attribute.Type targetAttribute = Attributes.getAttributeUnchecked(expr.getTarget(),
+                    Attribute.Type.class);
+
             switch (expr.getOp()) {
                 case NEG:
-                    expr.setType(expr.getTarget().getType());
+                    expr.addAttribute(targetAttribute);
                     break;
                 case NOT:
                     checkEqual(expr.getTarget(), TYPE_BOOL);
-                    expr.setType(TYPE_BOOL);
+                    expr.addAttributes(new Attribute.Type(TYPE_BOOL));
                     break;
                 default:
                     throw new InternalError(
-                            "visitExprUnary(ExprNode.Unary) not fully implemented: " + expr.getOp()
-                    );
+                            "visitExprUnary(ExprNode.Unary) not fully implemented: " + expr
+                                    .getOp());
             }
         }
 
         private void visitExprVariable(ExprNode.Variable expr) {
-            expr.setType(env.getUnchecked(expr.getName()));
+            expr.addAttributes(new Attribute.Type(env.getUnchecked(expr.getName())));
         }
     }
 }

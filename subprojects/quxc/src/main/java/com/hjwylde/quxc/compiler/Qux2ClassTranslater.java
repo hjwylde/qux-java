@@ -40,10 +40,14 @@ import static org.objectweb.asm.Opcodes.SIPUSH;
 import static org.objectweb.asm.Opcodes.T_BYTE;
 import static org.objectweb.asm.Opcodes.V1_7;
 
+import com.hjwylde.qux.api.FunctionAdapter;
 import com.hjwylde.qux.api.FunctionVisitor;
+import com.hjwylde.qux.api.QuxAdapter;
 import com.hjwylde.qux.api.QuxVisitor;
 import com.hjwylde.qux.tree.ExprNode;
 import com.hjwylde.qux.tree.StmtNode;
+import com.hjwylde.qux.util.Attribute;
+import com.hjwylde.qux.util.Attributes;
 import com.hjwylde.qux.util.Types;
 
 import com.google.common.base.Optional;
@@ -87,7 +91,7 @@ import qux.lang.operators.Sub;
  *
  * @author Henry J. Wylde
  */
-public final class Qux2ClassTranslater extends QuxVisitor {
+public final class Qux2ClassTranslater extends QuxAdapter {
 
     // TODO: Change from depending on qrt to using a ClassLoader and getting the runtime files that way
     // This will mean the user can specify the runtime library to compile against
@@ -170,7 +174,7 @@ public final class Qux2ClassTranslater extends QuxVisitor {
         throw new InternalError("getTypeFromQuxType(String) not fully implemented: " + desc);
     }
 
-    private final class Function2ClassTranslater extends FunctionVisitor {
+    private final class Function2ClassTranslater extends FunctionAdapter {
 
         private static final String THIS = "this";
 
@@ -263,7 +267,10 @@ public final class Qux2ClassTranslater extends QuxVisitor {
             for (int i = 0; i < arguments.size(); i++) {
                 visitExpr(arguments.get(i));
 
-                argumentTypes[i] = getTypeFromQuxType(arguments.get(i).getType());
+                Attribute.Type attribute = Attributes.getAttributeUnchecked(arguments.get(i),
+                        Attribute.Type.class);
+
+                argumentTypes[i] = getTypeFromQuxType(attribute.getType());
             }
 
             mv.visitMethodInsn(INVOKESTATIC, name, name, Type.getMethodDescriptor(Type.VOID_TYPE,
@@ -307,8 +314,11 @@ public final class Qux2ClassTranslater extends QuxVisitor {
 
             visitExpr(expr);
 
-            mv.visitMethodInsn(INVOKEVIRTUAL, getTypeFromQuxType(expr.getType()).getInternalName(),
-                    "toString", Type.getMethodDescriptor(Type.getType(String.class)), false);
+            Attribute.Type attribute = Attributes.getAttributeUnchecked(expr, Attribute.Type.class);
+
+            mv.visitMethodInsn(INVOKEVIRTUAL, getTypeFromQuxType(attribute.getType())
+                    .getInternalName(), "toString", Type.getMethodDescriptor(Type.getType(
+                    String.class)), false);
             try {
                 mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(PrintStream.class),
                         "println", Type.getMethodDescriptor(PrintStream.class.getMethod("println",
@@ -482,7 +492,9 @@ public final class Qux2ClassTranslater extends QuxVisitor {
         }
 
         private void visitExprFunction(ExprNode.Function expr) {
-            Type type = getTypeFromQuxType(expr.getType());
+            Attribute.Type attribute = Attributes.getAttributeUnchecked(expr, Attribute.Type.class);
+
+            Type type = getTypeFromQuxType(attribute.getType());
 
             for (int i = 0; i < expr.getArguments().size(); i++) {
                 visitExpr(expr.getArguments().get(i));
@@ -520,8 +532,8 @@ public final class Qux2ClassTranslater extends QuxVisitor {
                     break;
                 default:
                     throw new InternalError(
-                            "visitExprUnary(ExprNode.Unary) not fully implemented: " + expr.getOp()
-                    );
+                            "visitExprUnary(ExprNode.Unary) not fully implemented: " + expr
+                                    .getOp());
             }
         }
 
