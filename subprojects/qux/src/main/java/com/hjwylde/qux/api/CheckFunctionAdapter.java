@@ -17,12 +17,12 @@ import javax.annotation.Nullable;
  *
  * @author Henry J. Wylde
  */
-public class CheckFunctionAdapter extends FunctionVisitor {
+public class CheckFunctionAdapter extends FunctionAdapter {
 
     private boolean visitedCode = false;
     private boolean visitedEnd = false;
 
-    public CheckFunctionAdapter(@Nullable FunctionVisitor next) {
+    public CheckFunctionAdapter(FunctionVisitor next) {
         super(next);
     }
 

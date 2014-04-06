@@ -1,65 +1,55 @@
 package com.hjwylde.qux.tree;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
 
+import com.hjwylde.qux.util.Attribute;
 import com.hjwylde.qux.util.Op;
-import com.hjwylde.qux.util.Type;
 
 import com.google.common.collect.ImmutableList;
+
+import java.util.Arrays;
+import java.util.Collection;
 
 /**
  * TODO: Documentation
  *
  * @author Henry J. Wylde
  */
-public abstract class ExprNode {
-
-    // TODO: Make these immutable
-
-    private Type type = null;
+public abstract class ExprNode extends Node {
 
     /**
      * This class may only be sub-classed locally.
      */
-    ExprNode() {}
-
-    /**
-     * Gets the type of this expression. The type is initially unresolved and needs to be set using
-     * {@link #setType}.
-     *
-     * @return the type.
-     * @throws java.lang.IllegalStateException if the type has not been resolved.
-     */
-    public final Type getType() {
-        checkState(type != null, "type has not been resolved");
-
-        return type;
+    ExprNode(Attribute... attributes) {
+        super(attributes);
     }
 
     /**
-     * Sets the type of this expression. If this expressions type has already been set (resolved),
-     * then this method will throw an error.
-     *
-     * @param type the type.
-     * @throws java.lang.IllegalStateException if the type has already been resolved.
+     * This class may only be sub-classed locally.
      */
-    public final void setType(Type type) {
-        checkState(this.type == null, "type has already been resolved");
-
-        this.type = checkNotNull(type, "type cannot be null");
+    ExprNode(Collection<? extends Attribute> attributes) {
+        super(attributes);
     }
 
-    public final boolean isTypeResolved() {
-        return type != null;
-    }
+    // TODO: Consider adding in an accept(ExprVisitor) method
 
+    /**
+     * TODO: Documentation
+     *
+     * @author Henry J. Wylde
+     */
     public static final class Binary extends ExprNode {
 
         private Op.Binary op;
         private ExprNode lhs, rhs;
 
-        public Binary(Op.Binary op, ExprNode lhs, ExprNode rhs) {
+        public Binary(Op.Binary op, ExprNode lhs, ExprNode rhs, Attribute... attributes) {
+            this(op, lhs, rhs, Arrays.asList(attributes));
+        }
+
+        public Binary(Op.Binary op, ExprNode lhs, ExprNode rhs, Collection<Attribute> attributes) {
+            super(attributes);
+
             setOp(op);
             setLhs(lhs);
             setRhs(rhs);
@@ -90,12 +80,23 @@ public abstract class ExprNode {
         }
     }
 
+    /**
+     * TODO: Documentation
+     *
+     * @author Henry J. Wylde
+     */
     public static final class Constant extends ExprNode {
 
         private ExprNode.Constant.Type valueType;
         private Object value;
 
-        public Constant(Type type, Object value) {
+        public Constant(Type type, Object value, Attribute... attributes) {
+            this(type, value, Arrays.asList(attributes));
+        }
+
+        public Constant(Type type, Object value, Collection<Attribute> attribtues) {
+            super(attribtues);
+
             setValueType(type);
             setValue(value);
         }
@@ -116,17 +117,34 @@ public abstract class ExprNode {
             this.valueType = checkNotNull(valueType, "valueType cannot be null");
         }
 
+        /**
+         * TODO: Documentation
+         *
+         * @author Henry J. Wylde
+         */
         public static enum Type {
             BOOL, INT, NULL, REAL, STR;
         }
     }
 
+    /**
+     * TODO: Documentation
+     *
+     * @author Henry J. Wylde
+     */
     public static final class Function extends ExprNode {
 
         private String name;
         private ImmutableList<ExprNode> arguments;
 
-        public Function(String name, java.util.List<ExprNode> arguments) {
+        public Function(String name, java.util.List<ExprNode> arguments, Attribute... attributes) {
+            this(name, arguments, Arrays.asList(attributes));
+        }
+
+        public Function(String name, java.util.List<ExprNode> arguments,
+                Collection<Attribute> attributes) {
+            super(attributes);
+
             setName(name);
             setArguments(arguments);
         }
@@ -148,11 +166,22 @@ public abstract class ExprNode {
         }
     }
 
+    /**
+     * TODO: Documentation
+     *
+     * @author Henry J. Wylde
+     */
     public static final class List extends ExprNode {
 
         private ImmutableList<ExprNode> values;
 
-        public List(java.util.List<ExprNode> values) {
+        public List(java.util.List<ExprNode> values, Attribute... attributes) {
+            this(values, Arrays.asList(attributes));
+        }
+
+        public List(java.util.List<ExprNode> values, Collection<Attribute> attributes) {
+            super(attributes);
+
             setValues(values);
         }
 
@@ -165,12 +194,23 @@ public abstract class ExprNode {
         }
     }
 
+    /**
+     * TODO: Documentation
+     *
+     * @author Henry J. Wylde
+     */
     public static final class Unary extends ExprNode {
 
         private Op.Unary op;
         private ExprNode target;
 
-        public Unary(Op.Unary op, ExprNode target) {
+        public Unary(Op.Unary op, ExprNode target, Attribute... attributes) {
+            this(op, target, Arrays.asList(attributes));
+        }
+
+        public Unary(Op.Unary op, ExprNode target, Collection<Attribute> attributes) {
+            super(attributes);
+
             setOp(op);
             setTarget(target);
         }
@@ -192,11 +232,22 @@ public abstract class ExprNode {
         }
     }
 
+    /**
+     * TODO: Documentation
+     *
+     * @author Henry J. Wylde
+     */
     public static final class Variable extends ExprNode {
 
         private String name;
 
-        public Variable(String name) {
+        public Variable(String name, Attribute... attributes) {
+            this(name, Arrays.asList(attributes));
+        }
+
+        public Variable(String name, Collection<Attribute> attributes) {
+            super(attributes);
+
             setName(name);
         }
 

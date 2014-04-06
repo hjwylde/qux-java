@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.hjwylde.qux.api.FunctionVisitor;
 import com.hjwylde.qux.api.QuxVisitor;
+import com.hjwylde.qux.util.Attribute;
 import com.hjwylde.qux.util.Type;
 
 import com.google.common.base.Optional;
@@ -12,6 +13,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,7 +24,7 @@ import java.util.Map;
  *
  * @author Henry J. Wylde
  */
-public final class FunctionNode extends FunctionVisitor {
+public final class FunctionNode extends Node implements FunctionVisitor {
 
     private final int flags;
     private final String name;
@@ -32,7 +35,13 @@ public final class FunctionNode extends FunctionVisitor {
 
     private List<StmtNode> stmts = new ArrayList<>();
 
-    public FunctionNode(int flags, String name, String desc) {
+    public FunctionNode(int flags, String name, String desc, Attribute... attributes) {
+        this(flags, name, desc, Arrays.asList(attributes));
+    }
+
+    public FunctionNode(int flags, String name, String desc, Collection<Attribute> attributes) {
+        super(attributes);
+
         this.flags = flags;
         this.name = checkNotNull(name, "name cannot be null");
         this.desc = checkNotNull(desc, "desc cannot be null");
@@ -81,6 +90,12 @@ public final class FunctionNode extends FunctionVisitor {
     public ImmutableList<StmtNode> getStmts() {
         return ImmutableList.copyOf(stmts);
     }
+
+    @Override
+    public void visitCode() {}
+
+    @Override
+    public void visitEnd() {}
 
     @Override
     public void visitParameter(String var, Type type) {

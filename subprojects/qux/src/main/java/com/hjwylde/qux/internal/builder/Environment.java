@@ -17,7 +17,7 @@ import java.util.Set;
  */
 public final class Environment<K, V> implements Iterable<Map.Entry<K, V>> {
 
-    private final Environment previous;
+    private final Environment<K, V> previous;
     private Map<K, V> mapping = new HashMap<>();
 
     public Environment() {
@@ -87,7 +87,7 @@ public final class Environment<K, V> implements Iterable<Map.Entry<K, V>> {
     }
 
     public Environment<K, V> push() {
-        return new Environment(this);
+        return new Environment<K, V>(this);
     }
 
     public void put(K key, V value) {

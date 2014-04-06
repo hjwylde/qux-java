@@ -1,5 +1,7 @@
 package com.hjwylde.qux.util;
 
+import com.hjwylde.qux.tree.Node;
+
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
@@ -17,6 +19,11 @@ public final class Attributes {
      */
     private Attributes() {}
 
+    public static <T extends Attribute> Optional<T> getAttribute(Node node, Class<T> clazz) {
+        return getAttribute(node.getAttributes(), clazz);
+    }
+
+    @SuppressWarnings("unchecked")
     public static <T extends Attribute> Optional<T> getAttribute(
             Collection<? extends Attribute> attributes, Class<T> clazz) {
         for (Attribute attribute : attributes) {
@@ -28,16 +35,26 @@ public final class Attributes {
         return Optional.absent();
     }
 
+    public static <T extends Attribute> T getAttributeUnchecked(Node node, Class<T> clazz) {
+        return getAttributeUnchecked(node.getAttributes(), clazz);
+    }
+
     public static <T extends Attribute> T getAttributeUnchecked(
             Collection<? extends Attribute> attributes, Class<T> clazz) {
         return getAttribute(attributes, clazz).get();
     }
 
+    public static <T extends Attribute> ImmutableList<T> getAttributes(Node node, Class<T> clazz) {
+        return getAttributes(node.getAttributes(), clazz);
+    }
+
+    @SuppressWarnings("unchecked")
     public static <T extends Attribute> ImmutableList<T> getAttributes(
             Collection<? extends Attribute> attributes, Class<T> clazz) {
         ImmutableList.Builder<T> builder = ImmutableList.builder();
         for (Attribute attribute : attributes) {
             if (clazz.isInstance(attribute)) {
+
                 builder.add((T) attribute);
             }
         }
