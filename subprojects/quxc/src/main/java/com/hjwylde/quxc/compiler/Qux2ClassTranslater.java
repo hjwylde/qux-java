@@ -431,7 +431,7 @@ public final class Qux2ClassTranslater extends QuxAdapter {
         private void visitExprConstant(ExprNode.Constant expr) throws NoSuchMethodException {
             Object value;
 
-            switch (expr.getValueType()) {
+            switch (expr.getType()) {
                 case BOOL:
                     if ((boolean) expr.getValue()) {
                         mv.visitFieldInsn(GETSTATIC, Type.getInternalName(Bool.class), "TRUE",
@@ -481,7 +481,7 @@ public final class Qux2ClassTranslater extends QuxAdapter {
                             false);
                     break;
                 default:
-                    throw new MethodNotImplementedError(expr.getValueType().toString());
+                    throw new MethodNotImplementedError(expr.getType().toString());
             }
         }
 

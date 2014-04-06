@@ -13,10 +13,13 @@ import com.hjwylde.qux.internal.antlr.QuxBaseVisitor;
 import com.hjwylde.qux.internal.antlr.QuxParser;
 import com.hjwylde.qux.tree.ExprNode;
 import com.hjwylde.qux.tree.StmtNode;
+import com.hjwylde.qux.util.Attribute;
 import com.hjwylde.qux.util.Op;
 import com.hjwylde.qux.util.Type;
 import com.hjwylde.qux.util.Types;
 
+import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.misc.NotNull;
 
 import java.math.BigDecimal;
@@ -96,6 +99,9 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
 
     @Override
     public ExprNode visitExprBinary(@NotNull QuxParser.ExprBinaryContext ctx) {
+        ParserRuleContext start = ctx.exprUnary();
+        QuxParser.ExprContext end;
+
         ExprNode expr = visitExprUnary(ctx.exprUnary());
 
         for (int i = 0; i < ctx.expr().size(); i++) {
@@ -125,7 +131,10 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
                 throw new MethodNotImplementedError(ctx.getText());
             }
 
-            expr = new ExprNode.Binary(op, expr, visitExpr(ctx.expr(i)));
+            end = ctx.expr(i);
+
+            expr = new ExprNode.Binary(op, expr, visitExpr(end), generateAttributeSource(start,
+                    end));
         }
 
         return expr;
@@ -138,7 +147,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
             values.add(visitExpr(ectx));
         }
 
-        return new ExprNode.List(values);
+        return new ExprNode.List(values, generateAttributeSource(ctx));
     }
 
     @Override
@@ -150,7 +159,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
             arguments.add(visitExpr(expr));
         }
 
-        return new ExprNode.Function(name, arguments);
+        return new ExprNode.Function(name, arguments, generateAttributeSource(ctx));
     }
 
     @Override
@@ -187,12 +196,12 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
             return visitExprTerm(ctx.exprTerm());
         }
 
-        return new ExprNode.Unary(op, visitExprTerm(ctx.exprTerm()));
+        return new ExprNode.Unary(op, visitExprTerm(ctx.exprTerm()), generateAttributeSource(ctx));
     }
 
     @Override
     public ExprNode.Variable visitExprVariable(@NotNull QuxParser.ExprVariableContext ctx) {
-        return new ExprNode.Variable(ctx.Identifier().getText());
+        return new ExprNode.Variable(ctx.Identifier().getText(), generateAttributeSource(ctx));
     }
 
     @Override
@@ -217,7 +226,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
 
         ExprNode expr = visitExpr(ctx.expr());
 
-        return new StmtNode.Assign(var, expr);
+        return new StmtNode.Assign(var, expr, generateAttributeSource(ctx));
     }
 
     @Override
@@ -227,7 +236,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         List<StmtNode> trueBlock = visitBlock(ctx.block(0));
         List<StmtNode> falseBlock = visitBlock(ctx.block(1));
 
-        return new StmtNode.If(condition, trueBlock, falseBlock);
+        return new StmtNode.If(condition, trueBlock, falseBlock, generateAttributeSource(ctx));
     }
 
     @Alpha
@@ -235,7 +244,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
     public StmtNode.Print visitStmtPrint(@NotNull QuxParser.StmtPrintContext ctx) {
         ExprNode expr = visitExpr(ctx.expr());
 
-        return new StmtNode.Print(expr);
+        return new StmtNode.Print(expr, generateAttributeSource(ctx));
     }
 
     @Override
@@ -245,7 +254,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
             expr = visitExpr(ctx.expr());
         }
 
-        return new StmtNode.Return(expr);
+        return new StmtNode.Return(expr, generateAttributeSource(ctx));
     }
 
     @Override
@@ -312,10 +321,31 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         }
 
         if (type != null) {
-            return new ExprNode.Constant(type, value);
+            return new ExprNode.Constant(type, value, generateAttributeSource(ctx));
         }
 
         throw new MethodNotImplementedError(ctx.getText());
+    }
+
+    private Attribute.Source generateAttributeSource(ParserRuleContext start,
+            ParserRuleContext end) {
+        return generateAttributeSource(start.getStart(), end.getStop());
+    }
+
+    private Attribute.Source generateAttributeSource(ParserRuleContext ctx) {
+        return generateAttributeSource(ctx.getStart(), ctx.getStop());
+    }
+
+    private Attribute.Source generateAttributeSource(Token start, Token end) {
+        int line = start.getLine();
+        int col = start.getCharPositionInLine();
+        int length = (end.getStopIndex() + 1) - start.getStartIndex();
+
+        return new Attribute.Source(name, line, col, length);
+    }
+
+    private Attribute.Source generateAttributeSource(Token token) {
+        return generateAttributeSource(token, token);
     }
 
     private static Type getType(String type) {
