@@ -43,8 +43,8 @@ public abstract class StmtNode extends Node {
      */
     public static final class Assign extends StmtNode {
 
-        private String var;
-        private ExprNode expr;
+        private final String var;
+        private final ExprNode expr;
 
         public Assign(String var, ExprNode expr, Attribute... attributes) {
             this(var, expr, Arrays.asList(attributes));
@@ -53,8 +53,8 @@ public abstract class StmtNode extends Node {
         public Assign(String var, ExprNode expr, Collection<Attribute> attributes) {
             super(attributes);
 
-            setVar(var);
-            setExpr(expr);
+            this.var = checkNotNull(var, "var cannot be null");
+            this.expr = checkNotNull(expr, "expr cannot be null");
         }
 
         @Override
@@ -66,16 +66,8 @@ public abstract class StmtNode extends Node {
             return expr;
         }
 
-        public void setExpr(ExprNode expr) {
-            this.expr = checkNotNull(expr, "expr cannot be null");
-        }
-
         public String getVar() {
             return var;
-        }
-
-        public void setVar(String var) {
-            this.var = checkNotNull(var, "var cannot be null");
         }
     }
 
@@ -86,8 +78,8 @@ public abstract class StmtNode extends Node {
      */
     public static final class Function extends StmtNode {
 
-        private String name;
-        private ImmutableList<ExprNode> arguments;
+        private final String name;
+        private final ImmutableList<ExprNode> arguments;
 
         public Function(String name, List<ExprNode> arguments, Attribute... attributes) {
             this(name, arguments, Arrays.asList(attributes));
@@ -96,8 +88,8 @@ public abstract class StmtNode extends Node {
         public Function(String name, List<ExprNode> arguments, Collection<Attribute> attributes) {
             super(attributes);
 
-            setName(name);
-            setArguments(arguments);
+            this.name = checkNotNull(name, "name cannot be null");
+            this.arguments = ImmutableList.copyOf(arguments);
         }
 
         @Override
@@ -109,16 +101,8 @@ public abstract class StmtNode extends Node {
             return arguments;
         }
 
-        public void setArguments(List<ExprNode> arguments) {
-            this.arguments = ImmutableList.copyOf(arguments);
-        }
-
         public String getName() {
             return name;
-        }
-
-        public void setName(String name) {
-            this.name = checkNotNull(name, "name cannot be null");
         }
     }
 
@@ -129,9 +113,9 @@ public abstract class StmtNode extends Node {
      */
     public static final class If extends StmtNode {
 
-        private ExprNode condition;
-        private ImmutableList<StmtNode> trueBlock;
-        private ImmutableList<StmtNode> falseBlock;
+        private final ExprNode condition;
+        private final ImmutableList<StmtNode> trueBlock;
+        private final ImmutableList<StmtNode> falseBlock;
 
         public If(ExprNode condition, List<StmtNode> trueBlock, List<StmtNode> falseBlock,
                 Attribute... attributes) {
@@ -142,9 +126,9 @@ public abstract class StmtNode extends Node {
                 Collection<Attribute> attributes) {
             super(attributes);
 
-            setCondition(condition);
-            setTrueBlock(trueBlock);
-            setFalseBlock(falseBlock);
+            this.condition = checkNotNull(condition, "condition cannot be null");
+            this.trueBlock = ImmutableList.copyOf(trueBlock);
+            this.falseBlock = ImmutableList.copyOf(falseBlock);
         }
 
         @Override
@@ -156,24 +140,12 @@ public abstract class StmtNode extends Node {
             return condition;
         }
 
-        public void setCondition(ExprNode condition) {
-            this.condition = checkNotNull(condition, "condition cannot be null");
-        }
-
         public ImmutableList<StmtNode> getFalseBlock() {
             return falseBlock;
         }
 
-        public void setFalseBlock(List<StmtNode> falseBlock) {
-            this.falseBlock = ImmutableList.copyOf(falseBlock);
-        }
-
         public ImmutableList<StmtNode> getTrueBlock() {
             return trueBlock;
-        }
-
-        public void setTrueBlock(List<StmtNode> trueBlock) {
-            this.trueBlock = ImmutableList.copyOf(trueBlock);
         }
     }
 
@@ -185,7 +157,7 @@ public abstract class StmtNode extends Node {
     @Alpha
     public static final class Print extends StmtNode {
 
-        private ExprNode expr;
+        private final ExprNode expr;
 
         public Print(ExprNode expr, Attribute... attributes) {
             this(expr, Arrays.asList(attributes));
@@ -194,7 +166,7 @@ public abstract class StmtNode extends Node {
         public Print(ExprNode expr, Collection<Attribute> attributes) {
             super(attributes);
 
-            setExpr(expr);
+            this.expr = checkNotNull(expr, "expr cannot be null");
         }
 
         @Override
@@ -205,10 +177,6 @@ public abstract class StmtNode extends Node {
         public ExprNode getExpr() {
             return expr;
         }
-
-        public void setExpr(ExprNode expr) {
-            this.expr = checkNotNull(expr, "expr cannot be null");
-        }
     }
 
     /**
@@ -218,7 +186,7 @@ public abstract class StmtNode extends Node {
      */
     public static final class Return extends StmtNode {
 
-        private Optional<ExprNode> expr;
+        private final Optional<ExprNode> expr;
 
         public Return(Attribute... attributes) {
             this(Optional.<ExprNode>absent(), Arrays.asList(attributes));
@@ -239,7 +207,7 @@ public abstract class StmtNode extends Node {
         public Return(Optional<ExprNode> expr, Collection<Attribute> attributes) {
             super(attributes);
 
-            setExpr(expr);
+            this.expr = checkNotNull(expr, "expr cannot be null");
         }
 
         public Return(ExprNode expr, Collection<Attribute> attributes) {
@@ -253,14 +221,6 @@ public abstract class StmtNode extends Node {
 
         public Optional<ExprNode> getExpr() {
             return expr;
-        }
-
-        public void setExpr(Optional<ExprNode> expr) {
-            this.expr = checkNotNull(expr, "expr cannot be null");
-        }
-
-        public void setExpr(ExprNode expr) {
-            setExpr(Optional.fromNullable(expr));
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.hjwylde.qux.tree;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.hjwylde.qux.util.Attribute;
@@ -40,8 +41,8 @@ public abstract class ExprNode extends Node {
      */
     public static final class Binary extends ExprNode {
 
-        private Op.Binary op;
-        private ExprNode lhs, rhs;
+        private final Op.Binary op;
+        private final ExprNode lhs, rhs;
 
         public Binary(Op.Binary op, ExprNode lhs, ExprNode rhs, Attribute... attributes) {
             this(op, lhs, rhs, Arrays.asList(attributes));
@@ -50,33 +51,21 @@ public abstract class ExprNode extends Node {
         public Binary(Op.Binary op, ExprNode lhs, ExprNode rhs, Collection<Attribute> attributes) {
             super(attributes);
 
-            setOp(op);
-            setLhs(lhs);
-            setRhs(rhs);
+            this.op = checkNotNull(op, "op cannot be null");
+            this.lhs = checkNotNull(lhs, "lhs cannot be null");
+            this.rhs = checkNotNull(rhs, "rhs cannot be null");
         }
 
         public ExprNode getLhs() {
             return lhs;
         }
 
-        public void setLhs(ExprNode lhs) {
-            this.lhs = checkNotNull(lhs, "lhs cannot be null");
-        }
-
         public Op.Binary getOp() {
             return op;
         }
 
-        public void setOp(Op.Binary op) {
-            this.op = checkNotNull(op, "op cannot be null");
-        }
-
         public ExprNode getRhs() {
             return rhs;
-        }
-
-        public void setRhs(ExprNode rhs) {
-            this.rhs = checkNotNull(rhs, "rhs cannot be null");
         }
     }
 
@@ -87,8 +76,8 @@ public abstract class ExprNode extends Node {
      */
     public static final class Constant extends ExprNode {
 
-        private ExprNode.Constant.Type valueType;
-        private Object value;
+        private final ExprNode.Constant.Type type;
+        private final Object value;
 
         public Constant(Type type, Object value, Attribute... attributes) {
             this(type, value, Arrays.asList(attributes));
@@ -97,24 +86,19 @@ public abstract class ExprNode extends Node {
         public Constant(Type type, Object value, Collection<Attribute> attribtues) {
             super(attribtues);
 
-            setValueType(type);
-            setValue(value);
+            checkArgument(value != null || type == Type.NULL,
+                    "value cannot be null unless type is null");
+
+            this.type = checkNotNull(type, "type cannot be null");
+            this.value = value;
+        }
+
+        public ExprNode.Constant.Type getType() {
+            return type;
         }
 
         public Object getValue() {
             return value;
-        }
-
-        public void setValue(Object value) {
-            this.value = value;
-        }
-
-        public ExprNode.Constant.Type getValueType() {
-            return valueType;
-        }
-
-        public void setValueType(ExprNode.Constant.Type valueType) {
-            this.valueType = checkNotNull(valueType, "valueType cannot be null");
         }
 
         /**
@@ -134,8 +118,8 @@ public abstract class ExprNode extends Node {
      */
     public static final class Function extends ExprNode {
 
-        private String name;
-        private ImmutableList<ExprNode> arguments;
+        private final String name;
+        private final ImmutableList<ExprNode> arguments;
 
         public Function(String name, java.util.List<ExprNode> arguments, Attribute... attributes) {
             this(name, arguments, Arrays.asList(attributes));
@@ -145,24 +129,16 @@ public abstract class ExprNode extends Node {
                 Collection<Attribute> attributes) {
             super(attributes);
 
-            setName(name);
-            setArguments(arguments);
+            this.name = checkNotNull(name, "name cannot be null");
+            this.arguments = ImmutableList.copyOf(arguments);
         }
 
         public ImmutableList<ExprNode> getArguments() {
             return arguments;
         }
 
-        public void setArguments(java.util.List<ExprNode> arguments) {
-            this.arguments = ImmutableList.copyOf(arguments);
-        }
-
         public String getName() {
             return name;
-        }
-
-        public void setName(String name) {
-            this.name = checkNotNull(name, "name cannot be null");
         }
     }
 
@@ -173,7 +149,7 @@ public abstract class ExprNode extends Node {
      */
     public static final class List extends ExprNode {
 
-        private ImmutableList<ExprNode> values;
+        private final ImmutableList<ExprNode> values;
 
         public List(java.util.List<ExprNode> values, Attribute... attributes) {
             this(values, Arrays.asList(attributes));
@@ -182,15 +158,11 @@ public abstract class ExprNode extends Node {
         public List(java.util.List<ExprNode> values, Collection<Attribute> attributes) {
             super(attributes);
 
-            setValues(values);
+            this.values = ImmutableList.copyOf(values);
         }
 
         public ImmutableList<ExprNode> getValues() {
             return values;
-        }
-
-        public void setValues(java.util.List<ExprNode> values) {
-            this.values = ImmutableList.copyOf(values);
         }
     }
 
@@ -201,8 +173,8 @@ public abstract class ExprNode extends Node {
      */
     public static final class Unary extends ExprNode {
 
-        private Op.Unary op;
-        private ExprNode target;
+        private final Op.Unary op;
+        private final ExprNode target;
 
         public Unary(Op.Unary op, ExprNode target, Attribute... attributes) {
             this(op, target, Arrays.asList(attributes));
@@ -211,24 +183,16 @@ public abstract class ExprNode extends Node {
         public Unary(Op.Unary op, ExprNode target, Collection<Attribute> attributes) {
             super(attributes);
 
-            setOp(op);
-            setTarget(target);
+            this.op = checkNotNull(op, "op cannot be null");
+            this.target = checkNotNull(target, "target cannot be null");
         }
 
         public Op.Unary getOp() {
             return op;
         }
 
-        public void setOp(Op.Unary op) {
-            this.op = checkNotNull(op, "op cannot be null");
-        }
-
         public ExprNode getTarget() {
             return target;
-        }
-
-        public void setTarget(ExprNode target) {
-            this.target = checkNotNull(target, "target cannot be null");
         }
     }
 
@@ -239,7 +203,7 @@ public abstract class ExprNode extends Node {
      */
     public static final class Variable extends ExprNode {
 
-        private String name;
+        private final String name;
 
         public Variable(String name, Attribute... attributes) {
             this(name, Arrays.asList(attributes));
@@ -248,15 +212,11 @@ public abstract class ExprNode extends Node {
         public Variable(String name, Collection<Attribute> attributes) {
             super(attributes);
 
-            setName(name);
+            this.name = checkNotNull(name, "name cannot be null");
         }
 
         public String getName() {
             return name;
-        }
-
-        public void setName(String name) {
-            this.name = checkNotNull(name, "name cannot be null");
         }
     }
 }

@@ -248,7 +248,7 @@ public final class TypeChecker extends QuxAdapter {
         }
 
         private void visitExprConstant(ExprNode.Constant expr) {
-            switch (expr.getValueType()) {
+            switch (expr.getType()) {
                 case BOOL:
                     expr.addAttributes(new Attribute.Type(TYPE_BOOL));
                     break;
@@ -265,7 +265,7 @@ public final class TypeChecker extends QuxAdapter {
                     expr.addAttributes(new Attribute.Type(TYPE_STR));
                     break;
                 default:
-                    throw new MethodNotImplementedError(expr.getValueType().toString());
+                    throw new MethodNotImplementedError(expr.getType().toString());
             }
         }
 
