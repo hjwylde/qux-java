@@ -1,5 +1,7 @@
 package com.hjwylde.qbs.builder.resources;
 
+import com.hjwylde.common.error.MethodNotImplementedError;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
@@ -44,6 +46,6 @@ public final class LocalZipResourceReader implements Resource.Reader<ZipResource
     @Override
     public ZipResource read(InputStream in) {
         // TODO: Implement read(InputStream)
-        throw new InternalError("read(InputStream) not implemented");
+        throw new MethodNotImplementedError();
     }
 }

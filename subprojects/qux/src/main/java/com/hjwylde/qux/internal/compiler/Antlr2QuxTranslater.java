@@ -5,6 +5,7 @@ import static com.hjwylde.qux.util.Constants.QUX0_1_0;
 import static com.hjwylde.qux.util.Op.ACC_PUBLIC;
 import static com.hjwylde.qux.util.Op.ACC_STATIC;
 
+import com.hjwylde.common.error.MethodNotImplementedError;
 import com.hjwylde.common.lang.annotation.Alpha;
 import com.hjwylde.qux.api.FunctionVisitor;
 import com.hjwylde.qux.api.QuxVisitor;
@@ -121,10 +122,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
             } else if (ctx.BOP_GTE(i) != null) {
                 op = Op.Binary.GTE;
             } else {
-                throw new InternalError(
-                        "visitExprBinary(QuxParser.ExprBinaryContext) not fully implemented: " + ctx
-                                .getText()
-                );
+                throw new MethodNotImplementedError(ctx.getText());
             }
 
             expr = new ExprNode.Binary(op, expr, visitExpr(ctx.expr(i)));
@@ -173,10 +171,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         } else if (ctx.exprVariable() != null) {
             return visitExprVariable(ctx.exprVariable());
         } else {
-            throw new InternalError(
-                    "visitExprTerm(QuxParser.ExprTermContext) not fully implemented: " + ctx
-                            .getText()
-            );
+            throw new MethodNotImplementedError(ctx.getText());
         }
     }
 
@@ -320,8 +315,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
             return new ExprNode.Constant(type, value);
         }
 
-        throw new InternalError(
-                "visitValue(QuxParser.ValueContext) not fully implemented: " + ctx.getText());
+        throw new MethodNotImplementedError(ctx.getText());
     }
 
     private static Type getType(String type) {
@@ -350,6 +344,6 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
             return Type.forList(getTypeDescriptor(innerType)).getDescriptor();
         }
 
-        throw new InternalError("getTypeDescriptor(String) not fully implemented: " + type);
+        throw new MethodNotImplementedError(type);
     }
 }

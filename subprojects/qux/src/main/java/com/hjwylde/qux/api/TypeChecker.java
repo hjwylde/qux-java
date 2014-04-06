@@ -8,6 +8,7 @@ import static com.hjwylde.qux.util.Type.TYPE_REAL;
 import static com.hjwylde.qux.util.Type.TYPE_STR;
 
 import com.hjwylde.common.error.CompilerErrors;
+import com.hjwylde.common.error.MethodNotImplementedError;
 import com.hjwylde.qux.internal.builder.Environment;
 import com.hjwylde.qux.tree.ExprNode;
 import com.hjwylde.qux.tree.StmtNode;
@@ -128,8 +129,7 @@ public final class TypeChecker extends QuxVisitor {
             super.visitStmtFunction(name, arguments);
 
             // TODO: Implement visitStmtFunction(String, ImmutableList<ExprNode>)
-            throw new InternalError(
-                    "visitStmtFunction(String, ImmutableList<ExprNode>) not implemented");
+            throw new MethodNotImplementedError();
         }
 
         @Override
@@ -205,8 +205,7 @@ public final class TypeChecker extends QuxVisitor {
             } else if (expr instanceof ExprNode.Variable) {
                 visitExprVariable((ExprNode.Variable) expr);
             } else {
-                throw new InternalError(
-                        "visitExpr(ExprNode) not fully implemented: " + expr.getClass());
+                throw new MethodNotImplementedError(expr.getClass().toString());
             }
         }
 
@@ -233,10 +232,7 @@ public final class TypeChecker extends QuxVisitor {
                     checkEqual(expr.getRhs(), expr.getLhs().getType());
                     expr.setType(TYPE_BOOL);
                 default:
-                    throw new InternalError(
-                            "visitExprBinary(ExprNode.Binary) not fully implemented: " + expr
-                                    .getOp()
-                    );
+                    throw new MethodNotImplementedError(expr.getOp().toString());
             }
         }
 
@@ -258,10 +254,7 @@ public final class TypeChecker extends QuxVisitor {
                     expr.setType(TYPE_STR);
                     break;
                 default:
-                    throw new InternalError(
-                            "visitExprConstant(ExprNode.Constant) not fully implemented: " + expr
-                                    .getValueType()
-                    );
+                    throw new MethodNotImplementedError(expr.getValueType().toString());
             }
         }
 
@@ -271,12 +264,12 @@ public final class TypeChecker extends QuxVisitor {
             }
 
             // TODO: Implement visitExprFunction(ExprNode.Function)
-            throw new InternalError("visitExprFunction(ExprNode.Function) not implemented");
+            throw new MethodNotImplementedError();
         }
 
         private void visitExprList(ExprNode.List expr) {
             // TODO: Implement visitExprList(ExprNode.List)
-            throw new InternalError("visitExprList(ExprNode.List) not implemented");
+            throw new MethodNotImplementedError();
         }
 
         private void visitExprUnary(ExprNode.Unary expr) {
@@ -291,9 +284,7 @@ public final class TypeChecker extends QuxVisitor {
                     expr.setType(TYPE_BOOL);
                     break;
                 default:
-                    throw new InternalError(
-                            "visitExprUnary(ExprNode.Unary) not fully implemented: " + expr.getOp()
-                    );
+                    throw new MethodNotImplementedError(expr.getOp().toString());
             }
         }
 

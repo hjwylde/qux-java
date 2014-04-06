@@ -1,6 +1,7 @@
 package com.hjwylde.qux.api;
 
 import com.hjwylde.common.error.CompilerErrors;
+import com.hjwylde.common.error.MethodNotImplementedError;
 import com.hjwylde.qux.internal.builder.Environment;
 import com.hjwylde.qux.tree.ExprNode;
 import com.hjwylde.qux.tree.StmtNode;
@@ -96,8 +97,7 @@ public final class DefiniteAssignmentChecker extends QuxVisitor {
             super.visitStmtIf(condition, trueBlock, falseBlock);
 
             // TODO: Implement visitStmtIf(ExprNode, ImmutableList<StmtNode>, ImmutableList<StmtNode>)
-            throw new InternalError(
-                    "visitStmtIf(ExprNode, ImmutableList<StmtNode>, ImmutableList<StmtNode>) not implemented");
+            throw new MethodNotImplementedError();
         }
 
         @Override
@@ -130,8 +130,7 @@ public final class DefiniteAssignmentChecker extends QuxVisitor {
             } else if (expr instanceof ExprNode.Variable) {
                 visitExprVariable((ExprNode.Variable) expr);
             } else {
-                throw new InternalError(
-                        "visitExpr(ExprNode) not fully implemented: " + expr.getClass());
+                throw new MethodNotImplementedError(expr.getClass().toString());
             }
         }
 

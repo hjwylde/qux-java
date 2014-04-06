@@ -40,6 +40,7 @@ import static org.objectweb.asm.Opcodes.SIPUSH;
 import static org.objectweb.asm.Opcodes.T_BYTE;
 import static org.objectweb.asm.Opcodes.V1_7;
 
+import com.hjwylde.common.error.MethodNotImplementedError;
 import com.hjwylde.qux.api.FunctionVisitor;
 import com.hjwylde.qux.api.QuxVisitor;
 import com.hjwylde.qux.tree.ExprNode;
@@ -167,7 +168,7 @@ public final class Qux2ClassTranslater extends QuxVisitor {
             return Type.getDescriptor(List.class);
         }
 
-        throw new InternalError("getTypeFromQuxType(String) not fully implemented: " + desc);
+        throw new MethodNotImplementedError(desc);
     }
 
     private final class Function2ClassTranslater extends FunctionVisitor {
@@ -413,10 +414,7 @@ public final class Qux2ClassTranslater extends QuxVisitor {
                             true);
                     break;
                 default:
-                    throw new InternalError(
-                            "visitExprBinary(ExprNode.Binary) not fully implemented: " + expr
-                                    .getOp()
-                    );
+                    throw new MethodNotImplementedError(expr.getOp().toString());
             }
         }
 
@@ -463,8 +461,7 @@ public final class Qux2ClassTranslater extends QuxVisitor {
                             Type.getDescriptor(Null.class));
                     break;
                 case REAL:
-                    throw new InternalError(
-                            "visitExprConstant(ExprNode.Constant) not fully implemented");
+                    throw new MethodNotImplementedError("real");
                 case STR:
                     value = expr.getValue();
 
@@ -474,10 +471,7 @@ public final class Qux2ClassTranslater extends QuxVisitor {
                             false);
                     break;
                 default:
-                    throw new InternalError(
-                            "visitExprConstant(ExprNode.Constant) not fully implemented: " + expr
-                                    .getValueType()
-                    );
+                    throw new MethodNotImplementedError(expr.getValueType().toString());
             }
         }
 
@@ -519,9 +513,7 @@ public final class Qux2ClassTranslater extends QuxVisitor {
                             Type.getMethodDescriptor(Not.class.getMethod("_not_")), true);
                     break;
                 default:
-                    throw new InternalError(
-                            "visitExprUnary(ExprNode.Unary) not fully implemented: " + expr.getOp()
-                    );
+                    throw new MethodNotImplementedError(expr.getOp().toString());
             }
         }
 
