@@ -181,8 +181,17 @@ public final class TypeChecker extends QuxAdapter {
             Attribute.Type attribute = Attributes.getAttributeUnchecked(expr, Attribute.Type.class);
 
             if (!attribute.getType().equals(expected)) {
-                throw CompilerErrors.invalidType(attribute.getType().toString(),
-                        expected.toString());
+                Optional<Attribute.Source> opt = Attributes.getAttribute(expr, Attribute.Source.class);
+
+                if (opt.isPresent()) {
+                    Attribute.Source source = opt.get();
+
+                    throw CompilerErrors.invalidType(attribute.getType().toString(), expected
+                            .toString(), source.getSource(), source.getLine(), source.getCol(), source.getLength());
+                } else {
+                    throw CompilerErrors.invalidType(attribute.getType().toString(), expected
+                            .toString());
+                }
             }
         }
 

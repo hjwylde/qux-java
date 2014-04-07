@@ -58,7 +58,11 @@ public final class Environment<K, V> implements Iterable<Map.Entry<K, V>> {
     public Optional<V> get(K key) {
         checkNotNull(key, "key cannot be null");
 
-        return Optional.fromNullable(mapping.get(key));
+        if (mapping.containsKey(key)) {
+            return Optional.of(mapping.get(key));
+        }
+
+        return previous != null ? previous.get(key) : Optional.<V>absent();
     }
 
     /**

@@ -19,41 +19,21 @@ appender('STDERR_ROOT', ConsoleAppender) {
         onMismatch = DENY
     }
     encoder(PatternLayoutEncoder) {
-        pattern = 'qux! %msg%n'
+        pattern = '%msg%n'
     }
 }
 appender('STDOUT_ROOT', ConsoleAppender) {
     filter(LevelFilter) {
-        level = WARN
-        onMatch = ACCEPT
-        onMismatch = NEUTRAL
-    }
-    filter(LevelFilter) {
-        level = INFO
-        onMatch = ACCEPT
-        onMismatch = DENY
+        level = ERROR
+        onMatch = DENY
+        onMismatch = ACCEPT
     }
     encoder(PatternLayoutEncoder) {
-        pattern = 'qux: %msg%n'
-    }
-}
-appender('STDOUT_ROOT_DEBUG', ConsoleAppender) {
-    filter(LevelFilter) {
-        level = DEBUG
-        onMatch = ACCEPT
-        onMismatch = NEUTRAL
-    }
-    filter(LevelFilter) {
-        level = TRACE
-        onMatch = ACCEPT
-        onMismatch = DENY
-    }
-    encoder(PatternLayoutEncoder) {
-        pattern = 'qux# %msg%n'
+        pattern = '%msg%n'
     }
 }
 
-root(LEVEL, ['STDOUT_ROOT', 'STDOUT_ROOT_DEBUG', 'STDERR_ROOT'])
+root(LEVEL, ['STDOUT_ROOT', 'STDERR_ROOT'])
 
 // Production level should be set to WARN rather than anything else
 if (LEVEL != WARN) {

@@ -72,6 +72,8 @@ public final class Qux2ClassBuildJob extends BuildJob {
 
             // Write out the Java bytecode
             write(bytecode);
+
+            logger.debug("{}: building finished in {}", source, stopwatch);
         } catch (IOException e) {
             throw new BuildError(e);
         }

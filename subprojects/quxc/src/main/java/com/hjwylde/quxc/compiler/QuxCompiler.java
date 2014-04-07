@@ -9,7 +9,10 @@ import com.hjwylde.quxc.builder.QuxProject;
 
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 
 import ch.qos.logback.classic.Level;
@@ -29,16 +32,12 @@ public final class QuxCompiler implements Compiler<QuxCompileSpec> {
      */
     @Override
     public void execute(QuxCompileSpec spec) {
-        logger.debug("executing compiler with spec: {}", spec);
-
         setLogLevel(spec.getOptions().isVerbose());
 
         QuxProject project = QuxProject.builder(spec).build();
         // TODO: Make a QuxContext so we don't need to always cast for the QuxProject
         Context context = new Context(project);
         Qux2ClassBuilder builder = new Qux2ClassBuilder(context);
-
-        logger.debug("generated project: {}", project);
 
         Map<Path, BuildResult> results = builder.build(spec.getSource());
 
@@ -54,7 +53,13 @@ public final class QuxCompiler implements Compiler<QuxCompileSpec> {
 
         logger.error("{}: {}", path, result.getCode());
 
-        LoggerUtils.logError(result.getCause());
+        try {
+            List<String> source = Files.readAllLines(path, spec.getOptions().getCharset());
+
+            LoggerUtils.logError(result.getCause(), source);
+        } catch (IOException e) {
+            LoggerUtils.logError(result.getCause());
+        }
     }
 
     private static void setLogLevel(boolean verbose) {

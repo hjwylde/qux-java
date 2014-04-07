@@ -5,12 +5,12 @@ import com.hjwylde.common.error.MethodNotImplementedError;
 import com.hjwylde.qux.internal.builder.Environment;
 import com.hjwylde.qux.tree.ExprNode;
 import com.hjwylde.qux.tree.StmtNode;
+import com.hjwylde.qux.util.Attribute;
+import com.hjwylde.qux.util.Attributes;
 import com.hjwylde.qux.util.Type;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-
-import javax.annotation.Nullable;
 
 /**
  * TODO: Documentation
@@ -40,7 +40,7 @@ public final class DefiniteAssignmentChecker extends QuxAdapter {
 
         private static final String RETURN = "$";
 
-        private final Environment<String, Boolean> env = new Environment<>();
+        private Environment<String, Boolean> env = new Environment<>();
 
         public FunctionDefiniteAssignmentChecker(FunctionVisitor next) {
             super(next);
@@ -49,7 +49,7 @@ public final class DefiniteAssignmentChecker extends QuxAdapter {
         @Override
         public void visitCode() {
             // Clone the environment to keep a clear separation of parameters and variables
-            env.push();
+            env = env.push();
 
             super.visitCode();
         }
@@ -72,10 +72,7 @@ public final class DefiniteAssignmentChecker extends QuxAdapter {
         public void visitStmtAssign(String var, ExprNode expr) {
             visitExpr(expr);
 
-            // Check to see if the variable exists in parameters
-            if (!env.contains(var)) {
-                throw CompilerErrors.undeclaredVariableAssignment(var);
-            }
+            env.put(var, true);
 
             super.visitStmtAssign(var, expr);
         }
@@ -162,7 +159,18 @@ public final class DefiniteAssignmentChecker extends QuxAdapter {
         private void visitExprVariable(ExprNode.Variable expr) {
             // Check to see if the variable exists
             if (!env.contains(expr.getName())) {
-                throw CompilerErrors.undeclaredVariableAccess(expr.getName());
+                Optional<Attribute.Source> opt = Attributes.getAttribute(expr,
+                        Attribute.Source.class);
+
+                if (opt.isPresent()) {
+                    Attribute.Source source = opt.get();
+
+                    throw CompilerErrors.undeclaredVariableAccess(expr.getName(),
+                            source.getSource(), source.getLine(), source.getCol(),
+                            source.getLength());
+                } else {
+                    throw CompilerErrors.undeclaredVariableAccess(expr.getName());
+                }
             }
         }
     }
