@@ -38,7 +38,7 @@ public abstract class Node {
 
     public void addAttributes(Collection<? extends Attribute> attributes) {
         for (Attribute attribute : attributes) {
-            addAttributes(attribute);
+            addAttribute(attribute);
         }
     }
 

@@ -84,7 +84,7 @@ public final class TypeChecker extends QuxAdapter {
 
         private static final String RETURN = "$";
 
-        private final Environment<String, Type> env = new Environment<>();
+        private Environment<String, Type> env = new Environment<>();
 
         public FunctionTypeChecker(FunctionVisitor next) {
             super(next);
@@ -93,7 +93,7 @@ public final class TypeChecker extends QuxAdapter {
         @Override
         public void visitCode() {
             // Clone the environment to keep a clear separation of parameters and variables
-            env.push();
+            env = env.push();
 
             super.visitCode();
         }
@@ -140,14 +140,14 @@ public final class TypeChecker extends QuxAdapter {
             visitExpr(condition);
 
             // Create a new environment for the true branch
-            env.push();
+            env = env.push();
 
             visitBlock(trueBlock);
 
             Environment<String, Type> trueEnv = env.pop();
 
             // Create a new environment for the false branch
-            env.push();
+            env = env.push();
 
             visitBlock(falseBlock);
 
@@ -181,8 +181,17 @@ public final class TypeChecker extends QuxAdapter {
             Attribute.Type attribute = Attributes.getAttributeUnchecked(expr, Attribute.Type.class);
 
             if (!attribute.getType().equals(expected)) {
-                throw CompilerErrors.invalidType(attribute.getType().toString(),
-                        expected.toString());
+                Optional<Attribute.Source> opt = Attributes.getAttribute(expr, Attribute.Source.class);
+
+                if (opt.isPresent()) {
+                    Attribute.Source source = opt.get();
+
+                    throw CompilerErrors.invalidType(attribute.getType().toString(), expected
+                            .toString(), source.getSource(), source.getLine(), source.getCol(), source.getLength());
+                } else {
+                    throw CompilerErrors.invalidType(attribute.getType().toString(), expected
+                            .toString());
+                }
             }
         }
 

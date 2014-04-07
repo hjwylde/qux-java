@@ -42,7 +42,11 @@ public final class QuxReader {
     }
 
     private QuxReader(QuxParser parser) throws CompilerError {
-        SyntaxErrorListener listener = new SyntaxErrorListener();
+        // TODO: Test what happens when the parser doesn't have a source name
+        String source = Files.getNameWithoutExtension(parser.getSourceName());
+
+        SyntaxErrorListener listener = new SyntaxErrorListener(source);
+        parser.removeErrorListeners();
         parser.addErrorListener(listener);
 
         QuxParser.StartContext start = parser.start();
@@ -51,10 +55,7 @@ public final class QuxReader {
             throw new CompilerErrorList(listener.getSyntaxErrors());
         }
 
-        // TODO: Test what happens when the parser doesn't have a source name
-        String name = Files.getNameWithoutExtension(parser.getSourceName());
-
-        start.accept(new Antlr2QuxTranslater(name, node));
+        start.accept(new Antlr2QuxTranslater(source, node));
     }
 
     public void accept(QuxVisitor qv) {
