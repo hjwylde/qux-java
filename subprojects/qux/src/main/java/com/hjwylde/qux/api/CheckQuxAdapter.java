@@ -5,6 +5,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.hjwylde.qux.util.Constants.SUPPORTED_VERSIONS;
 
+import com.hjwylde.qux.util.Type;
+
 /**
  * TODO: Documentation
  *
@@ -51,13 +53,13 @@ public class CheckQuxAdapter extends QuxAdapter {
      * {@inheritDoc}
      */
     @Override
-    public FunctionVisitor visitFunction(int flags, String name, String desc) {
+    public FunctionVisitor visitFunction(int flags, String name, Type.Function type) {
         checkState(visitedStart,
                 "must call visit(int, String) before visitFunction(int, String, String)");
         checkState(!visitedEnd, "must call visitFunction(int, String, String) before visitEnd()");
         checkNotNull(name, "name cannot be null");
-        checkNotNull(desc, "desc cannot be null");
+        checkNotNull(type, "type cannot be null");
 
-        return new CheckFunctionAdapter(super.visitFunction(flags, name, desc));
+        return new CheckFunctionAdapter(super.visitFunction(flags, name, type));
     }
 }

@@ -6,7 +6,6 @@ import com.hjwylde.qux.tree.StmtNode;
 import com.hjwylde.qux.util.Type;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 
 /**
  * TODO: Documentation.
@@ -26,18 +25,17 @@ public interface FunctionVisitor {
     void visitReturnType(Type type);
 
     @Alpha
-    void visitStmtAssign(String var, ExprNode expr);
+    void visitStmtAssign(StmtNode.Assign stmt);
 
     @Alpha
-    void visitStmtFunction(String name, ImmutableList<ExprNode> arguments);
+    void visitStmtFunction(StmtNode.Function stmt);
 
     @Alpha
-    void visitStmtIf(ExprNode condition, ImmutableList<StmtNode> trueBlock,
-            ImmutableList<StmtNode> falseBlock);
+    void visitStmtIf(StmtNode.If stmt);
 
     @Alpha
-    void visitStmtPrint(ExprNode expr);
+    void visitStmtPrint(StmtNode.Print stmt);
 
     @Alpha
-    void visitStmtReturn(Optional<ExprNode> expr);
+    void visitStmtReturn(StmtNode.Return stmt);
 }

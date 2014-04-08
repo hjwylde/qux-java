@@ -18,7 +18,6 @@ import com.hjwylde.qux.util.Type;
 import com.hjwylde.qux.util.Types;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -45,8 +44,8 @@ public final class TypeChecker extends QuxAdapter {
      * {@inheritDoc}
      */
     @Override
-    public FunctionVisitor visitFunction(int flags, String name, String desc) {
-        FunctionVisitor fv = super.visitFunction(flags, name, desc);
+    public FunctionVisitor visitFunction(int flags, String name, Type.Function type) {
+        FunctionVisitor fv = super.visitFunction(flags, name, type);
 
         FunctionTypeChecker fvc = new FunctionTypeChecker(fv);
 
@@ -85,7 +84,7 @@ public final class TypeChecker extends QuxAdapter {
         return mergeEnvironments(Arrays.asList(envs));
     }
 
-    private static final class FunctionTypeChecker extends FunctionAdapter {
+    private static final class FunctionTypeChecker extends FunctionAdapter implements ExprVisitor {
 
         private static final String RETURN = "$";
 
@@ -93,6 +92,12 @@ public final class TypeChecker extends QuxAdapter {
 
         public FunctionTypeChecker(FunctionVisitor next) {
             super(next);
+        }
+
+        public void visitBlock(List<StmtNode> stmts) {
+            for (StmtNode stmt : stmts) {
+                stmt.accept(this);
+            }
         }
 
         /**
@@ -104,6 +109,121 @@ public final class TypeChecker extends QuxAdapter {
             env = env.push();
 
             super.visitCode();
+        }
+
+        public void visitExpr(ExprNode expr) {
+            // If the type has already been resovled
+            if (Attributes.getAttribute(expr, Attribute.Type.class).isPresent()) {
+                return;
+            }
+
+            expr.accept(this);
+        }
+
+        @Override
+        public void visitExprBinary(ExprNode.Binary expr) {
+            visitExpr(expr.getLhs());
+            visitExpr(expr.getRhs());
+
+            Attribute.Type lhsAttribute = Attributes.getAttributeUnchecked(expr.getLhs(),
+                    Attribute.Type.class);
+            Attribute.Type rhsAttribute = Attributes.getAttributeUnchecked(expr.getRhs(),
+                    Attribute.Type.class);
+
+            switch (expr.getOp()) {
+                case EQ:
+                case NEQ:
+                    expr.addAttributes(lhsAttribute);
+                    break;
+                case ADD:
+                case SUB:
+                case MUL:
+                case DIV:
+                    // TODO: This feels wrong, what is the lhs and rhs are equivalent unions? Surely we can't do a binary operation then!
+                    checkEquivalent(expr.getRhs(), lhsAttribute.getType());
+                    expr.addAttributes(lhsAttribute);
+                    break;
+                case GT:
+                case GTE:
+                case LT:
+                case LTE:
+                    checkEquivalent(expr.getRhs(), lhsAttribute.getType());
+                    expr.addAttributes(new Attribute.Type(TYPE_BOOL));
+                default:
+                    throw new MethodNotImplementedError(expr.getOp().toString());
+            }
+        }
+
+        @Override
+        public void visitExprConstant(ExprNode.Constant expr) {
+            switch (expr.getType()) {
+                case BOOL:
+                    expr.addAttributes(new Attribute.Type(TYPE_BOOL));
+                    break;
+                case INT:
+                    expr.addAttributes(new Attribute.Type(TYPE_INT));
+                    break;
+                case NULL:
+                    expr.addAttributes(new Attribute.Type(TYPE_NULL));
+                    break;
+                case REAL:
+                    expr.addAttributes(new Attribute.Type(TYPE_REAL));
+                    break;
+                case STR:
+                    expr.addAttributes(new Attribute.Type(TYPE_STR));
+                    break;
+                default:
+                    throw new MethodNotImplementedError(expr.getType().toString());
+            }
+        }
+
+        @Override
+        public void visitExprFunction(ExprNode.Function expr) {
+            for (ExprNode argument : expr.getArguments()) {
+                visitExpr(argument);
+            }
+
+            // TODO: Implement visitExprFunction(ExprNode.Function)
+            throw new MethodNotImplementedError();
+        }
+
+        @Override
+        public void visitExprList(ExprNode.List expr) {
+            List<Type> types = new ArrayList<>();
+
+            for (ExprNode value : expr.getValues()) {
+                visitExpr(value);
+                types.add(Attributes.getAttributeUnchecked(value, Attribute.Type.class).getType());
+            }
+
+            Type type = Type.forList(Type.forUnion(types));
+
+            expr.addAttributes(new Attribute.Type(type));
+        }
+
+        @Override
+        public void visitExprUnary(ExprNode.Unary expr) {
+            visitExpr(expr.getTarget());
+
+            Attribute.Type targetAttribute = Attributes.getAttributeUnchecked(expr.getTarget(),
+                    Attribute.Type.class);
+
+            switch (expr.getOp()) {
+                case NEG:
+                    expr.addAttributes(targetAttribute);
+                    break;
+                case NOT:
+                    checkSubtype(expr.getTarget(), TYPE_BOOL);
+                    expr.addAttributes(new Attribute.Type(TYPE_BOOL));
+                    break;
+                default:
+                    throw new MethodNotImplementedError(expr.getOp().toString());
+            }
+        }
+
+        @Override
+        public void visitExprVariable(ExprNode.Variable expr) {
+            expr.addAttributes(new Attribute.Type(env.getUnchecked(expr.getName())));
         }
 
         /**
@@ -130,25 +250,26 @@ public final class TypeChecker extends QuxAdapter {
          * {@inheritDoc}
          */
         @Override
-        public void visitStmtAssign(String var, ExprNode expr) {
-            visitExpr(expr);
+        public void visitStmtAssign(StmtNode.Assign stmt) {
+            visitExpr(stmt.getExpr());
 
-            Attribute.Type attribute = Attributes.getAttributeUnchecked(expr, Attribute.Type.class);
-            env.put(var, attribute.getType());
+            Attribute.Type attribute = Attributes.getAttributeUnchecked(stmt.getExpr(),
+                    Attribute.Type.class);
+            env.put(stmt.getVar(), attribute.getType());
 
-            super.visitStmtAssign(var, expr);
+            super.visitStmtAssign(stmt);
         }
 
         /**
          * {@inheritDoc}
          */
         @Override
-        public void visitStmtFunction(String name, ImmutableList<ExprNode> arguments) {
-            for (ExprNode argument : arguments) {
+        public void visitStmtFunction(StmtNode.Function stmt) {
+            for (ExprNode argument : stmt.getArguments()) {
                 visitExpr(argument);
             }
 
-            super.visitStmtFunction(name, arguments);
+            super.visitStmtFunction(stmt);
 
             // TODO: Implement visitStmtFunction(String, ImmutableList<ExprNode>)
             throw new MethodNotImplementedError();
@@ -158,50 +279,49 @@ public final class TypeChecker extends QuxAdapter {
          * {@inheritDoc}
          */
         @Override
-        public void visitStmtIf(ExprNode condition, ImmutableList<StmtNode> trueBlock,
-                ImmutableList<StmtNode> falseBlock) {
-            visitExpr(condition);
+        public void visitStmtIf(StmtNode.If stmt) {
+            visitExpr(stmt.getCondition());
 
             // Create a new environment for the true branch
             env = env.push();
 
-            visitBlock(trueBlock);
+            visitBlock(stmt.getTrueBlock());
 
             Environment<String, Type> trueEnv = env.pop();
 
             // Create a new environment for the false branch
             env = env.push();
 
-            visitBlock(falseBlock);
+            visitBlock(stmt.getFalseBlock());
 
             Environment<String, Type> falseEnv = env.pop();
 
             // Merge the two environments
             env.putAll(mergeEnvironments(trueEnv, falseEnv));
 
-            super.visitStmtIf(condition, trueBlock, falseBlock);
+            super.visitStmtIf(stmt);
         }
 
         /**
          * {@inheritDoc}
          */
         @Override
-        public void visitStmtPrint(ExprNode expr) {
-            visitExpr(expr);
+        public void visitStmtPrint(StmtNode.Print stmt) {
+            visitExpr(stmt.getExpr());
 
-            super.visitStmtPrint(expr);
+            super.visitStmtPrint(stmt);
         }
 
         /**
          * {@inheritDoc}
          */
         @Override
-        public void visitStmtReturn(Optional<ExprNode> expr) {
-            if (expr.isPresent()) {
-                checkSubtype(expr.get(), env.getUnchecked(RETURN));
+        public void visitStmtReturn(StmtNode.Return stmt) {
+            if (stmt.getExpr().isPresent()) {
+                checkSubtype(stmt.getExpr().get(), env.getUnchecked(RETURN));
             }
 
-            super.visitStmtReturn(expr);
+            super.visitStmtReturn(stmt);
         }
 
         private void checkEquivalent(ExprNode expr, Type expected) {
@@ -246,135 +366,6 @@ public final class TypeChecker extends QuxAdapter {
                             rhs.toString());
                 }
             }
-        }
-
-        private void visitBlock(List<StmtNode> stmts) {
-            for (StmtNode stmt : stmts) {
-                stmt.accept(this);
-            }
-        }
-
-        private void visitExpr(ExprNode expr) {
-            // If the type has already been resovled
-            if (Attributes.getAttribute(expr, Attribute.Type.class).isPresent()) {
-                return;
-            }
-
-            if (expr instanceof ExprNode.Binary) {
-                visitExprBinary((ExprNode.Binary) expr);
-            } else if (expr instanceof ExprNode.Constant) {
-                visitExprConstant((ExprNode.Constant) expr);
-            } else if (expr instanceof ExprNode.Function) {
-                visitExprFunction((ExprNode.Function) expr);
-            } else if (expr instanceof ExprNode.List) {
-                visitExprList((ExprNode.List) expr);
-            } else if (expr instanceof ExprNode.Unary) {
-                visitExprUnary((ExprNode.Unary) expr);
-            } else if (expr instanceof ExprNode.Variable) {
-                visitExprVariable((ExprNode.Variable) expr);
-            } else {
-                throw new MethodNotImplementedError(expr.getClass().toString());
-            }
-        }
-
-        private void visitExprBinary(ExprNode.Binary expr) {
-            visitExpr(expr.getLhs());
-            visitExpr(expr.getRhs());
-
-            Attribute.Type lhsAttribute = Attributes.getAttributeUnchecked(expr.getLhs(),
-                    Attribute.Type.class);
-            Attribute.Type rhsAttribute = Attributes.getAttributeUnchecked(expr.getRhs(),
-                    Attribute.Type.class);
-
-            switch (expr.getOp()) {
-                case EQ:
-                case NEQ:
-                    expr.addAttributes(lhsAttribute);
-                    break;
-                case ADD:
-                case SUB:
-                case MUL:
-                case DIV:
-                    // TODO: This feels wrong, what is the lhs and rhs are equivalent unions? Surely we can't do a binary operation then!
-                    checkEquivalent(expr.getRhs(), lhsAttribute.getType());
-                    expr.addAttributes(lhsAttribute);
-                    break;
-                case GT:
-                case GTE:
-                case LT:
-                case LTE:
-                    checkEquivalent(expr.getRhs(), lhsAttribute.getType());
-                    expr.addAttributes(new Attribute.Type(TYPE_BOOL));
-                default:
-                    throw new MethodNotImplementedError(expr.getOp().toString());
-            }
-        }
-
-        private void visitExprConstant(ExprNode.Constant expr) {
-            switch (expr.getType()) {
-                case BOOL:
-                    expr.addAttributes(new Attribute.Type(TYPE_BOOL));
-                    break;
-                case INT:
-                    expr.addAttributes(new Attribute.Type(TYPE_INT));
-                    break;
-                case NULL:
-                    expr.addAttributes(new Attribute.Type(TYPE_NULL));
-                    break;
-                case REAL:
-                    expr.addAttributes(new Attribute.Type(TYPE_REAL));
-                    break;
-                case STR:
-                    expr.addAttributes(new Attribute.Type(TYPE_STR));
-                    break;
-                default:
-                    throw new MethodNotImplementedError(expr.getType().toString());
-            }
-        }
-
-        private void visitExprFunction(ExprNode.Function expr) {
-            for (ExprNode argument : expr.getArguments()) {
-                visitExpr(argument);
-            }
-
-            // TODO: Implement visitExprFunction(ExprNode.Function)
-            throw new MethodNotImplementedError();
-        }
-
-        private void visitExprList(ExprNode.List expr) {
-            List<Type> types = new ArrayList<>();
-
-            for (ExprNode value : expr.getValues()) {
-                visitExpr(value);
-                types.add(Attributes.getAttributeUnchecked(value, Attribute.Type.class).getType());
-            }
-
-            Type type = Type.forList(Type.forUnion(types));
-
-            expr.addAttributes(new Attribute.Type(type));
-        }
-
-        private void visitExprUnary(ExprNode.Unary expr) {
-            visitExpr(expr.getTarget());
-
-            Attribute.Type targetAttribute = Attributes.getAttributeUnchecked(expr.getTarget(),
-                    Attribute.Type.class);
-
-            switch (expr.getOp()) {
-                case NEG:
-                    expr.addAttributes(targetAttribute);
-                    break;
-                case NOT:
-                    checkSubtype(expr.getTarget(), TYPE_BOOL);
-                    expr.addAttributes(new Attribute.Type(TYPE_BOOL));
-                    break;
-                default:
-                    throw new MethodNotImplementedError(expr.getOp().toString());
-            }
-        }
-
-        private void visitExprVariable(ExprNode.Variable expr) {
-            expr.addAttributes(new Attribute.Type(env.getUnchecked(expr.getName())));
         }
     }
 }

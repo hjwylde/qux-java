@@ -10,7 +10,6 @@ import com.hjwylde.qux.util.Attributes;
 import com.hjwylde.qux.util.Type;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 
 /**
  * TODO: Documentation
@@ -31,15 +30,17 @@ public final class DefiniteAssignmentChecker extends QuxAdapter {
      * {@inheritDoc}
      */
     @Override
-    public FunctionVisitor visitFunction(int flags, String name, String desc) {
-        FunctionVisitor fv = super.visitFunction(flags, name, desc);
+    public FunctionVisitor visitFunction(int flags, String name, Type.Function type) {
+        // TODO: Check if a function is declared twice
+        FunctionVisitor fv = super.visitFunction(flags, name, type);
 
         FunctionDefiniteAssignmentChecker fvc = new FunctionDefiniteAssignmentChecker(fv);
 
         return fvc;
     }
 
-    private static final class FunctionDefiniteAssignmentChecker extends FunctionAdapter {
+    private static final class FunctionDefiniteAssignmentChecker extends FunctionAdapter
+            implements ExprVisitor {
 
         private static final String RETURN = "$";
 
@@ -60,11 +61,66 @@ public final class DefiniteAssignmentChecker extends QuxAdapter {
             super.visitCode();
         }
 
+        public void visitExpr(ExprNode expr) {
+            expr.accept(this);
+        }
+
+        @Override
+        public void visitExprBinary(ExprNode.Binary expr) {
+            visitExpr(expr.getLhs());
+            visitExpr(expr.getRhs());
+        }
+
+        @Override
+        public void visitExprConstant(ExprNode.Constant expr) {
+            // Do nothing
+        }
+
+        @Override
+        public void visitExprFunction(ExprNode.Function expr) {
+            for (ExprNode argument : expr.getArguments()) {
+                visitExpr(argument);
+            }
+        }
+
+        @Override
+        public void visitExprList(ExprNode.List expr) {
+            for (ExprNode value : expr.getValues()) {
+                visitExpr(value);
+            }
+        }
+
+        @Override
+        public void visitExprUnary(ExprNode.Unary expr) {
+            visitExpr(expr.getTarget());
+        }
+
+        @Override
+        public void visitExprVariable(ExprNode.Variable expr) {
+            // Check to see if the variable exists
+            if (!env.contains(expr.getName())) {
+                Optional<Attribute.Source> opt = Attributes.getAttribute(expr,
+                        Attribute.Source.class);
+
+                if (opt.isPresent()) {
+                    Attribute.Source source = opt.get();
+
+                    throw CompilerErrors.undeclaredVariableAccess(expr.getName(),
+                            source.getSource(), source.getLine(), source.getCol(),
+                            source.getLength());
+                } else {
+                    throw CompilerErrors.undeclaredVariableAccess(expr.getName());
+                }
+            }
+        }
+
         /**
          * {@inheritDoc}
          */
         @Override
         public void visitParameter(String var, Type type) {
+            // TODO: Check if a parameter is declared twice
+
             env.put(var, true);
 
             super.visitParameter(var, type);
@@ -84,35 +140,34 @@ public final class DefiniteAssignmentChecker extends QuxAdapter {
          * {@inheritDoc}
          */
         @Override
-        public void visitStmtAssign(String var, ExprNode expr) {
-            visitExpr(expr);
+        public void visitStmtAssign(StmtNode.Assign stmt) {
+            visitExpr(stmt.getExpr());
 
-            env.put(var, true);
+            env.put(stmt.getVar(), true);
 
-            super.visitStmtAssign(var, expr);
+            super.visitStmtAssign(stmt);
         }
 
         /**
          * {@inheritDoc}
          */
         @Override
-        public void visitStmtFunction(String name, ImmutableList<ExprNode> arguments) {
-            for (ExprNode argument : arguments) {
+        public void visitStmtFunction(StmtNode.Function stmt) {
+            for (ExprNode argument : stmt.getArguments()) {
                 visitExpr(argument);
             }
 
-            super.visitStmtFunction(name, arguments);
+            super.visitStmtFunction(stmt);
         }
 
         /**
          * {@inheritDoc}
          */
         @Override
-        public void visitStmtIf(ExprNode condition, ImmutableList<StmtNode> trueBlock,
-                ImmutableList<StmtNode> falseBlock) {
-            visitExpr(condition);
+        public void visitStmtIf(StmtNode.If stmt) {
+            visitExpr(stmt.getCondition());
 
-            super.visitStmtIf(condition, trueBlock, falseBlock);
+            super.visitStmtIf(stmt);
 
             // TODO: Implement visitStmtIf(ExprNode, ImmutableList<StmtNode>, ImmutableList<StmtNode>)
             throw new MethodNotImplementedError();
@@ -122,83 +177,22 @@ public final class DefiniteAssignmentChecker extends QuxAdapter {
          * {@inheritDoc}
          */
         @Override
-        public void visitStmtPrint(ExprNode expr) {
-            visitExpr(expr);
+        public void visitStmtPrint(StmtNode.Print stmt) {
+            visitExpr(stmt.getExpr());
 
-            super.visitStmtPrint(expr);
+            super.visitStmtPrint(stmt);
         }
 
         /**
          * {@inheritDoc}
          */
         @Override
-        public void visitStmtReturn(Optional<ExprNode> expr) {
-            if (expr.isPresent()) {
-                visitExpr(expr.get());
+        public void visitStmtReturn(StmtNode.Return stmt) {
+            if (stmt.getExpr().isPresent()) {
+                visitExpr(stmt.getExpr().get());
             }
 
-            super.visitStmtReturn(expr);
-        }
-
-        private void visitExpr(ExprNode expr) {
-            if (expr instanceof ExprNode.Binary) {
-                visitExprBinary((ExprNode.Binary) expr);
-            } else if (expr instanceof ExprNode.Constant) {
-                visitExprConstant((ExprNode.Constant) expr);
-            } else if (expr instanceof ExprNode.Function) {
-                visitExprFunction((ExprNode.Function) expr);
-            } else if (expr instanceof ExprNode.List) {
-                visitExprList((ExprNode.List) expr);
-            } else if (expr instanceof ExprNode.Unary) {
-                visitExprUnary((ExprNode.Unary) expr);
-            } else if (expr instanceof ExprNode.Variable) {
-                visitExprVariable((ExprNode.Variable) expr);
-            } else {
-                throw new MethodNotImplementedError(expr.getClass().toString());
-            }
-        }
-
-        private void visitExprBinary(ExprNode.Binary expr) {
-            visitExpr(expr.getLhs());
-            visitExpr(expr.getRhs());
-        }
-
-        private void visitExprConstant(ExprNode.Constant expr) {
-            // Do nothing
-        }
-
-        private void visitExprFunction(ExprNode.Function expr) {
-            for (ExprNode argument : expr.getArguments()) {
-                visitExpr(argument);
-            }
-        }
-
-        private void visitExprList(ExprNode.List expr) {
-            for (ExprNode value : expr.getValues()) {
-                visitExpr(value);
-            }
-        }
-
-        private void visitExprUnary(ExprNode.Unary expr) {
-            visitExpr(expr.getTarget());
-        }
-
-        private void visitExprVariable(ExprNode.Variable expr) {
-            // Check to see if the variable exists
-            if (!env.contains(expr.getName())) {
-                Optional<Attribute.Source> opt = Attributes.getAttribute(expr,
-                        Attribute.Source.class);
-
-                if (opt.isPresent()) {
-                    Attribute.Source source = opt.get();
-
-                    throw CompilerErrors.undeclaredVariableAccess(expr.getName(),
-                            source.getSource(), source.getLine(), source.getCol(),
-                            source.getLength());
-                } else {
-                    throw CompilerErrors.undeclaredVariableAccess(expr.getName());
-                }
-            }
+            super.visitStmtReturn(stmt);
         }
     }
 }

@@ -1,5 +1,7 @@
 package com.hjwylde.qux.api;
 
+import com.hjwylde.qux.util.Type;
+
 /**
  * TODO: Documentation
  *
@@ -24,7 +26,7 @@ final class NullQuxVisitor implements QuxVisitor {
      * {@inheritDoc}
      */
     @Override
-    public FunctionVisitor visitFunction(int flags, String name, String desc) {
+    public FunctionVisitor visitFunction(int flags, String name, Type.Function type) {
         return FunctionVisitor.NULL_INSTANCE;
     }
 }
