@@ -26,6 +26,9 @@ public class CheckFunctionAdapter extends FunctionAdapter {
         super(next);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void visitCode() {
         checkState(!visitedCode, "may only call visitCode() once");
@@ -36,6 +39,9 @@ public class CheckFunctionAdapter extends FunctionAdapter {
         super.visitCode();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void visitEnd() {
         checkState(visitedCode, "must call visitCode() before visitEnd()");
@@ -46,6 +52,9 @@ public class CheckFunctionAdapter extends FunctionAdapter {
         super.visitEnd();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void visitParameter(String var, Type type) {
         checkState(!visitedCode, "must call visitParameter(String, Type) before visitCode()");
@@ -56,6 +65,9 @@ public class CheckFunctionAdapter extends FunctionAdapter {
         super.visitParameter(var, type);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void visitReturnType(Type type) {
         checkState(!visitedCode, "must call visitReturnType(Type) before visitCode()");
@@ -65,6 +77,9 @@ public class CheckFunctionAdapter extends FunctionAdapter {
         super.visitReturnType(type);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void visitStmtAssign(String var, ExprNode expr) {
         checkState(visitedCode, "must call visitCode() before visitStmtAssign(String, ExprNode)");
@@ -75,6 +90,9 @@ public class CheckFunctionAdapter extends FunctionAdapter {
         super.visitStmtAssign(var, expr);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void visitStmtFunction(String name, ImmutableList<ExprNode> arguments) {
         checkState(visitedCode,
@@ -87,6 +105,9 @@ public class CheckFunctionAdapter extends FunctionAdapter {
         super.visitStmtFunction(name, arguments);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void visitStmtIf(ExprNode condition, ImmutableList<StmtNode> trueBlock,
             ImmutableList<StmtNode> falseBlock) {
@@ -101,6 +122,9 @@ public class CheckFunctionAdapter extends FunctionAdapter {
         super.visitStmtIf(condition, trueBlock, falseBlock);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void visitStmtPrint(ExprNode expr) {
         checkState(visitedCode, "must call visitCode() before visitStmtAssign(String, ExprNode)");
@@ -110,6 +134,9 @@ public class CheckFunctionAdapter extends FunctionAdapter {
         super.visitStmtPrint(expr);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void visitStmtReturn(Optional<ExprNode> expr) {
         checkState(visitedCode, "must call visitCode() before visitStmtReturn(Optional<ExprNode>)");

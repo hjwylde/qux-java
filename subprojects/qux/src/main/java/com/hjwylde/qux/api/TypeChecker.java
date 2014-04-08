@@ -41,6 +41,9 @@ public final class TypeChecker extends QuxAdapter {
         super(next);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public FunctionVisitor visitFunction(int flags, String name, String desc) {
         FunctionVisitor fv = super.visitFunction(flags, name, desc);
@@ -92,6 +95,9 @@ public final class TypeChecker extends QuxAdapter {
             super(next);
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void visitCode() {
             // Clone the environment to keep a clear separation of parameters and variables
@@ -100,6 +106,9 @@ public final class TypeChecker extends QuxAdapter {
             super.visitCode();
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void visitParameter(String var, Type type) {
             env.put(var, type);
@@ -107,6 +116,9 @@ public final class TypeChecker extends QuxAdapter {
             super.visitParameter(var, type);
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void visitReturnType(Type type) {
             env.put(RETURN, type);
@@ -114,6 +126,9 @@ public final class TypeChecker extends QuxAdapter {
             super.visitReturnType(type);
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void visitStmtAssign(String var, ExprNode expr) {
             visitExpr(expr);
@@ -124,6 +139,9 @@ public final class TypeChecker extends QuxAdapter {
             super.visitStmtAssign(var, expr);
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void visitStmtFunction(String name, ImmutableList<ExprNode> arguments) {
             for (ExprNode argument : arguments) {
@@ -136,6 +154,9 @@ public final class TypeChecker extends QuxAdapter {
             throw new MethodNotImplementedError();
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void visitStmtIf(ExprNode condition, ImmutableList<StmtNode> trueBlock,
                 ImmutableList<StmtNode> falseBlock) {
@@ -161,6 +182,9 @@ public final class TypeChecker extends QuxAdapter {
             super.visitStmtIf(condition, trueBlock, falseBlock);
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void visitStmtPrint(ExprNode expr) {
             visitExpr(expr);
@@ -168,6 +192,9 @@ public final class TypeChecker extends QuxAdapter {
             super.visitStmtPrint(expr);
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void visitStmtReturn(Optional<ExprNode> expr) {
             if (expr.isPresent()) {
@@ -262,7 +289,7 @@ public final class TypeChecker extends QuxAdapter {
             switch (expr.getOp()) {
                 case EQ:
                 case NEQ:
-                    expr.addAttribute(lhsAttribute);
+                    expr.addAttributes(lhsAttribute);
                     break;
                 case ADD:
                 case SUB:
@@ -270,7 +297,7 @@ public final class TypeChecker extends QuxAdapter {
                 case DIV:
                     // TODO: This feels wrong, what is the lhs and rhs are equivalent unions? Surely we can't do a binary operation then!
                     checkEquivalent(expr.getRhs(), lhsAttribute.getType());
-                    expr.addAttribute(lhsAttribute);
+                    expr.addAttributes(lhsAttribute);
                     break;
                 case GT:
                 case GTE:
@@ -335,7 +362,7 @@ public final class TypeChecker extends QuxAdapter {
 
             switch (expr.getOp()) {
                 case NEG:
-                    expr.addAttribute(targetAttribute);
+                    expr.addAttributes(targetAttribute);
                     break;
                 case NOT:
                     checkSubtype(expr.getTarget(), TYPE_BOOL);

@@ -4,7 +4,10 @@ import com.hjwylde.qbs.compiler.Compiler;
 import com.hjwylde.qbs.compiler.CompilerFactory;
 
 /**
- * TODO: Documentation.
+ * A default compiler factory for creating a {@link com.hjwylde.qbs.compiler.Compiler} that takes a
+ * {@link com.hjwylde.quxc.compiler.QuxCompileSpec}.
+ * <p/>
+ * This factory simply returns a new {@link com.hjwylde.quxc.compiler.QuxCompiler}.
  *
  * @author Henry J. Wylde
  */

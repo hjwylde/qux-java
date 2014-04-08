@@ -28,17 +28,13 @@ public abstract class Node {
         addAttributes(attributes);
     }
 
-    public void addAttribute(Attribute attribute) {
-        attributes.add(checkNotNull(attribute, "attribute cannot be null"));
-    }
-
     public void addAttributes(Attribute... attributes) {
         addAttributes(Arrays.asList(attributes));
     }
 
     public void addAttributes(Collection<? extends Attribute> attributes) {
         for (Attribute attribute : attributes) {
-            addAttribute(attribute);
+            this.attributes.add(checkNotNull(attribute, "attribute cannot be null"));
         }
     }
 

@@ -21,6 +21,9 @@ public final class List extends Obj {
         this.count = data.length;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Str _desc_() {
         StringBuilder sb = new StringBuilder();

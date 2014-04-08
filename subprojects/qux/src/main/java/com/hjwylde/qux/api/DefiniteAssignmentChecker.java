@@ -27,6 +27,9 @@ public final class DefiniteAssignmentChecker extends QuxAdapter {
         super(next);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public FunctionVisitor visitFunction(int flags, String name, String desc) {
         FunctionVisitor fv = super.visitFunction(flags, name, desc);
@@ -46,6 +49,9 @@ public final class DefiniteAssignmentChecker extends QuxAdapter {
             super(next);
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void visitCode() {
             // Clone the environment to keep a clear separation of parameters and variables
@@ -54,6 +60,9 @@ public final class DefiniteAssignmentChecker extends QuxAdapter {
             super.visitCode();
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void visitParameter(String var, Type type) {
             env.put(var, true);
@@ -61,6 +70,9 @@ public final class DefiniteAssignmentChecker extends QuxAdapter {
             super.visitParameter(var, type);
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void visitReturnType(Type type) {
             env.put(RETURN, true);
@@ -68,6 +80,9 @@ public final class DefiniteAssignmentChecker extends QuxAdapter {
             super.visitReturnType(type);
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void visitStmtAssign(String var, ExprNode expr) {
             visitExpr(expr);
@@ -77,6 +92,9 @@ public final class DefiniteAssignmentChecker extends QuxAdapter {
             super.visitStmtAssign(var, expr);
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void visitStmtFunction(String name, ImmutableList<ExprNode> arguments) {
             for (ExprNode argument : arguments) {
@@ -86,6 +104,9 @@ public final class DefiniteAssignmentChecker extends QuxAdapter {
             super.visitStmtFunction(name, arguments);
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void visitStmtIf(ExprNode condition, ImmutableList<StmtNode> trueBlock,
                 ImmutableList<StmtNode> falseBlock) {
@@ -97,6 +118,9 @@ public final class DefiniteAssignmentChecker extends QuxAdapter {
             throw new MethodNotImplementedError();
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void visitStmtPrint(ExprNode expr) {
             visitExpr(expr);
@@ -104,6 +128,9 @@ public final class DefiniteAssignmentChecker extends QuxAdapter {
             super.visitStmtPrint(expr);
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void visitStmtReturn(Optional<ExprNode> expr) {
             if (expr.isPresent()) {

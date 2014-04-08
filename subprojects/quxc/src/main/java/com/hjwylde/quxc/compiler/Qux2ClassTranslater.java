@@ -102,17 +102,26 @@ public final class Qux2ClassTranslater extends QuxAdapter {
         this.cv = checkNotNull(cv, "cv cannot be null");
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void visit(int version, String name) {
         cv.visit(V1_7, ACC_PUBLIC | ACC_FINAL, name, null, Type.getInternalName(Obj.class),
                 new String[0]);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void visitEnd() {
         cv.visitEnd();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public FunctionVisitor visitFunction(int flags, String name, String desc) {
         MethodVisitor mv = cv.visitMethod(flags, name, getTypeFromQuxType(desc).getDescriptor(),
@@ -202,11 +211,17 @@ public final class Qux2ClassTranslater extends QuxAdapter {
             }
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void visitCode() {
             mv.visitCode();
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void visitEnd() {
             // If the type is Void, then add in a return instruction
@@ -222,6 +237,9 @@ public final class Qux2ClassTranslater extends QuxAdapter {
             mv.visitEnd();
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void visitParameter(String var, com.hjwylde.qux.util.Type type) {
             checkNotNull(var, "var cannot be null");
@@ -233,6 +251,9 @@ public final class Qux2ClassTranslater extends QuxAdapter {
             }
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void visitReturnType(com.hjwylde.qux.util.Type type) {
             checkNotNull(type, "type cannot be null");
@@ -240,6 +261,9 @@ public final class Qux2ClassTranslater extends QuxAdapter {
             returnType = getTypeFromQuxType(type).getDescriptor();
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void visitStmtAssign(String var, ExprNode expr) {
             visitExpr(expr);
@@ -251,6 +275,9 @@ public final class Qux2ClassTranslater extends QuxAdapter {
             mv.visitVarInsn(ASTORE, locals.indexOf(var));
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void visitStmtFunction(String name, ImmutableList<ExprNode> arguments) {
             Type[] argumentTypes = new Type[arguments.size()];
@@ -267,6 +294,9 @@ public final class Qux2ClassTranslater extends QuxAdapter {
                     argumentTypes), false);
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void visitStmtIf(ExprNode condition, ImmutableList<StmtNode> trueBlock,
                 ImmutableList<StmtNode> falseBlock) {
@@ -297,6 +327,9 @@ public final class Qux2ClassTranslater extends QuxAdapter {
             }
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void visitStmtPrint(ExprNode expr) {
             mv.visitFieldInsn(GETSTATIC, Type.getInternalName(System.class), "out",
@@ -321,6 +354,9 @@ public final class Qux2ClassTranslater extends QuxAdapter {
             }
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void visitStmtReturn(Optional<ExprNode> expr) {
             if (expr.isPresent()) {
