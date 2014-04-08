@@ -74,7 +74,7 @@ public final class LoggerUtils {
                 logger.error(line);
             }
         } else {
-            logger.error(t.toString(), t);
+            logger.error("error", t);
         }
     }
 
@@ -92,7 +92,7 @@ public final class LoggerUtils {
                 logger.error(line);
             }
         } else {
-            logger.error(t.toString(), t);
+            logger.error("error", t);
         }
     }
 }

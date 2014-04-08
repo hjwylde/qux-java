@@ -16,7 +16,6 @@ import com.hjwylde.qux.tree.StmtNode;
 import com.hjwylde.qux.util.Attribute;
 import com.hjwylde.qux.util.Op;
 import com.hjwylde.qux.util.Type;
-import com.hjwylde.qux.util.Types;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
@@ -72,7 +71,8 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
 
         Type returnType = visitTypeReturn(ctx.typeReturn());
 
-        Type functionType = Type.forFunction(returnType, parameterTypes.toArray(new Type[0]));
+        Type.Function functionType = Type.forFunction(returnType, parameterTypes.toArray(
+                new Type[0]));
 
         fv = qv.visitFunction(ACC_PUBLIC | ACC_STATIC, name, functionType.getDescriptor());
 
@@ -80,7 +80,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
             fv.visitParameter(parameterNames.get(i), parameterTypes.get(i));
         }
 
-        fv.visitReturnType(Types.getFunctionReturnType(functionType));
+        fv.visitReturnType(functionType.getReturnType());
 
         for (StmtNode stmt : visitBlock(ctx.block())) {
             stmt.accept(fv);
@@ -349,29 +349,27 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
     }
 
     private static Type getType(String type) {
-        return Type.of(getTypeDescriptor(type));
-    }
-
-    private static String getTypeDescriptor(String type) {
         switch (type) {
+            case "any":
+                return Type.TYPE_ANY;
             case "bool":
-                return Type.BOOL;
+                return Type.TYPE_BOOL;
             case "int":
-                return Type.INT;
+                return Type.TYPE_INT;
             case "null":
-                return Type.NULL;
+                return Type.TYPE_NULL;
             case "real":
-                return Type.REAL;
+                return Type.TYPE_REAL;
             case "str":
-                return Type.STR;
+                return Type.TYPE_STR;
             case "void":
-                return Type.VOID;
+                return Type.TYPE_VOID;
         }
 
-        if (type.startsWith(Type.LIST_START)) {
+        if (type.startsWith("[") && type.endsWith("]")) {
             String innerType = type.substring(1, type.length() - 1);
 
-            return Type.forList(getTypeDescriptor(innerType)).getDescriptor();
+            return Type.forList(getType(innerType));
         }
 
         throw new MethodNotImplementedError(type);

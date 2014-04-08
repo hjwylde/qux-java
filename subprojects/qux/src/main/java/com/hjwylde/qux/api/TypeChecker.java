@@ -15,10 +15,12 @@ import com.hjwylde.qux.tree.StmtNode;
 import com.hjwylde.qux.util.Attribute;
 import com.hjwylde.qux.util.Attributes;
 import com.hjwylde.qux.util.Type;
+import com.hjwylde.qux.util.Types;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -169,28 +171,52 @@ public final class TypeChecker extends QuxAdapter {
         @Override
         public void visitStmtReturn(Optional<ExprNode> expr) {
             if (expr.isPresent()) {
-                checkEqual(expr.get(), env.getUnchecked(RETURN));
+                checkSubtype(expr.get(), env.getUnchecked(RETURN));
             }
 
             super.visitStmtReturn(expr);
         }
 
-        private void checkEqual(ExprNode expr, Type expected) {
+        private void checkEquivalent(ExprNode expr, Type expected) {
             visitExpr(expr);
 
             Attribute.Type attribute = Attributes.getAttributeUnchecked(expr, Attribute.Type.class);
 
-            if (!attribute.getType().equals(expected)) {
-                Optional<Attribute.Source> opt = Attributes.getAttribute(expr, Attribute.Source.class);
+            if (!Types.isEquivalent(attribute.getType(), expected)) {
+                Optional<Attribute.Source> opt = Attributes.getAttribute(expr,
+                        Attribute.Source.class);
 
                 if (opt.isPresent()) {
                     Attribute.Source source = opt.get();
 
-                    throw CompilerErrors.invalidType(attribute.getType().toString(), expected
-                            .toString(), source.getSource(), source.getLine(), source.getCol(), source.getLength());
+                    throw CompilerErrors.invalidType(attribute.getType().toString(),
+                            expected.toString(), source.getSource(), source.getLine(),
+                            source.getCol(), source.getLength());
                 } else {
-                    throw CompilerErrors.invalidType(attribute.getType().toString(), expected
-                            .toString());
+                    throw CompilerErrors.invalidType(attribute.getType().toString(),
+                            expected.toString());
+                }
+            }
+        }
+
+        private void checkSubtype(ExprNode expr, Type rhs) {
+            visitExpr(expr);
+
+            Attribute.Type attribute = Attributes.getAttributeUnchecked(expr, Attribute.Type.class);
+
+            if (!Types.isSubtype(attribute.getType(), rhs)) {
+                Optional<Attribute.Source> opt = Attributes.getAttribute(expr,
+                        Attribute.Source.class);
+
+                if (opt.isPresent()) {
+                    Attribute.Source source = opt.get();
+
+                    throw CompilerErrors.invalidType(attribute.getType().toString(), rhs.toString(),
+                            source.getSource(), source.getLine(), source.getCol(),
+                            source.getLength());
+                } else {
+                    throw CompilerErrors.invalidType(attribute.getType().toString(),
+                            rhs.toString());
                 }
             }
         }
@@ -242,14 +268,15 @@ public final class TypeChecker extends QuxAdapter {
                 case SUB:
                 case MUL:
                 case DIV:
-                    checkEqual(expr.getRhs(), lhsAttribute.getType());
+                    // TODO: This feels wrong, what is the lhs and rhs are equivalent unions? Surely we can't do a binary operation then!
+                    checkEquivalent(expr.getRhs(), lhsAttribute.getType());
                     expr.addAttribute(lhsAttribute);
                     break;
                 case GT:
                 case GTE:
                 case LT:
                 case LTE:
-                    checkEqual(expr.getRhs(), lhsAttribute.getType());
+                    checkEquivalent(expr.getRhs(), lhsAttribute.getType());
                     expr.addAttributes(new Attribute.Type(TYPE_BOOL));
                 default:
                     throw new MethodNotImplementedError(expr.getOp().toString());
@@ -288,8 +315,16 @@ public final class TypeChecker extends QuxAdapter {
         }
 
         private void visitExprList(ExprNode.List expr) {
-            // TODO: Implement visitExprList(ExprNode.List)
-            throw new MethodNotImplementedError();
+            List<Type> types = new ArrayList<>();
+
+            for (ExprNode value : expr.getValues()) {
+                visitExpr(value);
+                types.add(Attributes.getAttributeUnchecked(value, Attribute.Type.class).getType());
+            }
+
+            Type type = Type.forList(Type.forUnion(types));
+
+            expr.addAttributes(new Attribute.Type(type));
         }
 
         private void visitExprUnary(ExprNode.Unary expr) {
@@ -303,7 +338,7 @@ public final class TypeChecker extends QuxAdapter {
                     expr.addAttribute(targetAttribute);
                     break;
                 case NOT:
-                    checkEqual(expr.getTarget(), TYPE_BOOL);
+                    checkSubtype(expr.getTarget(), TYPE_BOOL);
                     expr.addAttributes(new Attribute.Type(TYPE_BOOL));
                     break;
                 default:

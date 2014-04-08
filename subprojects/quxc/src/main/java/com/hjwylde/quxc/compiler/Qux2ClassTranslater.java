@@ -1,13 +1,6 @@
 package com.hjwylde.quxc.compiler;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.hjwylde.qux.util.Type.ANY;
-import static com.hjwylde.qux.util.Type.BOOL;
-import static com.hjwylde.qux.util.Type.INT;
-import static com.hjwylde.qux.util.Type.NULL;
-import static com.hjwylde.qux.util.Type.REAL;
-import static com.hjwylde.qux.util.Type.STR;
-import static com.hjwylde.qux.util.Type.VOID;
 import static org.objectweb.asm.Opcodes.AASTORE;
 import static org.objectweb.asm.Opcodes.ACC_FINAL;
 import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
@@ -49,7 +42,6 @@ import com.hjwylde.qux.tree.ExprNode;
 import com.hjwylde.qux.tree.StmtNode;
 import com.hjwylde.qux.util.Attribute;
 import com.hjwylde.qux.util.Attributes;
-import com.hjwylde.qux.util.Types;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -123,8 +115,8 @@ public final class Qux2ClassTranslater extends QuxAdapter {
 
     @Override
     public FunctionVisitor visitFunction(int flags, String name, String desc) {
-        MethodVisitor mv = cv.visitMethod(flags, name, getTypeFromQuxType(desc), null,
-                new String[0]);
+        MethodVisitor mv = cv.visitMethod(flags, name, getTypeFromQuxType(desc).getDescriptor(),
+                null, new String[0]);
 
         if (mv == null) {
             return FunctionVisitor.NULL_INSTANCE;
@@ -134,45 +126,41 @@ public final class Qux2ClassTranslater extends QuxAdapter {
     }
 
     static Type getTypeFromQuxType(com.hjwylde.qux.util.Type type) {
-        return Type.getMethodType(getTypeFromQuxType(type.getDescriptor()));
-    }
+        if (type instanceof com.hjwylde.qux.util.Type.Any) {
+            return Type.getType(Obj.class);
+        } else if (type instanceof com.hjwylde.qux.util.Type.Bool) {
+            return Type.getType(Bool.class);
+        } else if (type instanceof com.hjwylde.qux.util.Type.Function) {
+            com.hjwylde.qux.util.Type.Function function =
+                    ((com.hjwylde.qux.util.Type.Function) type);
 
-    static String getTypeFromQuxType(String desc) {
-        switch (desc) {
-            case ANY:
-                return Type.getDescriptor(Obj.class);
-            case BOOL:
-                return Type.getDescriptor(Bool.class);
-            case INT:
-                return Type.getDescriptor(Int.class);
-            case NULL:
-                return Type.getDescriptor(Null.class);
-            case REAL:
-                return Type.getDescriptor(Real.class);
-            case STR:
-                return Type.getDescriptor(Str.class);
-            case VOID:
-                return "V";
-        }
-
-        if (Types.isFunction(desc)) {
-            StringBuilder sb = new StringBuilder("(");
-
-            for (com.hjwylde.qux.util.Type parameter : Types.getFunctionParameterTypes(desc)) {
-                sb.append(getTypeFromQuxType(parameter));
+            Type[] parameterTypes = new Type[function.getParameterTypes().size()];
+            for (int i = 0; i < parameterTypes.length; i++) {
+                parameterTypes[i] = getTypeFromQuxType(function.getParameterTypes().get(i));
             }
 
-            sb.append(")");
-            sb.append(getTypeFromQuxType(Types.getFunctionReturnType(desc)));
-
-            return sb.toString();
+            return Type.getMethodType(getTypeFromQuxType(function.getReturnType()), parameterTypes);
+        } else if (type instanceof com.hjwylde.qux.util.Type.Int) {
+            return Type.getType(Int.class);
+        } else if (type instanceof com.hjwylde.qux.util.Type.List) {
+            return Type.getType(List.class);
+        } else if (type instanceof com.hjwylde.qux.util.Type.Null) {
+            return Type.getType(Null.class);
+        } else if (type instanceof com.hjwylde.qux.util.Type.Real) {
+            return Type.getType(Real.class);
+        } else if (type instanceof com.hjwylde.qux.util.Type.Str) {
+            return Type.getType(Str.class);
+        } else if (type instanceof com.hjwylde.qux.util.Type.Union) {
+            return Type.getType(Obj.class);
+        } else if (type instanceof com.hjwylde.qux.util.Type.Void) {
+            return Type.VOID_TYPE;
         }
 
-        if (Types.isList(desc)) {
-            return Type.getDescriptor(List.class);
-        }
+        throw new MethodNotImplementedError(type.getClass().toString());
+    }
 
-        throw new MethodNotImplementedError(desc);
+    static Type getTypeFromQuxType(String desc) {
+        return getTypeFromQuxType(com.hjwylde.qux.util.Type.forDescriptor(desc));
     }
 
     private final class Function2ClassTranslater extends FunctionAdapter {
@@ -222,7 +210,10 @@ public final class Qux2ClassTranslater extends QuxAdapter {
         @Override
         public void visitEnd() {
             // If the type is Void, then add in a return instruction
-            if (Types.isVoid(Types.getFunctionReturnType(desc))) {
+            com.hjwylde.qux.util.Type.Function function =
+                    (com.hjwylde.qux.util.Type.Function) com.hjwylde.qux.util.Type.forDescriptor(
+                            desc);
+            if (function.getReturnType() instanceof com.hjwylde.qux.util.Type.Void) {
                 mv.visitInsn(RETURN);
             }
 
@@ -262,8 +253,6 @@ public final class Qux2ClassTranslater extends QuxAdapter {
 
         @Override
         public void visitStmtFunction(String name, ImmutableList<ExprNode> arguments) {
-            // TODO: Consider changing ExprNode.type to an attribute
-
             Type[] argumentTypes = new Type[arguments.size()];
             for (int i = 0; i < arguments.size(); i++) {
                 visitExpr(arguments.get(i));

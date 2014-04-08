@@ -30,6 +30,8 @@ import java.util.concurrent.Future;
  */
 public final class Qux2ClassBuilder implements Builder {
 
+    // TODO: Consider making changes such that it is possible to register different pipelines to be used in the build job
+
     private static final Logger logger = LoggerFactory.getLogger(Qux2ClassBuilder.class);
 
     private final Context context;
