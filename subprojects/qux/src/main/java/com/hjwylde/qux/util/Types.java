@@ -1,25 +1,18 @@
 package com.hjwylde.qux.util;
 
 import static com.google.common.base.Preconditions.checkState;
-import static com.hjwylde.qux.util.Type.ANY;
-import static com.hjwylde.qux.util.Type.BOOL;
-import static com.hjwylde.qux.util.Type.FUNCTION_PARAM_END;
-import static com.hjwylde.qux.util.Type.FUNCTION_START;
-import static com.hjwylde.qux.util.Type.INT;
-import static com.hjwylde.qux.util.Type.LIST_START;
-import static com.hjwylde.qux.util.Type.NULL;
-import static com.hjwylde.qux.util.Type.REAL;
-import static com.hjwylde.qux.util.Type.STR;
-import static com.hjwylde.qux.util.Type.UNION_END;
-import static com.hjwylde.qux.util.Type.UNION_START;
-import static com.hjwylde.qux.util.Type.VOID;
 
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 /**
  * TODO: Documentation
  *
  * @author Henry J. Wylde
+ * @since 0.1.1
  */
 public final class Types {
 
@@ -28,193 +21,146 @@ public final class Types {
      */
     private Types() {}
 
-    public static ImmutableList<Type> getFunctionParameterTypes(Type type) {
-        return getFunctionParameterTypes(type.getDescriptor());
+    public static boolean isEquivalent(Type lhs, Type rhs) {
+        // Because union types are represented with sets, we can just use standard equality
+        return lhs.equals(rhs);
     }
 
-    public static ImmutableList<Type> getFunctionParameterTypes(String desc) {
-        checkState(isFunction(desc), "cannot get parameters on a non-function type");
+    public static boolean isSubtype(Type lhs, Type rhs) {
+        lhs = normalise(lhs);
+        rhs = normalise(rhs);
 
-        ImmutableList.Builder<Type> builder = ImmutableList.builder();
-        int index = 1;
-        while (!desc.substring(index, index + 1).equals(FUNCTION_PARAM_END)) {
-            String param = parseFirstType(desc, index);
-            builder.add(Type.of(param));
-
-            index += param.length();
+        if (rhs instanceof Type.Any) {
+            return true;
+        } else if (rhs instanceof Type.Union) {
+            return isSubtype(lhs, (Type.Union) rhs);
         }
 
-        return builder.build();
-    }
+        if (lhs instanceof Type.Function) {
+            if (!(rhs instanceof Type.Function)) {
+                return false;
+            }
 
-    public static Type getFunctionReturnType(Type type) {
-        return getFunctionReturnType(type.getDescriptor());
-    }
+            return isSubtype((Type.Function) lhs, (Type.Function) rhs);
+        } else if (lhs instanceof Type.List) {
+            if (!(rhs instanceof Type.List)) {
+                return false;
+            }
 
-    public static Type getFunctionReturnType(String desc) {
-        checkState(isFunction(desc), "cannot get return type on a non-function type");
-
-        return Type.of(desc.substring(desc.indexOf(FUNCTION_PARAM_END) + 1));
-    }
-
-    public static Type getListInnerType(Type type) {
-        return getListInnerType(type.getDescriptor());
-    }
-
-    public static Type getListInnerType(String desc) {
-        checkState(isList(desc), "cannot get inner type on a non-list type");
-
-        return Type.of(desc.substring(LIST_START.length()));
-    }
-
-    public static ImmutableList<Type> getUnionTypes(Type type) {
-        return getUnionTypes(type.getDescriptor());
-    }
-
-    public static ImmutableList<Type> getUnionTypes(String desc) {
-        checkState(isUnion(desc), "cannot get types on a non-union type");
-
-        ImmutableList.Builder<Type> builder = ImmutableList.builder();
-        int index = 1;
-        while (!desc.substring(index, index + 1).equals(UNION_END)) {
-            String param = parseFirstType(desc, index);
-            builder.add(Type.of(param));
-
-            index += param.length();
+            return isSubtype(((Type.List) lhs).getInnerType(), ((Type.List) rhs).getInnerType());
+        } else if (lhs instanceof Type.Union) {
+            return isSubtype((Type.Union) lhs, rhs);
         }
 
-        return builder.build();
+        // Rest of the types only subtype themselves
+        return lhs.equals(rhs);
     }
 
-    public static boolean isAny(String type) {
-        return type.equals(ANY);
+    public static Type normalise(Type type) {
+        if (type instanceof Type.Function) {
+            return normalise((Type.Function) type);
+        } else if (type instanceof Type.List) {
+            return normalise((Type.List) type);
+        } else if (type instanceof Type.Union) {
+            return normalise((Type.Union) type);
+        }
+
+        // Rest of the types are already normalised
+        return type;
     }
 
-    public static boolean isAny(Type type) {
-        return isAny(type.getDescriptor());
+    public static Type.Function normalise(Type.Function type) {
+        List<Type> parameterTypes = new ArrayList<>();
+
+        for (Type parameterType : type.getParameterTypes()) {
+            parameterTypes.add(normalise(parameterType));
+        }
+
+        // Create a new function using the constructor to avoid an infinite recursive call to normalise
+        return new Type.Function(normalise(type.getReturnType()), parameterTypes);
     }
 
-    public static boolean isBool(String type) {
-        return type.equals(BOOL);
+    public static Type.List normalise(Type.List type) {
+        // Create a new list using the constructor to avoid an infinite recursive call to normalise
+        return new Type.List(normalise(type.getInnerType()));
     }
 
-    public static boolean isBool(Type type) {
-        return isBool(type.getDescriptor());
-    }
+    public static Type normalise(Type.Union type) {
+        List<Type> types = new ArrayList<>();
 
-    public static boolean isFunction(String type) {
-        return type.startsWith(FUNCTION_START);
-    }
+        OUTER:
+        for (Type inner : type.getTypes()) {
+            // If it contains an any type, then just return that
+            if (inner.equals(Type.TYPE_ANY)) {
+                return Type.TYPE_ANY;
+            }
 
-    public static boolean isFunction(Type type) {
-        return isFunction(type.getDescriptor());
-    }
+            INNER:
+            for (int i = 0; i < types.size(); i++) {
+                // Ignore subtypes
+                if (isSubtype(inner, types.get(i))) {
+                    continue OUTER;
+                } else if (isSubtype(types.get(i), inner)) {
+                    // Supertypes should override the redundent type
+                    types.set(i, inner);
 
-    public static boolean isInt(String type) {
-        return type.equals(INT);
-    }
-
-    public static boolean isInt(Type type) {
-        return isInt(type.getDescriptor());
-    }
-
-    public static boolean isList(String type) {
-        return type.startsWith(LIST_START);
-    }
-
-    public static boolean isList(Type type) {
-        return isList(type.getDescriptor());
-    }
-
-    public static boolean isNull(String type) {
-        return type.equals(NULL);
-    }
-
-    public static boolean isNull(Type type) {
-        return isNull(type.getDescriptor());
-    }
-
-    public static boolean isReal(String type) {
-        return type.equals(REAL);
-    }
-
-    public static boolean isReal(Type type) {
-        return isReal(type.getDescriptor());
-    }
-
-    public static boolean isStr(String type) {
-        return type.equals(STR);
-    }
-
-    public static boolean isStr(Type type) {
-        return isStr(type.getDescriptor());
-    }
-
-    public static boolean isUnion(String type) {
-        return type.startsWith(UNION_START) && type.endsWith(UNION_END);
-    }
-
-    public static boolean isUnion(Type type) {
-        return isUnion(type.getDescriptor());
-    }
-
-    public static boolean isVoid(String type) {
-        return type.equals(VOID);
-    }
-
-    public static boolean isVoid(Type type) {
-        return isVoid(type.getDescriptor());
-    }
-
-    static boolean isValidTypeDescriptor(String desc) {
-        // TODO: Fixme, does not take into account functions properly
-        boolean valid = false;
-
-        valid |= isAny(desc);
-        valid |= isBool(desc);
-        valid |= isFunction(desc);
-        valid |= isInt(desc);
-        valid |= isList(desc);
-        valid |= isNull(desc);
-        valid |= isReal(desc);
-        valid |= isStr(desc);
-        valid |= isUnion(desc);
-        valid |= isVoid(desc);
-
-        return valid;
-    }
-
-    private static String parseFirstType(String desc, int offset) {
-        switch (desc.substring(offset, offset + 1)) {
-            case ANY:
-            case BOOL:
-            case INT:
-            case REAL:
-            case STR:
-            case VOID:
-                return desc.substring(offset, offset + 1);
-            case FUNCTION_START:
-                int index = offset + 1;
-                while (!desc.substring(index, index + 1).equals(FUNCTION_PARAM_END)) {
-                    index += parseFirstType(desc, index).length();
+                    // Continue on the inner, as it may supertype more than one inner type
+                    // If it does, then duplicates will be removed when we create a set of the types
+                    continue INNER;
                 }
+            }
 
-                index += 1;
-                index += parseFirstType(desc, index).length();
-
-                return desc.substring(offset, index);
-            case LIST_START:
-                return LIST_START + parseFirstType(desc, offset + 1);
-            case UNION_START:
-                index = offset + 1;
-                while (!desc.substring(index, index + 1).equals(UNION_END)) {
-                    index += parseFirstType(desc, index).length();
-                }
-
-                return desc.substring(offset, index + 1);
-            default:
-                throw new IllegalArgumentException("illegal type start character: " + desc.charAt(
-                        offset));
+            types.add(inner);
         }
+
+        Set<Type> union = ImmutableSet.copyOf(types);
+
+        checkState(union.size() > 0, "normalisation of union resulted in union of size 0: {}",
+                type);
+
+        if (union.size() == 1) {
+            return union.iterator().next();
+        }
+
+        // Create a new union using the constructor to avoid an infinite recursive call to normalise
+        return new Type.Union(union);
+    }
+
+    private static boolean isSubtype(Type.Function lhs, Type.Function rhs) {
+        if (!isSubtype(lhs.getReturnType(), rhs.getReturnType())) {
+            return false;
+        }
+
+        if (lhs.getParameterTypes().size() < rhs.getParameterTypes().size()) {
+            return false;
+        }
+
+        for (int i = 0; i < lhs.getParameterTypes().size(); i++) {
+            if (!isSubtype(lhs.getParameterTypes().get(i), rhs.getParameterTypes().get(i))) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static boolean isSubtype(Type lhs, Type.Union rhs) {
+        for (Type type : rhs.getTypes()) {
+            if (isSubtype(lhs, type)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static boolean isSubtype(Type.Union lhs, Type rhs) {
+        for (Type type : lhs.getTypes()) {
+            if (!isSubtype(type, rhs)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

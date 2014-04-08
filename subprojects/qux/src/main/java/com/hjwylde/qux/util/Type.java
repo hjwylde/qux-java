@@ -1,204 +1,669 @@
 package com.hjwylde.qux.util;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.google.common.base.Function;
+import com.hjwylde.common.error.MethodNotImplementedError;
+
 import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
-
-import javax.annotation.Nullable;
+import java.util.Collection;
 
 /**
  * TODO: Documentation.
  *
  * @author Henry J. Wylde
+ * @since 0.1.1
  */
-public final class Type {
-
-    // TODO: Convert these to each have a class per type
+public abstract class Type {
 
     /**
      * String representation of the <code>any</code> type.
      */
     public static final String ANY = "A";
-    public static final Type TYPE_ANY = Type.of(ANY);
+    public static final Type.Any TYPE_ANY = new Type.Any();
 
     /**
      * String representation of the <code>bool</code> type.
      */
     public static final String BOOL = "B";
-    public static final Type TYPE_BOOL = Type.of(BOOL);
+    public static final Type.Bool TYPE_BOOL = new Type.Bool();
 
     /**
      * String representation of the <code>int</code> type.
      */
     public static final String INT = "Z";
-    public static final Type TYPE_INT = Type.of(INT);
+    public static final Type.Int TYPE_INT = new Type.Int();
 
     /**
      * String representation of the {@code int} type.
      */
     public static final String NULL = "N";
-    public static final Type TYPE_NULL = Type.of(NULL);
+    public static final Type.Null TYPE_NULL = new Type.Null();
 
     /**
      * String representation of the <code>real</code> type.
      */
     public static final String REAL = "R";
-    public static final Type TYPE_REAL = Type.of(REAL);
+    public static final Type.Real TYPE_REAL = new Type.Real();
 
     /**
      * String representation of the <code>str</code> type.
      */
     public static final String STR = "S";
-    public static final Type TYPE_STR = Type.of(STR);
+    public static final Type.Str TYPE_STR = new Type.Str();
 
     /**
      * String representation of the <code>void</code> type.
      */
     public static final String VOID = "V";
-    public static final Type TYPE_VOID = Type.of(VOID);
+    public static final Type.Void TYPE_VOID = new Type.Void();
 
-    public static final String FUNCTION_START = "(";
-    public static final String FUNCTION_PARAM_END = ")";
+    static final String FUNCTION_START = "(";
+    static final String FUNCTION_PARAM_END = ")";
 
-    public static final String LIST_START = "[";
+    static final String LIST_START = "[";
 
-    public static final String UNION_START = "U";
-    public static final String UNION_END = ";";
+    static final String UNION_START = "U";
+    static final String UNION_END = ";";
 
-    private static final Logger logger = LoggerFactory.getLogger(Type.class);
+    /**
+     * This class may only be instantiated locally.
+     */
+    private Type() {}
 
-    private final String desc;
-
-    private Type(String... concat) {
-        this.desc = Joiner.on("").join(concat);
-    }
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof Type)) {
+        if (obj == null || getClass() != obj.getClass()) {
             return false;
         }
 
-        return desc.equals(((Type) obj).desc);
+        return true;
     }
 
-    public static Type forFunction(Type returnType, Type... parameters) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("(");
-        for (Type parameter : parameters) {
-            sb.append(parameter.getDescriptor());
-        }
-        sb.append(")");
-        sb.append(returnType.getDescriptor());
-
-        return new Type(sb.toString());
+    public static Type forDescriptor(String desc) {
+        return forDescriptor(desc, true);
     }
 
-    public static Type forFunction(String returnType, String... parameters) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("(");
-        for (String parameter : parameters) {
-            sb.append(parameter);
-        }
-        sb.append(")");
-        sb.append(returnType);
-
-        return new Type(sb.toString());
+    public static Type.Function forFunction(Type returnType, java.util.List<Type> parameterTypes) {
+        return Types.normalise(new Type.Function(returnType, parameterTypes));
     }
 
-    public static Type forList(String innerType) {
-        return new Type(LIST_START + innerType);
+    public static Type.Function forFunction(Type returnType, Type... parameterTypes) {
+        return Types.normalise(new Type.Function(returnType, parameterTypes));
     }
 
-    public static Type forList(Type innerType) {
-        return forList(innerType.getDescriptor());
+    public static Type.List forList(Type innerType) {
+        return Types.normalise(new Type.List(innerType));
     }
 
-    public static Type forUnion(String... types) {
-        return Type.of(UNION_START + Joiner.on("").join(types) + UNION_END);
+    public static Type forUnion(Collection<Type> types) {
+        return Types.normalise(new Type.Union(types));
     }
 
     public static Type forUnion(Type... types) {
-        return forUnion(Lists.transform(Arrays.asList(types), new Function<Type, String>() {
-            @Nullable
-            @Override
-            public String apply(@Nullable Type input) {
-                return input.getDescriptor();
-            }
-        }).toArray(new String[0]));
+        return Types.normalise(new Type.Union(types));
     }
 
-    public String getDescriptor() {
-        return desc;
-    }
+    public abstract String getDescriptor();
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public int hashCode() {
-        return desc.hashCode();
-    }
+    public abstract int hashCode();
 
-    public static Type of(String desc) {
-        checkArgument(Types.isValidTypeDescriptor(desc), "invalid type descriptor: " + desc);
-
-        return new Type(desc);
-    }
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public String toString() {
-        if (Types.isAny(this)) {
+    public abstract String toString();
+
+    private static Type forDescriptor(String desc, boolean match) {
+        checkArgument(!desc.isEmpty(), "desc cannot be empty");
+
+        switch (desc.substring(0, 1)) {
+            case ANY:
+                checkArgument(!match || desc.length() == 1, "desc is invalid: %s", desc);
+                return TYPE_ANY;
+            case BOOL:
+                checkArgument(!match || desc.length() == 1, "desc is invalid: %s", desc);
+                return TYPE_BOOL;
+            case FUNCTION_START:
+                java.util.List<Type> parameterTypes = new ArrayList<>();
+                int index = 1;
+                while (index < desc.length()) {
+                    if (desc.substring(index, index + 1).equals(FUNCTION_PARAM_END)) {
+                        break;
+                    }
+
+                    parameterTypes.add(forDescriptor(desc.substring(index), false));
+
+                    index += parameterTypes.get(parameterTypes.size() - 1).getDescriptor().length();
+                }
+
+                checkArgument(desc.substring(index, index + 1).equals(FUNCTION_PARAM_END),
+                        "desc is invalid: %s", desc);
+
+                Type returnType = forDescriptor(desc.substring(index + 1), match);
+
+                index += returnType.getDescriptor().length();
+
+                checkArgument(!match || desc.length() == index + 1, "desc is invalid: %s", desc);
+
+                return forFunction(returnType, parameterTypes);
+            case INT:
+                checkArgument(!match || desc.length() == 1, "desc is invalid: %s", desc);
+                return TYPE_INT;
+            case LIST_START:
+                checkArgument(desc.length() > 1, "desc is invalid: %s", desc);
+                return forList(forDescriptor(desc.substring(1), match));
+            case NULL:
+                checkArgument(!match || desc.length() == 1, "desc is invalid: %s", desc);
+                return TYPE_NULL;
+            case REAL:
+                checkArgument(!match || desc.length() == 1, "desc is invalid: %s", desc);
+                return TYPE_REAL;
+            case STR:
+                checkArgument(!match || desc.length() == 1, "desc is invalid: %s", desc);
+                return TYPE_STR;
+            case UNION_START:
+                java.util.List<Type> types = new ArrayList<>();
+                index = 1;
+                while (index < desc.length()) {
+                    if (desc.substring(index, index + 1).equals(UNION_END)) {
+                        break;
+                    }
+
+                    types.add(forDescriptor(desc.substring(index), false));
+
+                    index += types.get(types.size() - 1).getDescriptor().length();
+                }
+
+                checkArgument(desc.substring(index, index + 1).equals(UNION_END),
+                        "desc is invalid: %s", desc);
+                checkArgument(!match || desc.length() == index + 1, "desc is invalid: %s", desc);
+
+                return forUnion(types);
+            case VOID:
+                checkArgument(desc.length() == 1, "desc is invalid: %s", desc);
+                return TYPE_VOID;
+            default:
+                throw new MethodNotImplementedError(desc);
+        }
+    }
+
+    /**
+     * TODO: Documentation
+     *
+     * @author Henry J. Wylde
+     * @since 0.1.1
+     */
+    public static final class Any extends Type {
+
+        /**
+         * This class is a singleton.
+         */
+        private Any() {}
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getDescriptor() {
+            return ANY;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int hashCode() {
+            return 0;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String toString() {
             return "any";
-        } else if (Types.isBool(this)) {
+        }
+    }
+
+    /**
+     * TODO: Documentation
+     *
+     * @author Henry J. Wylde
+     * @since 0.1.1
+     */
+    public static final class Bool extends Type {
+
+        /**
+         * This class is a singleton.
+         */
+        private Bool() {}
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getDescriptor() {
+            return BOOL;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int hashCode() {
+            return 1;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String toString() {
             return "bool";
-        } else if (Types.isList(this)) {
-            return "[" + Types.getListInnerType(this) + "]";
-        } else if (Types.isReal(this)) {
-            return "real";
-        } else if (Types.isFunction(this)) {
+        }
+    }
+
+    /**
+     * TODO: Documentation
+     *
+     * @author Henry J. Wylde
+     * @since 0.1.1
+     */
+    public static final class Function extends Type {
+
+        private final Type returnType;
+        private final ImmutableList<Type> parameterTypes;
+
+        Function(Type returnType, Type... parameterTypes) {
+            this(returnType, Arrays.asList(parameterTypes));
+        }
+
+        Function(Type returnType, java.util.List<Type> parameterTypes) {
+            this.returnType = checkNotNull(returnType, "returnType cannot be null");
+            this.parameterTypes = ImmutableList.copyOf(parameterTypes);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean equals(Object obj) {
+            if (!super.equals(obj)) {
+                return false;
+            }
+
+            Type.Function function = (Type.Function) obj;
+
+            return returnType.equals(function.returnType) && parameterTypes.equals(
+                    function.parameterTypes);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getDescriptor() {
             StringBuilder sb = new StringBuilder();
 
-            sb.append("(");
-            for (Iterator<Type> it = Types.getFunctionParameterTypes(this).iterator();
-                    it.hasNext(); ) {
-                sb.append(it.next());
-                if (it.hasNext()) {
-                    sb.append(", ");
-                }
+            sb.append(FUNCTION_START);
+            for (Type parameterType : parameterTypes) {
+                sb.append(parameterType.getDescriptor());
             }
-            sb.append(") => ");
-            sb.append(Types.getFunctionReturnType(this));
+            sb.append(FUNCTION_PARAM_END);
+            sb.append(returnType.getDescriptor());
 
             return sb.toString();
-        } else if (Types.isInt(this)) {
+        }
+
+        public ImmutableList<Type> getParameterTypes() {
+            return parameterTypes;
+        }
+
+        public Type getReturnType() {
+            return returnType;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int hashCode() {
+            return 2 + 31 * (returnType.hashCode() + 31 * parameterTypes.hashCode());
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String toString() {
+            return "(" + Joiner.on(", ").join(parameterTypes) + ") => " + returnType;
+        }
+    }
+
+    /**
+     * TODO: Documentation
+     *
+     * @author Henry J. Wylde
+     * @since 0.1.1
+     */
+    public static final class Int extends Type {
+
+        /**
+         * This class is a singleton.
+         */
+        private Int() {}
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getDescriptor() {
+            return INT;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int hashCode() {
+            return 3;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String toString() {
             return "int";
-        } else if (Types.isNull(this)) {
-            return "null";
-        } else if (Types.isStr(this)) {
-            return "str";
-        } else if (Types.isUnion(this)) {
-            StringBuilder sb = new StringBuilder();
+        }
+    }
 
-            for (Iterator<Type> it = Types.getUnionTypes(this).iterator(); it.hasNext(); ) {
-                sb.append(it.next());
+    /**
+     * TODO: Documentation
+     *
+     * @author Henry J. Wylde
+     * @since 0.1.1
+     */
+    public static final class List extends Type {
 
-                if (it.hasNext()) {
-                    sb.append("|");
-                }
+        private final Type innerType;
+
+        List(Type innerType) {
+            this.innerType = checkNotNull(innerType, "innerType cannot be null");
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean equals(Object obj) {
+            if (!super.equals(obj)) {
+                return false;
             }
 
-            return sb.toString();
-        } else if (Types.isVoid(this)) {
-            return "void";
-        } else {
-            logger.warn("Type.toString() not fully implemented: " + desc);
+            return innerType.equals(((Type.List) obj).innerType);
+        }
 
-            return getDescriptor();
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getDescriptor() {
+            return LIST_START + innerType.getDescriptor();
+        }
+
+        public Type getInnerType() {
+            return innerType;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int hashCode() {
+            return 4 + 31 * innerType.hashCode();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String toString() {
+            return "[" + innerType + "]";
+        }
+    }
+
+    /**
+     * TODO: Documentation
+     *
+     * @author Henry J. Wylde
+     * @since 0.1.1
+     */
+    public static final class Null extends Type {
+
+        /**
+         * This class is a singleton.
+         */
+        private Null() {}
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getDescriptor() {
+            return NULL;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int hashCode() {
+            return 5;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String toString() {
+            return "null";
+        }
+    }
+
+    /**
+     * TODO: Documentation
+     *
+     * @author Henry J. Wylde
+     * @since 0.1.1
+     */
+    public static final class Real extends Type {
+
+        /**
+         * This class is a singleton.
+         */
+        private Real() {}
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getDescriptor() {
+            return REAL;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int hashCode() {
+            return 6;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String toString() {
+            return "real";
+        }
+    }
+
+    /**
+     * TODO: Documentation
+     *
+     * @author Henry J. Wylde
+     * @since 0.1.1
+     */
+    public static final class Str extends Type {
+
+        /**
+         * This class is a singleton.
+         */
+        private Str() {}
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getDescriptor() {
+            return STR;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int hashCode() {
+            return 7;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String toString() {
+            return "str";
+        }
+    }
+
+    /**
+     * TODO: Documentation
+     *
+     * @author Henry J. Wylde
+     * @since 0.1.1
+     */
+    public static final class Union extends Type {
+
+        private final ImmutableSet<Type> types;
+
+        Union(Type... types) {
+            this(Arrays.asList(types));
+        }
+
+        Union(Collection<Type> types) {
+            checkArgument(types.size() > 1, "types must contain at least 2 elements");
+
+            this.types = ImmutableSet.copyOf(types);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean equals(Object obj) {
+            if (!super.equals(obj)) {
+                return false;
+            }
+
+            return types.equals(((Type.Union) obj).types);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getDescriptor() {
+            StringBuilder sb = new StringBuilder();
+
+            sb.append(UNION_START);
+            for (Type type : types) {
+                sb.append(type.getDescriptor());
+            }
+            sb.append(UNION_END);
+
+            return sb.toString();
+        }
+
+        public ImmutableSet<Type> getTypes() {
+            return types;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int hashCode() {
+            return 8 + 31 * types.hashCode();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String toString() {
+            return Joiner.on("|").join(types);
+        }
+    }
+
+    /**
+     * TODO: Documentation
+     *
+     * @author Henry J. Wylde
+     * @since 0.1.1
+     */
+    public static final class Void extends Type {
+
+        /**
+         * This class is a singleton.
+         */
+        private Void() {}
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getDescriptor() {
+            return VOID;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int hashCode() {
+            return 9;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String toString() {
+            return "void";
         }
     }
 }

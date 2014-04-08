@@ -42,10 +42,9 @@ public class MainFunctionInjector extends ClassVisitor {
 
     private static final int FUNCTION_MAIN_FLAGS = ACC_PUBLIC | ACC_STATIC;
     private static final String FUNCTION_MAIN_NAME = "main";
-    private static final String FUNCTION_MAIN_DESC = com.hjwylde.qux.util.Type.forFunction(
-            com.hjwylde.qux.util.Type.TYPE_VOID, com.hjwylde.qux.util.Type.forList(
-                    com.hjwylde.qux.util.Type.STR)
-    ).getDescriptor();
+    private static final com.hjwylde.qux.util.Type FUNCTION_MAIN_TYPE =
+            com.hjwylde.qux.util.Type.forFunction(com.hjwylde.qux.util.Type.TYPE_VOID,
+                    com.hjwylde.qux.util.Type.forList(com.hjwylde.qux.util.Type.TYPE_STR));
 
     private final String name;
 
@@ -66,7 +65,7 @@ public class MainFunctionInjector extends ClassVisitor {
             String[] exceptions) {
         // If there is a main function using the Qux types, then add an adapter function to call it
         if (access == FUNCTION_MAIN_FLAGS && name.equals(FUNCTION_MAIN_NAME) && desc.equals(
-                getTypeFromQuxType(FUNCTION_MAIN_DESC))) {
+                getTypeFromQuxType(FUNCTION_MAIN_TYPE).getDescriptor())) {
             logger.debug("main function detected, injecting proxy function for {}.{}:{}", this.name,
                     name, desc);
 
@@ -142,7 +141,7 @@ public class MainFunctionInjector extends ClassVisitor {
         mv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(List.class), "valueOf",
                 Type.getMethodDescriptor(List.class.getMethod("valueOf", Obj[].class)), false);
         mv.visitMethodInsn(INVOKESTATIC, this.name, FUNCTION_MAIN_NAME, getTypeFromQuxType(
-                FUNCTION_MAIN_DESC), false);
+                FUNCTION_MAIN_TYPE).getDescriptor(), false);
         mv.visitInsn(RETURN);
 
         // These values are ignored so long as ClassWriter.COMPUTE_MAXS is set

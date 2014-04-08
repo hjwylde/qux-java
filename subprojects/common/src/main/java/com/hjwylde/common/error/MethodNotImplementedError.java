@@ -24,7 +24,7 @@ public final class MethodNotImplementedError extends InternalError {
     }
 
     private static String getMethodSignature() {
-        StackTraceElement caller = Thread.currentThread().getStackTrace()[2];
+        StackTraceElement caller = Thread.currentThread().getStackTrace()[3];
 
         return caller.getClassName() + ":" + caller.getMethodName();
     }
