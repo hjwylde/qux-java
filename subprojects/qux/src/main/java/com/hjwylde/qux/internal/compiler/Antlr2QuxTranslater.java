@@ -74,7 +74,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         Type.Function functionType = Type.forFunction(returnType, parameterTypes.toArray(
                 new Type[0]));
 
-        fv = qv.visitFunction(ACC_PUBLIC | ACC_STATIC, name, functionType.getDescriptor());
+        fv = qv.visitFunction(ACC_PUBLIC | ACC_STATIC, name, functionType);
 
         for (int i = 0; i < parameterNames.size(); i++) {
             fv.visitParameter(parameterNames.get(i), parameterTypes.get(i));

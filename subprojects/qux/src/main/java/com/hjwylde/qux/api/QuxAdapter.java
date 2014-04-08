@@ -2,6 +2,8 @@ package com.hjwylde.qux.api;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.hjwylde.qux.util.Type;
+
 /**
  * TODO: Documentation.
  *
@@ -40,7 +42,7 @@ public abstract class QuxAdapter implements QuxVisitor {
      * {@inheritDoc}
      */
     @Override
-    public FunctionVisitor visitFunction(int flags, String name, String desc) {
-        return next.visitFunction(flags, name, desc);
+    public FunctionVisitor visitFunction(int flags, String name, Type.Function type) {
+        return next.visitFunction(flags, name, type);
     }
 }

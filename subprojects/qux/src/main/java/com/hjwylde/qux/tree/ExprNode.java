@@ -3,6 +3,7 @@ package com.hjwylde.qux.tree;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.hjwylde.qux.api.ExprVisitor;
 import com.hjwylde.qux.util.Attribute;
 import com.hjwylde.qux.util.Op;
 
@@ -32,7 +33,7 @@ public abstract class ExprNode extends Node {
         super(attributes);
     }
 
-    // TODO: Consider adding in an accept(ExprVisitor) method
+    public abstract void accept(ExprVisitor ev);
 
     /**
      * TODO: Documentation
@@ -54,6 +55,14 @@ public abstract class ExprNode extends Node {
             this.op = checkNotNull(op, "op cannot be null");
             this.lhs = checkNotNull(lhs, "lhs cannot be null");
             this.rhs = checkNotNull(rhs, "rhs cannot be null");
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void accept(ExprVisitor ev) {
+            ev.visitExprBinary(this);
         }
 
         public ExprNode getLhs() {
@@ -91,6 +100,11 @@ public abstract class ExprNode extends Node {
 
             this.type = checkNotNull(type, "type cannot be null");
             this.value = value;
+        }
+
+        @Override
+        public void accept(ExprVisitor ev) {
+            ev.visitExprConstant(this);
         }
 
         public ExprNode.Constant.Type getType() {
@@ -133,6 +147,11 @@ public abstract class ExprNode extends Node {
             this.arguments = ImmutableList.copyOf(arguments);
         }
 
+        @Override
+        public void accept(ExprVisitor ev) {
+            ev.visitExprFunction(this);
+        }
+
         public ImmutableList<ExprNode> getArguments() {
             return arguments;
         }
@@ -161,6 +180,11 @@ public abstract class ExprNode extends Node {
             this.values = ImmutableList.copyOf(values);
         }
 
+        @Override
+        public void accept(ExprVisitor ev) {
+            ev.visitExprList(this);
+        }
+
         public ImmutableList<ExprNode> getValues() {
             return values;
         }
@@ -185,6 +209,11 @@ public abstract class ExprNode extends Node {
 
             this.op = checkNotNull(op, "op cannot be null");
             this.target = checkNotNull(target, "target cannot be null");
+        }
+
+        @Override
+        public void accept(ExprVisitor ev) {
+            ev.visitExprUnary(this);
         }
 
         public Op.Unary getOp() {
@@ -213,6 +242,11 @@ public abstract class ExprNode extends Node {
             super(attributes);
 
             this.name = checkNotNull(name, "name cannot be null");
+        }
+
+        @Override
+        public void accept(ExprVisitor ev) {
+            ev.visitExprVariable(this);
         }
 
         public String getName() {

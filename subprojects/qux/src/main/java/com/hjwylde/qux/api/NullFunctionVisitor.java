@@ -1,11 +1,7 @@
 package com.hjwylde.qux.api;
 
-import com.hjwylde.qux.tree.ExprNode;
 import com.hjwylde.qux.tree.StmtNode;
 import com.hjwylde.qux.util.Type;
-
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 
 /**
  * TODO: Documentation
@@ -43,30 +39,29 @@ final class NullFunctionVisitor implements FunctionVisitor {
      * {@inheritDoc}
      */
     @Override
-    public void visitStmtAssign(String var, ExprNode expr) {}
+    public void visitStmtAssign(StmtNode.Assign stmt) {}
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void visitStmtFunction(String name, ImmutableList<ExprNode> arguments) {}
+    public void visitStmtFunction(StmtNode.Function stmt) {}
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void visitStmtIf(ExprNode condition, ImmutableList<StmtNode> trueBlock,
-            ImmutableList<StmtNode> falseBlock) {}
+    public void visitStmtIf(StmtNode.If stmt) {}
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void visitStmtPrint(ExprNode expr) {}
+    public void visitStmtPrint(StmtNode.Print stmt) {}
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void visitStmtReturn(Optional<ExprNode> expr) {}
+    public void visitStmtReturn(StmtNode.Return stmt) {}
 }

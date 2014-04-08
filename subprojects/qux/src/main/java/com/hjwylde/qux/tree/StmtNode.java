@@ -59,7 +59,7 @@ public abstract class StmtNode extends Node {
 
         @Override
         public void accept(FunctionVisitor fv) {
-            fv.visitStmtAssign(var, expr);
+            fv.visitStmtAssign(this);
         }
 
         public ExprNode getExpr() {
@@ -94,7 +94,7 @@ public abstract class StmtNode extends Node {
 
         @Override
         public void accept(FunctionVisitor fv) {
-            fv.visitStmtFunction(name, arguments);
+            fv.visitStmtFunction(this);
         }
 
         public ImmutableList<ExprNode> getArguments() {
@@ -133,7 +133,7 @@ public abstract class StmtNode extends Node {
 
         @Override
         public void accept(FunctionVisitor fv) {
-            fv.visitStmtIf(condition, trueBlock, falseBlock);
+            fv.visitStmtIf(this);
         }
 
         public ExprNode getCondition() {
@@ -171,7 +171,7 @@ public abstract class StmtNode extends Node {
 
         @Override
         public void accept(FunctionVisitor fv) {
-            fv.visitStmtPrint(expr);
+            fv.visitStmtPrint(this);
         }
 
         public ExprNode getExpr() {
@@ -216,7 +216,7 @@ public abstract class StmtNode extends Node {
 
         @Override
         public void accept(FunctionVisitor fv) {
-            fv.visitStmtReturn(expr);
+            fv.visitStmtReturn(this);
         }
 
         public Optional<ExprNode> getExpr() {

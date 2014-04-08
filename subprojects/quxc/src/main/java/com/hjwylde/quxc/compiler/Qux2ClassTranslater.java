@@ -34,6 +34,7 @@ import static org.objectweb.asm.Opcodes.T_BYTE;
 import static org.objectweb.asm.Opcodes.V1_7;
 
 import com.hjwylde.common.error.MethodNotImplementedError;
+import com.hjwylde.qux.api.ExprVisitor;
 import com.hjwylde.qux.api.FunctionAdapter;
 import com.hjwylde.qux.api.FunctionVisitor;
 import com.hjwylde.qux.api.QuxAdapter;
@@ -42,9 +43,6 @@ import com.hjwylde.qux.tree.ExprNode;
 import com.hjwylde.qux.tree.StmtNode;
 import com.hjwylde.qux.util.Attribute;
 import com.hjwylde.qux.util.Attributes;
-
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Label;
@@ -123,15 +121,16 @@ public final class Qux2ClassTranslater extends QuxAdapter {
      * {@inheritDoc}
      */
     @Override
-    public FunctionVisitor visitFunction(int flags, String name, String desc) {
-        MethodVisitor mv = cv.visitMethod(flags, name, getTypeFromQuxType(desc).getDescriptor(),
+    public FunctionVisitor visitFunction(int flags, String name,
+            com.hjwylde.qux.util.Type.Function type) {
+        MethodVisitor mv = cv.visitMethod(flags, name, getTypeFromQuxType(type).getDescriptor(),
                 null, new String[0]);
 
         if (mv == null) {
             return FunctionVisitor.NULL_INSTANCE;
         }
 
-        return new Function2ClassTranslater(mv, flags, name, desc);
+        return new Function2ClassTranslater(mv, flags, name, type);
     }
 
     static Type getTypeFromQuxType(com.hjwylde.qux.util.Type type) {
@@ -172,7 +171,9 @@ public final class Qux2ClassTranslater extends QuxAdapter {
         return getTypeFromQuxType(com.hjwylde.qux.util.Type.forDescriptor(desc));
     }
 
-    private final class Function2ClassTranslater extends FunctionAdapter {
+    private final class Function2ClassTranslater extends FunctionAdapter implements ExprVisitor {
+
+        // TODO: Create a helper method for getting method descriptors so that we can remove the nasty try-catch blocks
 
         private static final String THIS = "this";
 
@@ -180,7 +181,7 @@ public final class Qux2ClassTranslater extends QuxAdapter {
 
         private final int flags;
         private final String name;
-        private final String desc;
+        private final com.hjwylde.qux.util.Type.Function type;
 
         /**
          * Stores a map of parameter names to jvm types.
@@ -199,15 +200,22 @@ public final class Qux2ClassTranslater extends QuxAdapter {
          */
         private java.util.List<String> locals = new ArrayList<>();
 
-        public Function2ClassTranslater(MethodVisitor mv, int flags, String name, String desc) {
+        public Function2ClassTranslater(MethodVisitor mv, int flags, String name,
+                com.hjwylde.qux.util.Type.Function type) {
             this.mv = checkNotNull(mv, "mv cannot be null");
 
             this.flags = flags;
             this.name = checkNotNull(name, "name cannot be null");
-            this.desc = checkNotNull(desc, "desc cannot be null");
+            this.type = checkNotNull(type, "type cannot be null");
 
             if ((flags & ACC_STATIC) == 0) {
                 locals.add(THIS);
+            }
+        }
+
+        public void visitBlock(java.util.List<StmtNode> stmts) {
+            for (StmtNode stmt : stmts) {
+                stmt.accept(this);
             }
         }
 
@@ -225,16 +233,224 @@ public final class Qux2ClassTranslater extends QuxAdapter {
         @Override
         public void visitEnd() {
             // If the type is Void, then add in a return instruction
-            com.hjwylde.qux.util.Type.Function function =
-                    (com.hjwylde.qux.util.Type.Function) com.hjwylde.qux.util.Type.forDescriptor(
-                            desc);
-            if (function.getReturnType() instanceof com.hjwylde.qux.util.Type.Void) {
+            if (type.getReturnType() instanceof com.hjwylde.qux.util.Type.Void) {
                 mv.visitInsn(RETURN);
             }
 
             // These values are ignored so long as ClassWriter.COMPUTE_MAXS is set
             mv.visitMaxs(0, 0);
             mv.visitEnd();
+        }
+
+        public void visitExpr(ExprNode expr) {
+            try {
+                expr.accept(this);
+            } catch (RuntimeException e) {
+                if (e.getCause() instanceof NoSuchMethodException) {
+                    logger.error("error", e.getCause());
+
+                    throw new InternalError(e.getCause().getMessage());
+                }
+            }
+        }
+
+        @Override
+        public void visitExprBinary(ExprNode.Binary expr) {
+            visitExpr(expr.getLhs());
+            visitExpr(expr.getRhs());
+
+            try {
+                switch (expr.getOp()) {
+                    case ADD:
+                        mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Add.class),
+                                "_add_", Type.getMethodDescriptor(Add.class.getMethod("_add_",
+                                        Obj.class)), true
+                        );
+                        break;
+                    case DIV:
+                        mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Div.class),
+                                "_div_", Type.getMethodDescriptor(Div.class.getMethod("_div_",
+                                        Obj.class)), true
+                        );
+                        break;
+                    case EQ:
+                        mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Eq.class), "_eq_",
+                                Type.getMethodDescriptor(Eq.class.getMethod("_eq_", Obj.class)),
+                                true);
+                        break;
+                    case GT:
+                        mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Gt.class), "_gt_",
+                                Type.getMethodDescriptor(Gt.class.getMethod("_gt_", Obj.class)),
+                                true);
+                        break;
+                    case GTE:
+                        mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Gte.class),
+                                "_gte_", Type.getMethodDescriptor(Gte.class.getMethod("_gte_",
+                                        Obj.class)), true
+                        );
+                        break;
+                    case LT:
+                        mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Lt.class), "_lt_",
+                                Type.getMethodDescriptor(Lt.class.getMethod("_lt_", Obj.class)),
+                                true);
+                        break;
+                    case LTE:
+                        mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Lte.class),
+                                "_lteadd_", Type.getMethodDescriptor(Lte.class.getMethod("_lte_",
+                                        Obj.class)), true
+                        );
+                        break;
+                    case MUL:
+                        mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Add.class),
+                                "_mul_", Type.getMethodDescriptor(Mul.class.getMethod("_mul_",
+                                        Obj.class)), true
+                        );
+                        break;
+                    case NEQ:
+                        mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Neq.class),
+                                "_neq_", Type.getMethodDescriptor(Neq.class.getMethod("_neq_",
+                                        Obj.class)), true
+                        );
+                        break;
+                    case SUB:
+                        mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Sub.class),
+                                "_sub_", Type.getMethodDescriptor(Sub.class.getMethod("_sub_",
+                                        Obj.class)), true
+                        );
+                        break;
+                    default:
+                        throw new MethodNotImplementedError(expr.getOp().toString());
+                }
+            } catch (NoSuchMethodException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        @Override
+        public void visitExprConstant(ExprNode.Constant expr) {
+            Object value;
+
+            try {
+                switch (expr.getType()) {
+                    case BOOL:
+                        if ((boolean) expr.getValue()) {
+                            mv.visitFieldInsn(GETSTATIC, Type.getInternalName(Bool.class), "TRUE",
+                                    Type.getDescriptor(Bool.class));
+                        } else {
+                            mv.visitFieldInsn(GETSTATIC, Type.getInternalName(Bool.class), "FALSE",
+                                    Type.getDescriptor(Bool.class));
+                        }
+                        break;
+                    case INT:
+                        value = expr.getValue();
+
+                        visitValue((BigInteger) value);
+
+                        Class<?> argumentClass;
+
+                        int bitLength = ((BigInteger) value).bitLength();
+                        if (bitLength < 8) {
+                            argumentClass = byte.class;
+                        } else if (bitLength < 16) {
+                            argumentClass = short.class;
+                        } else if (bitLength < 32) {
+                            argumentClass = int.class;
+                        } else if (bitLength < 64) {
+                            argumentClass = long.class;
+                        } else {
+                            argumentClass = byte[].class;
+                        }
+
+                        // TODO: FIXME: This doesn't work because we need to use the constructor if we have byte[] as the argument class
+                        mv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(Int.class), "valueOf",
+                                Type.getMethodDescriptor(Int.class.getMethod("valueOf",
+                                        argumentClass)), false
+                        );
+                        break;
+                    case NULL:
+                        mv.visitFieldInsn(GETSTATIC, Type.getInternalName(Null.class), "INSTANCE",
+                                Type.getDescriptor(Null.class));
+                        break;
+                    case REAL:
+                        throw new MethodNotImplementedError("real");
+                    case STR:
+                        value = expr.getValue();
+
+                        mv.visitLdcInsn(value);
+                        mv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(Str.class), "valueOf",
+                                Type.getMethodDescriptor(Str.class.getMethod("valueOf",
+                                        String.class)), false
+                        );
+                        break;
+                    default:
+                        throw new MethodNotImplementedError(expr.getType().toString());
+                }
+            } catch (NoSuchMethodException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        @Override
+        public void visitExprFunction(ExprNode.Function expr) {
+            Attribute.Type attribute = Attributes.getAttributeUnchecked(expr, Attribute.Type.class);
+
+            Type type = getTypeFromQuxType(attribute.getType());
+
+            for (int i = 0; i < expr.getArguments().size(); i++) {
+                visitExpr(expr.getArguments().get(i));
+            }
+
+            mv.visitMethodInsn(INVOKESTATIC, name, name, type.getDescriptor(), false);
+        }
+
+        @Override
+        public void visitExprList(ExprNode.List expr) {
+            visitValue(expr.getValues().size());
+            mv.visitTypeInsn(ANEWARRAY, Type.getInternalName(Obj.class));
+
+            for (int i = 0; i < expr.getValues().size(); i++) {
+                mv.visitInsn(DUP);
+                visitValue(i);
+                visitExpr(expr.getValues().get(i));
+                mv.visitInsn(AASTORE);
+            }
+
+            try {
+                mv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(List.class), "valueOf",
+                        Type.getMethodDescriptor(List.class.getMethod("valueOf", Obj[].class)),
+                        false);
+            } catch (NoSuchMethodException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        @Override
+        public void visitExprUnary(ExprNode.Unary expr) {
+            visitExpr(expr.getTarget());
+
+            try {
+                switch (expr.getOp()) {
+                    case NEG:
+                        mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Neg.class),
+                                "_neg_", Type.getMethodDescriptor(Neg.class.getMethod("_neg_")),
+                                true);
+                        break;
+                    case NOT:
+                        mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Not.class),
+                                "_not_", Type.getMethodDescriptor(Not.class.getMethod("_not_")),
+                                true);
+                        break;
+                    default:
+                        throw new MethodNotImplementedError(expr.getOp().toString());
+                }
+            } catch (NoSuchMethodException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        @Override
+        public void visitExprVariable(ExprNode.Variable expr) {
+            mv.visitVarInsn(ALOAD, locals.indexOf(expr.getName()));
         }
 
         /**
@@ -265,27 +481,28 @@ public final class Qux2ClassTranslater extends QuxAdapter {
          * {@inheritDoc}
          */
         @Override
-        public void visitStmtAssign(String var, ExprNode expr) {
-            visitExpr(expr);
+        public void visitStmtAssign(StmtNode.Assign stmt) {
+            visitExpr(stmt.getExpr());
 
-            if (!locals.contains(var)) {
-                locals.add(var);
+            if (!locals.contains(stmt.getVar())) {
+                locals.add(stmt.getVar());
             }
 
-            mv.visitVarInsn(ASTORE, locals.indexOf(var));
+            mv.visitVarInsn(ASTORE, locals.indexOf(stmt.getVar()));
         }
 
         /**
          * {@inheritDoc}
          */
         @Override
-        public void visitStmtFunction(String name, ImmutableList<ExprNode> arguments) {
-            Type[] argumentTypes = new Type[arguments.size()];
-            for (int i = 0; i < arguments.size(); i++) {
-                visitExpr(arguments.get(i));
+        public void visitStmtFunction(StmtNode.Function stmt) {
+            Type[] argumentTypes = new Type[stmt.getArguments().size()];
+            for (int i = 0; i < stmt.getArguments().size(); i++) {
+                visitExpr(stmt.getArguments().get(i));
 
-                Attribute.Type attribute = Attributes.getAttributeUnchecked(arguments.get(i),
-                        Attribute.Type.class);
+                Attribute.Type attribute = Attributes.getAttributeUnchecked(stmt.getArguments().get(
+                                i), Attribute.Type.class
+                );
 
                 argumentTypes[i] = getTypeFromQuxType(attribute.getType());
             }
@@ -298,9 +515,8 @@ public final class Qux2ClassTranslater extends QuxAdapter {
          * {@inheritDoc}
          */
         @Override
-        public void visitStmtIf(ExprNode condition, ImmutableList<StmtNode> trueBlock,
-                ImmutableList<StmtNode> falseBlock) {
-            visitExpr(condition);
+        public void visitStmtIf(StmtNode.If stmt) {
+            visitExpr(stmt.getCondition());
 
             mv.visitFieldInsn(GETSTATIC, Type.getInternalName(Bool.class), "FALSE",
                     Type.getDescriptor(Bool.class));
@@ -310,18 +526,18 @@ public final class Qux2ClassTranslater extends QuxAdapter {
 
             mv.visitJumpInsn(IF_ACMPEQ, falseLabel);
 
-            visitBlock(trueBlock);
+            visitBlock(stmt.getTrueBlock());
 
             // Only need to visit this GOTO if there is a false block
-            if (!falseBlock.isEmpty()) {
+            if (!stmt.getFalseBlock().isEmpty()) {
                 mv.visitJumpInsn(GOTO, endLabel);
             }
 
             mv.visitLabel(falseLabel);
 
             // Only need to visit this block and label if there is a false block
-            if (!falseBlock.isEmpty()) {
-                visitBlock(falseBlock);
+            if (!stmt.getFalseBlock().isEmpty()) {
+                visitBlock(stmt.getFalseBlock());
 
                 mv.visitLabel(endLabel);
             }
@@ -331,13 +547,14 @@ public final class Qux2ClassTranslater extends QuxAdapter {
          * {@inheritDoc}
          */
         @Override
-        public void visitStmtPrint(ExprNode expr) {
+        public void visitStmtPrint(StmtNode.Print stmt) {
             mv.visitFieldInsn(GETSTATIC, Type.getInternalName(System.class), "out",
                     Type.getDescriptor(PrintStream.class));
 
-            visitExpr(expr);
+            visitExpr(stmt.getExpr());
 
-            Attribute.Type attribute = Attributes.getAttributeUnchecked(expr, Attribute.Type.class);
+            Attribute.Type attribute = Attributes.getAttributeUnchecked(stmt.getExpr(),
+                    Attribute.Type.class);
 
             mv.visitMethodInsn(INVOKEVIRTUAL, getTypeFromQuxType(attribute.getType())
                     .getInternalName(), "toString", Type.getMethodDescriptor(Type.getType(
@@ -358,204 +575,14 @@ public final class Qux2ClassTranslater extends QuxAdapter {
          * {@inheritDoc}
          */
         @Override
-        public void visitStmtReturn(Optional<ExprNode> expr) {
-            if (expr.isPresent()) {
-                visitExpr(expr.get());
+        public void visitStmtReturn(StmtNode.Return stmt) {
+            if (stmt.getExpr().isPresent()) {
+                visitExpr(stmt.getExpr().get());
 
                 mv.visitInsn(ARETURN);
             } else {
                 mv.visitInsn(RETURN);
             }
-        }
-
-        private void visitBlock(java.util.List<StmtNode> stmts) {
-            for (StmtNode stmt : stmts) {
-                stmt.accept(this);
-            }
-        }
-
-        private void visitExpr(ExprNode expr) {
-            try {
-                if (expr instanceof ExprNode.Binary) {
-                    visitExprBinary((ExprNode.Binary) expr);
-                } else if (expr instanceof ExprNode.Constant) {
-                    visitExprConstant((ExprNode.Constant) expr);
-                } else if (expr instanceof ExprNode.Function) {
-                    visitExprFunction((ExprNode.Function) expr);
-                } else if (expr instanceof ExprNode.List) {
-                    visitExprList((ExprNode.List) expr);
-                } else if (expr instanceof ExprNode.Unary) {
-                    visitExprUnary((ExprNode.Unary) expr);
-                } else if (expr instanceof ExprNode.Variable) {
-                    visitExprVariable((ExprNode.Variable) expr);
-                }
-            } catch (NoSuchMethodException e) {
-                logger.error(e.getMessage(), e);
-
-                throw new InternalError(e.getMessage());
-            }
-        }
-
-        private void visitExprBinary(ExprNode.Binary expr) throws NoSuchMethodException {
-            visitExpr(expr.getLhs());
-            visitExpr(expr.getRhs());
-
-            switch (expr.getOp()) {
-                case ADD:
-                    mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Add.class), "_add_",
-                            Type.getMethodDescriptor(Add.class.getMethod("_add_", Obj.class)),
-                            true);
-                    break;
-                case DIV:
-                    mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Div.class), "_div_",
-                            Type.getMethodDescriptor(Div.class.getMethod("_div_", Obj.class)),
-                            true);
-                    break;
-                case EQ:
-                    mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Eq.class), "_eq_",
-                            Type.getMethodDescriptor(Eq.class.getMethod("_eq_", Obj.class)), true);
-                    break;
-                case GT:
-                    mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Gt.class), "_gt_",
-                            Type.getMethodDescriptor(Gt.class.getMethod("_gt_", Obj.class)), true);
-                    break;
-                case GTE:
-                    mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Gte.class), "_gte_",
-                            Type.getMethodDescriptor(Gte.class.getMethod("_gte_", Obj.class)),
-                            true);
-                    break;
-                case LT:
-                    mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Lt.class), "_lt_",
-                            Type.getMethodDescriptor(Lt.class.getMethod("_lt_", Obj.class)), true);
-                    break;
-                case LTE:
-                    mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Lte.class), "_lteadd_",
-                            Type.getMethodDescriptor(Lte.class.getMethod("_lte_", Obj.class)),
-                            true);
-                    break;
-                case MUL:
-                    mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Add.class), "_mul_",
-                            Type.getMethodDescriptor(Mul.class.getMethod("_mul_", Obj.class)),
-                            true);
-                    break;
-                case NEQ:
-                    mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Neq.class), "_neq_",
-                            Type.getMethodDescriptor(Neq.class.getMethod("_neq_", Obj.class)),
-                            true);
-                    break;
-                case SUB:
-                    mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Sub.class), "_sub_",
-                            Type.getMethodDescriptor(Sub.class.getMethod("_sub_", Obj.class)),
-                            true);
-                    break;
-                default:
-                    throw new MethodNotImplementedError(expr.getOp().toString());
-            }
-        }
-
-        private void visitExprConstant(ExprNode.Constant expr) throws NoSuchMethodException {
-            Object value;
-
-            switch (expr.getType()) {
-                case BOOL:
-                    if ((boolean) expr.getValue()) {
-                        mv.visitFieldInsn(GETSTATIC, Type.getInternalName(Bool.class), "TRUE",
-                                Type.getDescriptor(Bool.class));
-                    } else {
-                        mv.visitFieldInsn(GETSTATIC, Type.getInternalName(Bool.class), "FALSE",
-                                Type.getDescriptor(Bool.class));
-                    }
-                    break;
-                case INT:
-                    value = expr.getValue();
-
-                    visitValue((BigInteger) value);
-
-                    Class<?> argumentClass;
-
-                    int bitLength = ((BigInteger) value).bitLength();
-                    if (bitLength < 8) {
-                        argumentClass = byte.class;
-                    } else if (bitLength < 16) {
-                        argumentClass = short.class;
-                    } else if (bitLength < 32) {
-                        argumentClass = int.class;
-                    } else if (bitLength < 64) {
-                        argumentClass = long.class;
-                    } else {
-                        argumentClass = byte[].class;
-                    }
-
-                    // TODO: FIXME: This doesn't work because we need to use the constructor if we have byte[] as the argument class
-                    mv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(Int.class), "valueOf",
-                            Type.getMethodDescriptor(Int.class.getMethod("valueOf", argumentClass)),
-                            false);
-                    break;
-                case NULL:
-                    mv.visitFieldInsn(GETSTATIC, Type.getInternalName(Null.class), "INSTANCE",
-                            Type.getDescriptor(Null.class));
-                    break;
-                case REAL:
-                    throw new MethodNotImplementedError("real");
-                case STR:
-                    value = expr.getValue();
-
-                    mv.visitLdcInsn((String) value);
-                    mv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(Str.class), "valueOf",
-                            Type.getMethodDescriptor(Str.class.getMethod("valueOf", String.class)),
-                            false);
-                    break;
-                default:
-                    throw new MethodNotImplementedError(expr.getType().toString());
-            }
-        }
-
-        private void visitExprFunction(ExprNode.Function expr) {
-            Attribute.Type attribute = Attributes.getAttributeUnchecked(expr, Attribute.Type.class);
-
-            Type type = getTypeFromQuxType(attribute.getType());
-
-            for (int i = 0; i < expr.getArguments().size(); i++) {
-                visitExpr(expr.getArguments().get(i));
-            }
-
-            mv.visitMethodInsn(INVOKESTATIC, name, name, type.getDescriptor(), false);
-        }
-
-        private void visitExprList(ExprNode.List expr) throws NoSuchMethodException {
-            visitValue(expr.getValues().size());
-            mv.visitTypeInsn(ANEWARRAY, Type.getInternalName(Obj.class));
-
-            for (int i = 0; i < expr.getValues().size(); i++) {
-                mv.visitInsn(DUP);
-                visitValue(i);
-                visitExpr(expr.getValues().get(i));
-                mv.visitInsn(AASTORE);
-            }
-
-            mv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(List.class), "valueOf",
-                    Type.getMethodDescriptor(List.class.getMethod("valueOf", Obj[].class)), false);
-        }
-
-        private void visitExprUnary(ExprNode.Unary expr) throws NoSuchMethodException {
-            visitExpr(expr.getTarget());
-
-            switch (expr.getOp()) {
-                case NEG:
-                    mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Neg.class), "_neg_",
-                            Type.getMethodDescriptor(Neg.class.getMethod("_neg_")), true);
-                    break;
-                case NOT:
-                    mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Not.class), "_not_",
-                            Type.getMethodDescriptor(Not.class.getMethod("_not_")), true);
-                    break;
-                default:
-                    throw new MethodNotImplementedError(expr.getOp().toString());
-            }
-        }
-
-        private void visitExprVariable(ExprNode.Variable expr) {
-            mv.visitVarInsn(ALOAD, locals.indexOf(expr.getName()));
         }
 
         private void visitValue(BigInteger value) {

@@ -1,5 +1,7 @@
 package com.hjwylde.qux.api;
 
+import com.hjwylde.qux.util.Type;
+
 /**
  * TODO: Documentation.
  *
@@ -13,5 +15,5 @@ public interface QuxVisitor {
 
     void visitEnd();
 
-    FunctionVisitor visitFunction(int flags, String name, String desc);
+    FunctionVisitor visitFunction(int flags, String name, Type.Function type);
 }

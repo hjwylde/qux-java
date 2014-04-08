@@ -7,6 +7,7 @@ import static com.google.common.base.Preconditions.checkState;
 import com.hjwylde.qux.api.FunctionVisitor;
 import com.hjwylde.qux.api.QuxVisitor;
 import com.hjwylde.qux.util.Attribute;
+import com.hjwylde.qux.util.Type;
 
 import com.google.common.collect.ImmutableList;
 
@@ -72,8 +73,8 @@ public final class QuxNode extends Node implements QuxVisitor {
     public void visitEnd() {}
 
     @Override
-    public FunctionVisitor visitFunction(int flags, String name, String desc) {
-        FunctionNode fn = new FunctionNode(flags, name, desc);
+    public FunctionVisitor visitFunction(int flags, String name, Type.Function type) {
+        FunctionNode fn = new FunctionNode(flags, name, type);
 
         functions.add(fn);
 

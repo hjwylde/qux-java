@@ -2,12 +2,8 @@ package com.hjwylde.qux.api;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.hjwylde.qux.tree.ExprNode;
 import com.hjwylde.qux.tree.StmtNode;
 import com.hjwylde.qux.util.Type;
-
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 
 /**
  * TODO: Documentation.
@@ -63,40 +59,39 @@ public abstract class FunctionAdapter implements FunctionVisitor {
      * {@inheritDoc}
      */
     @Override
-    public void visitStmtAssign(String var, ExprNode expr) {
-        next.visitStmtAssign(var, expr);
+    public void visitStmtAssign(StmtNode.Assign stmt) {
+        next.visitStmtAssign(stmt);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void visitStmtFunction(String name, ImmutableList<ExprNode> arguments) {
-        next.visitStmtFunction(name, arguments);
+    public void visitStmtFunction(StmtNode.Function stmt) {
+        next.visitStmtFunction(stmt);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void visitStmtIf(ExprNode condition, ImmutableList<StmtNode> trueBlock,
-            ImmutableList<StmtNode> falseBlock) {
-        next.visitStmtIf(condition, trueBlock, falseBlock);
+    public void visitStmtIf(StmtNode.If stmt) {
+        next.visitStmtIf(stmt);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void visitStmtPrint(ExprNode expr) {
-        next.visitStmtPrint(expr);
+    public void visitStmtPrint(StmtNode.Print stmt) {
+        next.visitStmtPrint(stmt);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void visitStmtReturn(Optional<ExprNode> expr) {
-        next.visitStmtReturn(expr);
+    public void visitStmtReturn(StmtNode.Return stmt) {
+        next.visitStmtReturn(stmt);
     }
 }
