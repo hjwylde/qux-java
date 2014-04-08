@@ -15,31 +15,58 @@ import com.google.common.collect.ImmutableList;
  */
 final class NullFunctionVisitor implements FunctionVisitor {
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void visitCode() {}
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void visitEnd() {}
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void visitParameter(String var, Type type) {}
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void visitReturnType(Type type) {}
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void visitStmtAssign(String var, ExprNode expr) {}
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void visitStmtFunction(String name, ImmutableList<ExprNode> arguments) {}
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void visitStmtIf(ExprNode condition, ImmutableList<StmtNode> trueBlock,
             ImmutableList<StmtNode> falseBlock) {}
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void visitStmtPrint(ExprNode expr) {}
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void visitStmtReturn(Optional<ExprNode> expr) {}
 }

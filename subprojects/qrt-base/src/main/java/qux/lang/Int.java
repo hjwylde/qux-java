@@ -34,16 +34,25 @@ public final class Int extends Obj implements Integral<Int>, Comparable<Int>, Or
         this.value = checkNotNull(value, "value cannot be null");
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Int _add_(Int t) {
         return valueOf(value.add(t.value));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Str _desc_() {
         return Str.valueOf(value.toString());
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Int _div_(Int t) {
         if (t.value.equals(BigInteger.ZERO)) {
@@ -53,51 +62,81 @@ public final class Int extends Obj implements Integral<Int>, Comparable<Int>, Or
         return valueOf(value.divide(t.value));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Bool _eq_(Int t) {
         return value.equals(t.value) ? TRUE : FALSE;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Bool _gt_(Int t) {
         return value.compareTo(t.value) > 0 ? TRUE : FALSE;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Bool _gte_(Int t) {
         return value.compareTo(t.value) >= 0 ? TRUE : FALSE;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Bool _lt_(Int t) {
         return value.compareTo(t.value) < 0 ? TRUE : FALSE;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Bool _lte_(Int t) {
         return value.compareTo(t.value) <= 0 ? TRUE : FALSE;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Int _mul_(Int t) {
         return valueOf(value.multiply(t.value));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Int _neg_() {
         return valueOf(value.negate());
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Bool _neq_(Int t) {
         return value.equals(t.value) ? FALSE : TRUE;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Int _sub_(Int t) {
         return valueOf(value.subtract(t.value));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean equals(Object obj) {
         if (obj == null || getClass() != obj.getClass()) {
@@ -107,6 +146,9 @@ public final class Int extends Obj implements Integral<Int>, Comparable<Int>, Or
         return Objects.equals(value, ((Int) obj).value);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int hashCode() {
         return value.hashCode();

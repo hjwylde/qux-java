@@ -12,7 +12,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * A basic implementation of a {@link com.hjwylde.qbs.compiler.CompileSpec}. Provide default
+ * A basic implementation of a {@link com.hjwylde.qbs.compiler.CompileSpec}. Provides default
  * implementation of the methods and some fields to hold the properties. Note that this
  * implementation will automatically normalise any paths passed as arguments to methods.
  * <p/>

@@ -27,47 +27,74 @@ public abstract class FunctionAdapter implements FunctionVisitor {
         this.next = checkNotNull(next, "next cannot be null");
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void visitCode() {
         next.visitCode();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void visitEnd() {
         next.visitEnd();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void visitParameter(String var, Type type) {
         next.visitParameter(var, type);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void visitReturnType(Type type) {
         next.visitReturnType(type);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void visitStmtAssign(String var, ExprNode expr) {
         next.visitStmtAssign(var, expr);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void visitStmtFunction(String name, ImmutableList<ExprNode> arguments) {
         next.visitStmtFunction(name, arguments);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void visitStmtIf(ExprNode condition, ImmutableList<StmtNode> trueBlock,
             ImmutableList<StmtNode> falseBlock) {
         next.visitStmtIf(condition, trueBlock, falseBlock);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void visitStmtPrint(ExprNode expr) {
         next.visitStmtPrint(expr);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void visitStmtReturn(Optional<ExprNode> expr) {
         next.visitStmtReturn(expr);

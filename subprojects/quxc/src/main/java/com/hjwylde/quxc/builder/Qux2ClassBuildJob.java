@@ -81,12 +81,12 @@ public final class Qux2ClassBuildJob extends BuildJob {
         return BuildResult.success();
     }
 
-    protected final String getFileName() {
-        return com.google.common.io.Files.getNameWithoutExtension(source.toString());
-    }
-
     private static Path generateOutpath(Path outdir, String name, String extension) {
         return outdir.resolve(name + "." + extension);
+    }
+
+    private final String getFileName() {
+        return com.google.common.io.Files.getNameWithoutExtension(source.toString());
     }
 
     private void parse(QuxVisitor qv) throws IOException {

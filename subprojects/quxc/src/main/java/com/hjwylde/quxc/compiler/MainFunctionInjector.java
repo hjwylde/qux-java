@@ -32,7 +32,10 @@ import qux.lang.Obj;
 import qux.lang.Str;
 
 /**
- * TODO: Documentation
+ * A {@link org.objectweb.asm.ClassVisitor} that injects a main function when it detects the
+ * required proxy method. If the visitor detects a method with the signature of {@code
+ * main(Lqux/lang/List;)V}, then the standard Java main function will be injected with code to call
+ * the proxy.
  *
  * @author Henry J. Wylde
  */
@@ -48,18 +51,22 @@ public class MainFunctionInjector extends ClassVisitor {
 
     private final String name;
 
+    /**
+     * Creates a new {@code MainFunctionInjector} with the given next {@link
+     * org.objectweb.asm.ClassVisitor} and name of the source compile file.
+     *
+     * @param cv the next class visitor.
+     * @param name the name of the Qux source file.
+     */
     public MainFunctionInjector(ClassVisitor cv, String name) {
         super(ASM5, cv);
 
         this.name = checkNotNull(name, "name cannot be null");
     }
 
-    @Override
-    public void visit(int version, int access, String name, String signature, String superName,
-            String[] interfaces) {
-        super.visit(version, access, name, signature, superName, interfaces);
-    }
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public MethodVisitor visitMethod(int access, String name, String desc, String signature,
             String[] exceptions) {
@@ -81,17 +88,21 @@ public class MainFunctionInjector extends ClassVisitor {
         return super.visitMethod(access, name, desc, signature, exceptions);
     }
 
+    /**
+     * Injects a Java main function in that will act as a proxy for the equivalent Qux main
+     * function.
+     *
+     * @throws NoSuchMethodException should never occur.
+     */
     private void injectMainFunction() throws NoSuchMethodException {
         MethodVisitor mv = super.visitMethod(FUNCTION_MAIN_FLAGS, FUNCTION_MAIN_NAME,
                 Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(String[].class)), null,
                 new String[0]);
 
+        // If this visitor doesn't care, do nothing
         if (mv == null) {
             return;
         }
-
-        mv.visitParameter("args", 0);
-        mv.visitCode();
 
         // Local variable positions
 
@@ -101,6 +112,9 @@ public class MainFunctionInjector extends ClassVisitor {
         int strs = 1;
         // int (local variable)
         int i = 2;
+
+        mv.visitParameter("args", args);
+        mv.visitCode();
 
         // Create the array of Str
         mv.visitVarInsn(ALOAD, args);

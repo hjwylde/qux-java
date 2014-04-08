@@ -20,16 +20,25 @@ public abstract class QuxAdapter implements QuxVisitor {
         this.next = checkNotNull(next, "next cannot be null");
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void visit(int version, String name) {
         next.visit(version, name);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void visitEnd() {
         next.visitEnd();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public FunctionVisitor visitFunction(int flags, String name, String desc) {
         return next.visitFunction(flags, name, desc);

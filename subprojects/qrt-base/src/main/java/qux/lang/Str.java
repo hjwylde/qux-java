@@ -33,41 +33,65 @@ public final class Str extends Obj implements Comparable<Str>, Orderable<Str> {
         this.value = checkNotNull(value, "value cannot be null");
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Str _desc_() {
         return this;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Bool _eq_(Str t) {
         return value.equals(t.value) ? TRUE : FALSE;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Bool _gt_(Str t) {
         return value.compareTo(t.value) > 0 ? TRUE : FALSE;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Bool _gte_(Str t) {
         return value.compareTo(t.value) >= 0 ? TRUE : FALSE;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Bool _lt_(Str t) {
         return value.compareTo(t.value) < 0 ? TRUE : FALSE;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Bool _lte_(Str t) {
         return value.compareTo(t.value) <= 0 ? TRUE : FALSE;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Bool _neq_(Str t) {
         return value.equals(t.value) ? FALSE : TRUE;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean equals(Object obj) {
         if (obj == null || getClass() != obj.getClass()) {
@@ -77,11 +101,17 @@ public final class Str extends Obj implements Comparable<Str>, Orderable<Str> {
         return Objects.equals(value, ((Str) obj).value);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int hashCode() {
         return value.hashCode();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String toString() {
         return value;

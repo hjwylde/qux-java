@@ -1,5 +1,6 @@
 package com.hjwylde.qux.util;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
@@ -23,6 +24,10 @@ public interface Attribute {
         private final int length;
 
         public Source(String source, int line, int col, int length) {
+            checkArgument(line >= 1, "line cannot be less than 1");
+            checkArgument(col >= 0, "col cannot be less than 0");
+            checkArgument(length >= 1, "length cannot be less than 1");
+
             this.source = checkNotNull(source, "source cannot be null");
 
             this.line = line;
@@ -30,18 +35,36 @@ public interface Attribute {
             this.length = length;
         }
 
+        /**
+         * Gets the column number of this source attribute. Starts from {@code 0}.
+         *
+         * @return the column number.
+         */
         public int getCol() {
             return col;
         }
 
+        /**
+         * Gets the length of text this source attribute spans. Starts from {@code 1}.
+         *
+         * @return the source length.
+         */
         public int getLength() {
             return length;
         }
 
+        /**
+         * Gets the line number of this source attribute. Starts from {@code 1}.
+         */
         public int getLine() {
             return line;
         }
 
+        /**
+         * Gets the source file name.
+         *
+         * @return the source file name.
+         */
         public String getSource() {
             return source;
         }
@@ -61,6 +84,11 @@ public interface Attribute {
             this.type = checkNotNull(type, "type cannot be null");
         }
 
+        /**
+         * Gets the type.
+         *
+         * @return the type.
+         */
         public com.hjwylde.qux.util.Type getType() {
             return type;
         }

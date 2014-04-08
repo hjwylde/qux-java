@@ -19,6 +19,9 @@ public class CheckQuxAdapter extends QuxAdapter {
         super(next);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void visit(int version, String name) {
         checkState(!visitedStart, "may only call visit(int, String) once");
@@ -31,6 +34,9 @@ public class CheckQuxAdapter extends QuxAdapter {
         super.visit(version, name);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void visitEnd() {
         checkState(visitedStart, "must call visit(int, String) before visitEnd()");
@@ -41,6 +47,9 @@ public class CheckQuxAdapter extends QuxAdapter {
         super.visitEnd();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public FunctionVisitor visitFunction(int flags, String name, String desc) {
         checkState(visitedStart,

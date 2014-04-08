@@ -23,6 +23,11 @@ public final class MethodNotImplementedError extends InternalError {
         super(getMethodSignature());
     }
 
+    /**
+     * Gets the method signature as a string.
+     *
+     * @return the method signature.
+     */
     private static String getMethodSignature() {
         StackTraceElement caller = Thread.currentThread().getStackTrace()[3];
 
