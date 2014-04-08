@@ -35,16 +35,25 @@ public final class Real extends Obj implements Integral<Real>, Comparable<Real>,
         this.value = checkNotNull(value, "value cannot be null");
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Real _add_(Real t) {
         return valueOf(value.add(t.value));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Str _desc_() {
         return Str.valueOf(value.toString());
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Real _div_(Real t) {
         if (t.value.equals(BigDecimal.ZERO)) {
@@ -54,51 +63,81 @@ public final class Real extends Obj implements Integral<Real>, Comparable<Real>,
         return valueOf(value.divide(t.value));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Bool _eq_(Real t) {
         return value.equals(t.value) ? TRUE : FALSE;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Bool _gt_(Real t) {
         return value.compareTo(t.value) > 0 ? TRUE : FALSE;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Bool _gte_(Real t) {
         return value.compareTo(t.value) >= 0 ? TRUE : FALSE;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Bool _lt_(Real t) {
         return value.compareTo(t.value) < 0 ? TRUE : FALSE;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Bool _lte_(Real t) {
         return value.compareTo(t.value) <= 0 ? TRUE : FALSE;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Real _mul_(Real t) {
         return valueOf(value.multiply(t.value));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Real _neg_() {
         return valueOf(value.negate());
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Bool _neq_(Real t) {
         return value.equals(t.value) ? FALSE : TRUE;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Real _sub_(Real t) {
         return valueOf(value.subtract(t.value));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean equals(Object obj) {
         if (obj == null || getClass() != obj.getClass()) {
@@ -108,6 +147,9 @@ public final class Real extends Obj implements Integral<Real>, Comparable<Real>,
         return Objects.equals(value, ((Real) obj).value);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int hashCode() {
         return value.hashCode();

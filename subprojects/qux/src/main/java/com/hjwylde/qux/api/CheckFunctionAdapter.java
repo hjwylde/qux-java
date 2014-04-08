@@ -3,32 +3,31 @@ package com.hjwylde.qux.api;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
-import com.hjwylde.qux.tree.ExprNode;
 import com.hjwylde.qux.tree.StmtNode;
 import com.hjwylde.qux.util.Type;
-
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
-
-import javax.annotation.Nullable;
 
 /**
  * TODO: Documentation
  *
  * @author Henry J. Wylde
  */
-public class CheckFunctionAdapter extends FunctionVisitor {
+public class CheckFunctionAdapter extends FunctionAdapter {
 
     private boolean visitedCode = false;
+    private boolean visitedReturnType = false;
     private boolean visitedEnd = false;
 
-    public CheckFunctionAdapter(@Nullable FunctionVisitor next) {
+    public CheckFunctionAdapter(FunctionVisitor next) {
         super(next);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void visitCode() {
         checkState(!visitedCode, "may only call visitCode() once");
+        checkState(visitedReturnType, "must call visitReturnType(Type) before visitCode()");
         checkState(!visitedEnd, "must call visitCode() before visitEnd()");
 
         visitedCode = true;
@@ -36,6 +35,9 @@ public class CheckFunctionAdapter extends FunctionVisitor {
         super.visitCode();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void visitEnd() {
         checkState(visitedCode, "must call visitCode() before visitEnd()");
@@ -46,6 +48,9 @@ public class CheckFunctionAdapter extends FunctionVisitor {
         super.visitEnd();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void visitParameter(String var, Type type) {
         checkState(!visitedCode, "must call visitParameter(String, Type) before visitCode()");
@@ -56,66 +61,82 @@ public class CheckFunctionAdapter extends FunctionVisitor {
         super.visitParameter(var, type);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void visitReturnType(Type type) {
         checkState(!visitedCode, "must call visitReturnType(Type) before visitCode()");
+        checkState(!visitedReturnType, "may only call visitReturnType(Type) once");
         checkState(!visitedEnd, "must call visitReturnType(Type) before visitEnd()");
         checkNotNull(type, "type cannot be null");
+
+        visitedReturnType = true;
 
         super.visitReturnType(type);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public void visitStmtAssign(String var, ExprNode expr) {
+    public void visitStmtAssign(StmtNode.Assign stmt) {
         checkState(visitedCode, "must call visitCode() before visitStmtAssign(String, ExprNode)");
         checkState(!visitedEnd, "must call visitStmtAssign(String, ExprNode) before visitEnd()");
-        checkNotNull(var, "var cannot be null");
-        checkNotNull(expr, "expr cannot be null");
+        checkNotNull(stmt, "stmt cannot be null");
 
-        super.visitStmtAssign(var, expr);
+        super.visitStmtAssign(stmt);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public void visitStmtFunction(String name, ImmutableList<ExprNode> arguments) {
+    public void visitStmtFunction(StmtNode.Function stmt) {
         checkState(visitedCode,
                 "must call visitCode() before visitStmtFunction(String, ImmutablelistList<ExprNode>)");
         checkState(!visitedEnd,
                 "must call visitStmtFunction(String, ImmutableList<ExprNode>) before visitEnd()");
-        checkNotNull(name, "name cannot be null");
-        checkNotNull(arguments, "arguments cannot be null");
+        checkNotNull(stmt, "stmt cannot be null");
 
-        super.visitStmtFunction(name, arguments);
+        super.visitStmtFunction(stmt);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public void visitStmtIf(ExprNode condition, ImmutableList<StmtNode> trueBlock,
-            ImmutableList<StmtNode> falseBlock) {
+    public void visitStmtIf(StmtNode.If stmt) {
         checkState(visitedCode,
                 "must call visitCode() before visitStmtIf(ExprNode, ImmutableList<StmtNode>, ImmutableList<StmtNode>)");
         checkState(!visitedEnd,
                 "must call visitStmtIf(ExprNode, ImmutableList<StmtNode>, ImmutableList<StmtNode>) before visitEnd()");
-        checkNotNull(condition, "condition cannot be null");
-        checkNotNull(trueBlock, "trueBlock cannot be null");
-        checkNotNull(falseBlock, "falseBlock cannot be null");
+        checkNotNull(stmt, "stmt cannot be null");
 
-        super.visitStmtIf(condition, trueBlock, falseBlock);
+        super.visitStmtIf(stmt);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public void visitStmtPrint(ExprNode expr) {
+    public void visitStmtPrint(StmtNode.Print stmt) {
         checkState(visitedCode, "must call visitCode() before visitStmtAssign(String, ExprNode)");
         checkState(!visitedEnd, "must call visitStmtPrint(ExprNode) before visitEnd()");
-        checkNotNull(expr, "expr cannot be null");
+        checkNotNull(stmt, "stmt cannot be null");
 
-        super.visitStmtPrint(expr);
+        super.visitStmtPrint(stmt);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public void visitStmtReturn(Optional<ExprNode> expr) {
+    public void visitStmtReturn(StmtNode.Return stmt) {
         checkState(visitedCode, "must call visitCode() before visitStmtReturn(Optional<ExprNode>)");
         checkState(!visitedEnd, "must call visitStmtReturn(Optional<ExprNode>) before visitEnd()");
-        checkNotNull(expr, "expr cannot be null");
+        checkNotNull(stmt, "stmt cannot be null");
 
-        super.visitStmtReturn(expr);
+        super.visitStmtReturn(stmt);
     }
 }

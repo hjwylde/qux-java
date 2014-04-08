@@ -3,9 +3,9 @@ package com.hjwylde.quxc.compiler;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.hjwylde.qbs.compiler.CompileOptions;
+import com.hjwylde.quxc.util.QuxcProperties;
 
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 
 /**
  * TODO: Documentation.
@@ -64,25 +64,59 @@ public class QuxCompileOptions extends CompileOptions {
 
         private boolean verbose;
 
-        private Charset charset = StandardCharsets.UTF_8;
+        private Charset charset;
 
-        protected Builder() {}
+        /**
+         * Creates a new {@code Builder} and initialises the verbose and character set fields to the
+         * defaults as found in the {@link com.hjwylde.quxc.util.QuxcProperties}.
+         */
+        protected Builder() {
+            // Get the default properties
+            QuxcProperties properties = QuxcProperties.loadDefaultProperties();
 
+            verbose = Boolean.valueOf(properties.getVerbose());
+
+            charset = Charset.forName(properties.getCharset());
+        }
+
+        /**
+         * Creates a new {@code Builder} and initialises the verbose and character set fields to the
+         * options found in the given {@link com.hjwylde.quxc.compiler.QuxCompileOptions}.
+         *
+         * @param options the options to load the defaults from.
+         */
         protected Builder(QuxCompileOptions options) {
             this.verbose = options.verbose;
 
             this.charset = options.charset;
         }
 
+        /**
+         * Builds the {@link com.hjwylde.quxc.compiler.QuxCompileOptions} from the current fields.
+         *
+         * @return a new {@link com.hjwylde.quxc.compiler.QuxCompileOptions}.
+         */
         public QuxCompileOptions build() {
             return new QuxCompileOptions(this);
         }
 
+        /**
+         * Sets the character set field.
+         *
+         * @param charset the character set.
+         * @return this for method chaining.
+         */
         public final Builder setCharset(Charset charset) {
             this.charset = checkNotNull(charset, "charset cannot be null");
             return this;
         }
 
+        /**
+         * Sets the verbose field.
+         *
+         * @param verbose the verbose field.
+         * @return this for method chaining.
+         */
         public final Builder setVerbose(boolean verbose) {
             this.verbose = verbose;
             return this;

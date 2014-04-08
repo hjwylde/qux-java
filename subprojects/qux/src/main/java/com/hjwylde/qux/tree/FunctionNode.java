@@ -5,13 +5,15 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.hjwylde.qux.api.FunctionVisitor;
 import com.hjwylde.qux.api.QuxVisitor;
+import com.hjwylde.qux.util.Attribute;
 import com.hjwylde.qux.util.Type;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,25 +23,32 @@ import java.util.Map;
  *
  * @author Henry J. Wylde
  */
-public final class FunctionNode extends FunctionVisitor {
+public final class FunctionNode extends Node implements FunctionVisitor {
 
     private final int flags;
     private final String name;
-    private final String desc;
+    private final Type.Function type;
 
     private Map<String, Type> parameters = new HashMap<>();
     private Type returnType;
 
     private List<StmtNode> stmts = new ArrayList<>();
 
-    public FunctionNode(int flags, String name, String desc) {
+    public FunctionNode(int flags, String name, Type.Function type, Attribute... attributes) {
+        this(flags, name, type, Arrays.asList(attributes));
+    }
+
+    public FunctionNode(int flags, String name, Type.Function type,
+            Collection<Attribute> attributes) {
+        super(attributes);
+
         this.flags = flags;
         this.name = checkNotNull(name, "name cannot be null");
-        this.desc = checkNotNull(desc, "desc cannot be null");
+        this.type = checkNotNull(type, "type cannot be null");
     }
 
     public void accept(QuxVisitor qv) {
-        FunctionVisitor fv = qv.visitFunction(flags, name, desc);
+        FunctionVisitor fv = qv.visitFunction(flags, name, type);
 
         accept(fv);
 
@@ -83,6 +92,12 @@ public final class FunctionNode extends FunctionVisitor {
     }
 
     @Override
+    public void visitCode() {}
+
+    @Override
+    public void visitEnd() {}
+
+    @Override
     public void visitParameter(String var, Type type) {
         checkNotNull(var, "var cannot be null");
         checkNotNull(type, "type cannot be null");
@@ -96,28 +111,27 @@ public final class FunctionNode extends FunctionVisitor {
     }
 
     @Override
-    public void visitStmtAssign(String var, ExprNode expr) {
-        stmts.add(new StmtNode.Assign(var, expr));
+    public void visitStmtAssign(StmtNode.Assign stmt) {
+        stmts.add(stmt);
     }
 
     @Override
-    public void visitStmtFunction(String name, ImmutableList<ExprNode> arguments) {
-        stmts.add(new StmtNode.Function(name, arguments));
+    public void visitStmtFunction(StmtNode.Function stmt) {
+        stmts.add(stmt);
     }
 
     @Override
-    public void visitStmtIf(ExprNode condition, ImmutableList<StmtNode> trueBlock,
-            ImmutableList<StmtNode> falseBlock) {
-        stmts.add(new StmtNode.If(condition, trueBlock, falseBlock));
+    public void visitStmtIf(StmtNode.If stmt) {
+        stmts.add(stmt);
     }
 
     @Override
-    public void visitStmtPrint(ExprNode expr) {
-        stmts.add(new StmtNode.Print(expr));
+    public void visitStmtPrint(StmtNode.Print stmt) {
+        stmts.add(stmt);
     }
 
     @Override
-    public void visitStmtReturn(Optional<ExprNode> expr) {
-        stmts.add(new StmtNode.Return(expr));
+    public void visitStmtReturn(StmtNode.Return stmt) {
+        stmts.add(stmt);
     }
 }

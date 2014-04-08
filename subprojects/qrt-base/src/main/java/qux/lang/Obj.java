@@ -9,11 +9,17 @@ import qux.lang.operators.Desc;
  */
 public abstract class Obj implements Desc {
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Str _desc_() {
         return Str.valueOf("_desc_() not implemented");
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String toString() {
         return _desc_().toString();

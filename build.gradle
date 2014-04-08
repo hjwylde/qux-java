@@ -24,6 +24,8 @@ subprojects {
 
     defaultTasks 'build'
 
+    sourceCompatibility = '1.7'
+
     dependencies {
         compile libraries.guava;
 
@@ -33,6 +35,10 @@ subprojects {
 
     checkstyle {
         configFile new File(rootDir, 'config/checkstyle/checkstyle.xml')
+    }
+
+    compileJava {
+        options.compilerArgs += ['-Xlint:unchecked']
     }
 }
 

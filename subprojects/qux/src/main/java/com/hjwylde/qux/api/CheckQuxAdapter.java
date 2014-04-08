@@ -5,22 +5,25 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.hjwylde.qux.util.Constants.SUPPORTED_VERSIONS;
 
-import javax.annotation.Nullable;
+import com.hjwylde.qux.util.Type;
 
 /**
  * TODO: Documentation
  *
  * @author Henry J. Wylde
  */
-public class CheckQuxAdapter extends QuxVisitor {
+public class CheckQuxAdapter extends QuxAdapter {
 
     private boolean visitedStart = false;
     private boolean visitedEnd = false;
 
-    public CheckQuxAdapter(@Nullable QuxVisitor next) {
+    public CheckQuxAdapter(QuxVisitor next) {
         super(next);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void visit(int version, String name) {
         checkState(!visitedStart, "may only call visit(int, String) once");
@@ -33,6 +36,9 @@ public class CheckQuxAdapter extends QuxVisitor {
         super.visit(version, name);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void visitEnd() {
         checkState(visitedStart, "must call visit(int, String) before visitEnd()");
@@ -43,14 +49,17 @@ public class CheckQuxAdapter extends QuxVisitor {
         super.visitEnd();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public FunctionVisitor visitFunction(int flags, String name, String desc) {
+    public FunctionVisitor visitFunction(int flags, String name, Type.Function type) {
         checkState(visitedStart,
                 "must call visit(int, String) before visitFunction(int, String, String)");
         checkState(!visitedEnd, "must call visitFunction(int, String, String) before visitEnd()");
         checkNotNull(name, "name cannot be null");
-        checkNotNull(desc, "desc cannot be null");
+        checkNotNull(type, "type cannot be null");
 
-        return new CheckFunctionAdapter(super.visitFunction(flags, name, desc));
+        return new CheckFunctionAdapter(super.visitFunction(flags, name, type));
     }
 }

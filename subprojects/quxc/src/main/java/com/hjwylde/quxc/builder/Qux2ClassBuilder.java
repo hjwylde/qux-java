@@ -30,6 +30,8 @@ import java.util.concurrent.Future;
  */
 public final class Qux2ClassBuilder implements Builder {
 
+    // TODO: Consider making changes such that it is possible to register different pipelines to be used in the build job
+
     private static final Logger logger = LoggerFactory.getLogger(Qux2ClassBuilder.class);
 
     private final Context context;
@@ -48,13 +50,13 @@ public final class Qux2ClassBuilder implements Builder {
         Stopwatch stopwatch = Stopwatch.createStarted();
 
         // Build all the files concurrently
-        int threads = Runtime.getRuntime().availableProcessors();
+        int threads = Runtime.getRuntime().availableProcessors() * 4;
         ExecutorService executor = Executors.newFixedThreadPool(threads);
-        CompletionService completion = new ExecutorCompletionService(executor);
+        CompletionService<BuildResult> completion = new ExecutorCompletionService<BuildResult>(
+                executor);
 
         logger.info("compiling {} source file(s) concurrently with {} worker(s)", source.size(),
                 threads);
-
 
         Map<Path, Future<BuildResult>> jobs = new HashMap<>();
 

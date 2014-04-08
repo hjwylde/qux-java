@@ -1,14 +1,18 @@
 package com.hjwylde.qux.tree;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.hjwylde.qux.api.FunctionVisitor;
 import com.hjwylde.qux.api.QuxVisitor;
+import com.hjwylde.qux.util.Attribute;
+import com.hjwylde.qux.util.Type;
 
 import com.google.common.collect.ImmutableList;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -16,12 +20,20 @@ import java.util.List;
  *
  * @author Henry J. Wylde
  */
-public final class QuxNode extends QuxVisitor {
+public final class QuxNode extends Node implements QuxVisitor {
 
     private int version;
     private String name;
 
     private List<FunctionNode> functions = new ArrayList<>();
+
+    public QuxNode(Attribute... attributes) {
+        super(attributes);
+    }
+
+    public QuxNode(Collection<Attribute> attributes) {
+        super(attributes);
+    }
 
     public void accept(QuxVisitor qv) {
         qv.visit(version, name);
@@ -51,13 +63,18 @@ public final class QuxNode extends QuxVisitor {
 
     @Override
     public void visit(int version, String name) {
+        checkArgument(version != 0, "version cannot be 0");
+
         this.version = version;
         this.name = checkNotNull(name, "name cannot be null");
     }
 
     @Override
-    public FunctionVisitor visitFunction(int flags, String name, String desc) {
-        FunctionNode fn = new FunctionNode(flags, name, desc);
+    public void visitEnd() {}
+
+    @Override
+    public FunctionVisitor visitFunction(int flags, String name, Type.Function type) {
+        FunctionNode fn = new FunctionNode(flags, name, type);
 
         functions.add(fn);
 
