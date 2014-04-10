@@ -1,12 +1,13 @@
 package com.hjwylde.quxc.compiler;
 
+import com.hjwylde.common.util.LoggerUtils;
 import com.hjwylde.qbs.builder.BuildResult;
 import com.hjwylde.qbs.builder.Context;
 import com.hjwylde.qbs.compiler.Compiler;
-import com.hjwylde.qux.internal.util.LoggerUtils;
 import com.hjwylde.quxc.builder.Qux2ClassBuilder;
 import com.hjwylde.quxc.builder.QuxProject;
 
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
@@ -15,9 +16,6 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-
 /**
  * TODO: Documentation.
  *
@@ -25,7 +23,7 @@ import ch.qos.logback.classic.Logger;
  */
 public final class QuxCompiler implements Compiler<QuxCompileSpec> {
 
-    private static final Logger logger = (Logger) LoggerFactory.getLogger(QuxCompiler.class);
+    private static final Logger logger = LoggerFactory.getLogger(QuxCompiler.class);
 
     /**
      * {@inheritDoc}
@@ -63,13 +61,10 @@ public final class QuxCompiler implements Compiler<QuxCompileSpec> {
     }
 
     private static void setLogLevel(boolean verbose) {
-        Logger rootLogger = (Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
-
+        // TODO: Implement a solution for verbose mode
+        // One idea is to have different loggers and to change which one is being used based on the verbose mode
         if (verbose) {
-            // Only set the log level if it hasn't been overwritten by a properties file
-            if (rootLogger.getLevel().isGreaterOrEqual(Level.INFO)) {
-                rootLogger.setLevel(Level.INFO);
-            }
+            logger.warn("verbose mode is not currently supported");
         }
     }
 }
