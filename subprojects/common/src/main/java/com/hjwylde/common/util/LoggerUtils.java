@@ -1,8 +1,7 @@
-package com.hjwylde.qux.internal.util;
+package com.hjwylde.common.util;
 
 import com.hjwylde.common.error.BuildError;
 import com.hjwylde.common.error.CompilerError;
-import com.hjwylde.common.util.ErrorUtils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,6 +1,6 @@
 dependencies {
     compile libraries.groovy_all
     compile libraries.jsr305
-    compile libraries.logback_classic
+    compile libraries.slf4j_log4j13
 }
 
