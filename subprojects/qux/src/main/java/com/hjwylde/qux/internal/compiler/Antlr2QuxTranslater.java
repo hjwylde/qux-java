@@ -1,7 +1,7 @@
 package com.hjwylde.qux.internal.compiler;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.hjwylde.qux.util.Constants.QUX0_1_0;
+import static com.hjwylde.qux.util.Constants.QUX0_1_1;
 import static com.hjwylde.qux.util.Op.ACC_PUBLIC;
 import static com.hjwylde.qux.util.Op.ACC_STATIC;
 
@@ -238,7 +238,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
      */
     @Override
     public Object visitFile(@NotNull QuxParser.FileContext ctx) {
-        qv.visit(QUX0_1_0, name);
+        qv.visit(QUX0_1_1, name);
 
         super.visitFile(ctx);
 
@@ -275,7 +275,10 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         ExprNode condition = visitExpr(ctx.expr());
 
         List<StmtNode> trueBlock = visitBlock(ctx.block(0));
-        List<StmtNode> falseBlock = visitBlock(ctx.block(1));
+        List<StmtNode> falseBlock = new ArrayList<>();
+        if (ctx.block(1) != null) {
+            falseBlock.addAll(visitBlock(ctx.block(1)));
+        }
 
         return new StmtNode.If(condition, trueBlock, falseBlock, generateAttributeSource(ctx));
     }

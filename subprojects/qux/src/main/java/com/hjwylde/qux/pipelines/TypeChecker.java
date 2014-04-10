@@ -12,10 +12,11 @@ import com.hjwylde.common.error.MethodNotImplementedError;
 import com.hjwylde.qux.api.ExprVisitor;
 import com.hjwylde.qux.api.FunctionAdapter;
 import com.hjwylde.qux.api.FunctionVisitor;
-import com.hjwylde.qux.api.QuxAdapter;
 import com.hjwylde.qux.api.QuxVisitor;
 import com.hjwylde.qux.builder.Environment;
 import com.hjwylde.qux.tree.ExprNode;
+import com.hjwylde.qux.tree.FunctionNode;
+import com.hjwylde.qux.tree.QuxNode;
 import com.hjwylde.qux.tree.StmtNode;
 import com.hjwylde.qux.util.Attribute;
 import com.hjwylde.qux.util.Attributes;
@@ -23,26 +24,34 @@ import com.hjwylde.qux.util.Type;
 import com.hjwylde.qux.util.Types;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * TODO: Documentation
  *
  * @author Henry J. Wylde
  */
-public final class TypeChecker extends QuxAdapter {
+public final class TypeChecker extends Pipeline {
 
-    public TypeChecker() {
-        super();
+    private final ImmutableMap<String, Type> functions;
+
+    public TypeChecker(QuxNode node) {
+        super(node);
+
+        functions = initialiseFunctions(node);
     }
 
-    public TypeChecker(QuxVisitor next) {
-        super(next);
+    public TypeChecker(QuxVisitor next, QuxNode node) {
+        super(next, node);
+
+        functions = initialiseFunctions(node);
     }
 
     /**
@@ -55,6 +64,16 @@ public final class TypeChecker extends QuxAdapter {
         FunctionTypeChecker fvc = new FunctionTypeChecker(fv);
 
         return fvc;
+    }
+
+    private static ImmutableMap<String, Type> initialiseFunctions(QuxNode node) {
+        ImmutableMap.Builder<String, Type> builder = ImmutableMap.builder();
+
+        for (FunctionNode function : node.getFunctions()) {
+            builder.put(function.getName(), function.getReturnType());
+        }
+
+        return builder.build();
     }
 
     private static Environment<String, Type> mergeEnvironments(
@@ -94,7 +113,7 @@ public final class TypeChecker extends QuxAdapter {
      *
      * @author Henry J. Wylde
      */
-    private static final class FunctionTypeChecker extends FunctionAdapter implements ExprVisitor {
+    private final class FunctionTypeChecker extends FunctionAdapter implements ExprVisitor {
 
         private static final String RETURN = "$";
 
@@ -140,14 +159,8 @@ public final class TypeChecker extends QuxAdapter {
 
             Attribute.Type lhsAttribute = Attributes.getAttributeUnchecked(expr.getLhs(),
                     Attribute.Type.class);
-            Attribute.Type rhsAttribute = Attributes.getAttributeUnchecked(expr.getRhs(),
-                    Attribute.Type.class);
 
             switch (expr.getOp()) {
-                case EQ:
-                case NEQ:
-                    expr.addAttributes(lhsAttribute);
-                    break;
                 case ADD:
                 case SUB:
                 case MUL:
@@ -156,12 +169,15 @@ public final class TypeChecker extends QuxAdapter {
                     checkEquivalent(expr.getRhs(), lhsAttribute.getType());
                     expr.addAttributes(lhsAttribute);
                     break;
+                case EQ:
+                case NEQ:
                 case GT:
                 case GTE:
                 case LT:
                 case LTE:
                     checkEquivalent(expr.getRhs(), lhsAttribute.getType());
                     expr.addAttributes(new Attribute.Type(TYPE_BOOL));
+                    break;
                 default:
                     throw new MethodNotImplementedError(expr.getOp().toString());
             }
@@ -202,8 +218,8 @@ public final class TypeChecker extends QuxAdapter {
                 visitExpr(argument);
             }
 
-            // TODO: Implement visitExprFunction(ExprNode.Function)
-            throw new MethodNotImplementedError();
+            // TODO: Change this to use setType() once merged with issue22
+            expr.addAttributes(new Attribute.Type(functions.get(expr.getName())));
         }
 
         /**
@@ -211,14 +227,23 @@ public final class TypeChecker extends QuxAdapter {
          */
         @Override
         public void visitExprList(ExprNode.List expr) {
-            List<Type> types = new ArrayList<>();
+            Set<Type> types = new HashSet<>();
 
             for (ExprNode value : expr.getValues()) {
                 visitExpr(value);
                 types.add(Attributes.getAttributeUnchecked(value, Attribute.Type.class).getType());
             }
 
-            Type type = Type.forList(Type.forUnion(types));
+            Type type;
+            if (types.isEmpty()) {
+                type = Type.forList(Type.TYPE_ANY);
+            } else if (types.size() == 1) {
+                type = Type.forList(types.iterator().next());
+            } else {
+                type = Type.forList(Type.forUnion(types));
+            }
+
+            type = Types.normalise(type);
 
             expr.addAttributes(new Attribute.Type(type));
         }

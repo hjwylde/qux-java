@@ -43,9 +43,14 @@ public final class QuxcProperties {
 
     /**
      * This class can only be instantiated locally.
+     * <p/>
+     * Creates a new {@code QuxcProperties} using the given properties to back it. If the given
+     * properties does not contain the required keys then an error is thrown.
+     *
+     * @param properties the properties to use as the backing.
      */
     private QuxcProperties(Properties properties) {
-        this.properties = checkNotNull(properties, "properties cannot be null");
+        this.properties = (Properties) properties.clone();
 
         // Check that all the properties are contained and non-null
         for (String property : PROP_KEYS) {

@@ -1,0 +1,3 @@
+void main([str] args) {
+    print true != false;
+}

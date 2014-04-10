@@ -12,6 +12,8 @@ import com.google.common.cache.LoadingCache;
 import java.math.BigInteger;
 import java.util.Objects;
 
+import qux.errors.InternalError;
+
 /**
  * TODO: Documentation
  *

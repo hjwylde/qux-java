@@ -11,3 +11,5 @@ dependencies {
 
 mainClassName = 'com.hjwylde.quxc.Quxc' 
 
+test.dependsOn installApp
+

@@ -13,6 +13,8 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Objects;
 
+import qux.errors.InternalError;
+
 /**
  * TODO: Documentation
  *
@@ -162,6 +164,10 @@ public final class Real extends Obj implements Integral<Real>, Comparable<Real>,
     @Override
     public Meta meta() {
         return META_REAL;
+    }
+
+    public static Real valueOf(String value) {
+        return valueOf(new BigDecimal(value));
     }
 
     public static Real valueOf(BigDecimal value) {
