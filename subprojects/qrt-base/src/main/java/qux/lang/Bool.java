@@ -1,5 +1,7 @@
 package qux.lang;
 
+import static qux.lang.Meta.META_BOOL;
+
 import qux.lang.operators.Not;
 
 /**
@@ -96,6 +98,14 @@ public final class Bool extends Obj implements Comparable<Bool>, Orderable<Bool>
     @Override
     public int hashCode() {
         return value ? 1 : 0;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Meta meta() {
+        return META_BOOL;
     }
 
     public static Bool valueOf(boolean value) {

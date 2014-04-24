@@ -3,6 +3,7 @@ package qux.lang;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static qux.lang.Bool.FALSE;
 import static qux.lang.Bool.TRUE;
+import static qux.lang.Meta.META_INT;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -152,6 +153,14 @@ public final class Int extends Obj implements Integral<Int>, Comparable<Int>, Or
     @Override
     public int hashCode() {
         return value.hashCode();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Meta meta() {
+        return META_INT;
     }
 
     public static Int valueOf(short value) {

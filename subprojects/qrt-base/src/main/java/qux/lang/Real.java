@@ -3,6 +3,7 @@ package qux.lang;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static qux.lang.Bool.FALSE;
 import static qux.lang.Bool.TRUE;
+import static qux.lang.Meta.META_REAL;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -153,6 +154,14 @@ public final class Real extends Obj implements Integral<Real>, Comparable<Real>,
     @Override
     public int hashCode() {
         return value.hashCode();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Meta meta() {
+        return META_REAL;
     }
 
     public static Real valueOf(BigDecimal value) {

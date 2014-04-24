@@ -17,6 +17,7 @@ public abstract class Obj implements Desc {
         return Str.valueOf("_desc_() not implemented");
     }
 
+    public abstract Meta meta();
     /**
      * {@inheritDoc}
      */
