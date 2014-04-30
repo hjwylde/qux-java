@@ -5,9 +5,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.hjwylde.common.error.BuildError;
 import com.hjwylde.common.error.CompilerError;
 import com.hjwylde.common.util.ExitCode;
+import com.hjwylde.common.util.LoggerUtils;
 import com.hjwylde.qbs.compiler.Compiler;
 import com.hjwylde.qbs.compiler.CompilerFactory;
-import com.hjwylde.qux.internal.util.LoggerUtils;
 import com.hjwylde.qux.util.QuxProperties;
 import com.hjwylde.quxc.compiler.QuxCompileOptions;
 import com.hjwylde.quxc.compiler.QuxCompileSpec;
@@ -157,11 +157,26 @@ public final class Quxc {
         return generateCompileSpec(new PosixParser().parse(OPTIONS, args));
     }
 
+    /**
+     * Generates a Qux properties from the given command line arguments.
+     *
+     * @param args the arguments.
+     * @return the generated Qux properties.
+     * @throws ParseException if the arguments cannot be parsed.
+     * @throws IOException if a properties file is specified and cannot be loaded.
+     */
     public static QuxcProperties generateProperties(String[] args)
             throws ParseException, IOException {
         return generateProperties(new PosixParser().parse(OPTIONS, args));
     }
 
+    /**
+     * Generates a Qux properties from the given command line object.
+     *
+     * @param cl the command line object.
+     * @return the generated Qux properties.
+     * @throws IOException if a properties file is specified and cannot be loaded.
+     */
     public static QuxcProperties generateProperties(CommandLine cl) throws IOException {
         QuxcProperties properties = QuxcProperties.loadDefaultProperties();
         if (cl.hasOption(OPT_PROPERTIES)) {
@@ -329,6 +344,6 @@ public final class Quxc {
      * Prints the version of the compiler language and intermediate language.
      */
     private static void printVersion() {
-        logger.info("qux: " + QuxProperties.VERSION_NAME);
+        logger.info(QuxProperties.VERSION_NAME);
     }
 }

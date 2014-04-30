@@ -36,6 +36,10 @@ public final class Qux2ClassBuilder implements Builder {
 
     private final Context context;
 
+    /**
+     * Creates a new {@code Qux2ClassBuilder} with the given context.
+     * @param context the context.
+     */
     public Qux2ClassBuilder(Context context) {
         this.context = checkNotNull(context, "context cannot be null");
     }
