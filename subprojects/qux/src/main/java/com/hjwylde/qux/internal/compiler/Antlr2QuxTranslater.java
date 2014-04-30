@@ -294,6 +294,20 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
      * {@inheritDoc}
      */
     @Override
+    public StmtNode.For visitStmtFor(@NotNull QuxParser.StmtForContext ctx) {
+        String var = ctx.Identifier().getText();
+
+        ExprNode expr = visitExpr(ctx.expr());
+
+        List<StmtNode> body = visitBlock(ctx.block());
+
+        return new StmtNode.For(var, expr, body, generateAttributeSource(ctx));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public StmtNode.If visitStmtIf(@NotNull QuxParser.StmtIfContext ctx) {
         ExprNode condition = visitExpr(ctx.expr());
 

@@ -103,6 +103,7 @@ declFunction : typeReturn Identifier '(' (type Identifier (',' type Identifier)*
 // Statements
 
 stmt : stmtAssign
+     | stmtFor
      | stmtIf
      | stmtPrint
      | stmtReturn
@@ -112,10 +113,12 @@ stmt : stmtAssign
 stmtAssign : Identifier '=' expr NL
            ;
 
+stmtFor : 'for' Identifier BOP_IN expr block
+        ;
+
 stmtIf : 'if' expr block ('else' block)?
        ;
 
-// TODO: Temporary
 stmtPrint : 'print' expr NL
           ;
 
@@ -297,6 +300,8 @@ BOP_XOR : 'xor' ;
 BOP_IFF : 'iff' ;
 BOP_IMPLIES : 'implies' ;
 
+BOP_IN : 'in' ;
+
 BOP_ADD : '+' ;
 BOP_SUB : '-' ;
 BOP_MUL : '*' ;
@@ -326,4 +331,6 @@ NL : (' '* '\r'? '\n')+ ;
 DENT : { getCharPositionInLine() == 0 }? [ ]+ ;
 
 WS : [ ]+ -> skip;
+
+UNKNOWN : .+? ;
 

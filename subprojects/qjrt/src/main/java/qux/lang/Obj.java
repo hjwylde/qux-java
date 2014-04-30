@@ -1,6 +1,9 @@
 package qux.lang;
 
+import static qux.lang.Bool.TRUE;
+
 import qux.lang.operators.Desc;
+import qux.lang.operators.Eq;
 
 /**
  * TODO: Documentation
@@ -17,7 +20,27 @@ public abstract class Obj implements Desc {
         return Str.valueOf("_desc_() not implemented");
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+
+        if (this instanceof Eq<?> && obj instanceof Obj) {
+            return ((Eq<Obj>) this)._eq_((Obj) obj) == TRUE ? true : false;
+        }
+
+        return false;
+    }
+
     public abstract Meta meta();
+
     /**
      * {@inheritDoc}
      */

@@ -1,6 +1,6 @@
 int average([int] list):
     total = 0
-    for (int i in list):
+    for i in list:
         total = total + i
 
     return total / |list|

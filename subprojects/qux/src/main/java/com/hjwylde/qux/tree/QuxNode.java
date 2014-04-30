@@ -61,6 +61,9 @@ public final class QuxNode extends Node implements QuxVisitor {
         return version;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void visit(int version, String name) {
         checkArgument(version != 0, "version cannot be 0");
@@ -69,9 +72,15 @@ public final class QuxNode extends Node implements QuxVisitor {
         this.name = checkNotNull(name, "name cannot be null");
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void visitEnd() {}
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public FunctionVisitor visitFunction(int flags, String name, Type.Function type) {
         FunctionNode fn = new FunctionNode(flags, name, type);

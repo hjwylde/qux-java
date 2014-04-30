@@ -1,11 +1,14 @@
 package qux.lang;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static qux.lang.Bool.FALSE;
+import static qux.lang.Bool.TRUE;
 
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+import qux.lang.operators.Contains;
 import qux.lang.operators.Len;
 
 /**
@@ -13,7 +16,7 @@ import qux.lang.operators.Len;
  *
  * @author Henry J. Wylde
  */
-public final class List extends Obj implements Len {
+public final class List extends Obj implements Contains<Obj>, Len {
 
     private Obj[] data;
     private int count;
@@ -23,6 +26,20 @@ public final class List extends Obj implements Len {
 
         this.data = data.clone();
         this.count = data.length;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Bool _contains_(Obj obj) {
+        for (int i = 0; i < count; i++) {
+            if (data[i].equals(obj)) {
+                return TRUE;
+            }
+        }
+
+        return FALSE;
     }
 
     /**
@@ -65,6 +82,7 @@ public final class List extends Obj implements Len {
         }
 
         // TODO: Normalise the list before the checks
+        // The normalisation should happen in the Meta.forList methods
 
         if (types.isEmpty()) {
             return Meta.forList(Meta.META_ANY);

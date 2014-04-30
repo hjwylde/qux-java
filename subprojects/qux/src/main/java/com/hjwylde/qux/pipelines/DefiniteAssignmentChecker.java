@@ -16,6 +16,8 @@ import com.hjwylde.qux.util.Type;
 
 import com.google.common.base.Optional;
 
+import java.util.List;
+
 /**
  * TODO: Documentation
  *
@@ -53,6 +55,12 @@ public final class DefiniteAssignmentChecker extends Pipeline {
 
         public FunctionDefiniteAssignmentChecker(FunctionVisitor next) {
             super(next);
+        }
+
+        public void visitBlock(List<StmtNode> stmts) {
+            for (StmtNode stmt : stmts) {
+                stmt.accept(this);
+            }
         }
 
         /**
@@ -151,6 +159,23 @@ public final class DefiniteAssignmentChecker extends Pipeline {
             env.put(stmt.getVar(), true);
 
             super.visitStmtAssign(stmt);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void visitStmtFor(StmtNode.For stmt) {
+            visitExpr(stmt.getExpr());
+
+            env = env.push();
+            env.put(stmt.getVar(), true);
+
+            visitBlock(stmt.getBody());
+
+            env = env.pop();
+
+            super.visitStmtFor(stmt);
         }
 
         /**

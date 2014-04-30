@@ -91,12 +91,21 @@ public final class FunctionNode extends Node implements FunctionVisitor {
         return ImmutableList.copyOf(stmts);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void visitCode() {}
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void visitEnd() {}
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void visitParameter(String var, Type type) {
         checkNotNull(var, "var cannot be null");
@@ -105,31 +114,57 @@ public final class FunctionNode extends Node implements FunctionVisitor {
         parameters.put(var, type);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void visitReturnType(Type type) {
         returnType = checkNotNull(type, "type cannot be null");
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void visitStmtAssign(StmtNode.Assign stmt) {
         stmts.add(stmt);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void visitStmtFor(StmtNode.For stmt) {
+        stmts.add(stmt);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void visitStmtFunction(StmtNode.Function stmt) {
         stmts.add(stmt);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void visitStmtIf(StmtNode.If stmt) {
         stmts.add(stmt);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void visitStmtPrint(StmtNode.Print stmt) {
         stmts.add(stmt);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void visitStmtReturn(StmtNode.Return stmt) {
         stmts.add(stmt);
