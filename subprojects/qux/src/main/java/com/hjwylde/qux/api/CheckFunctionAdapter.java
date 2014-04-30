@@ -21,6 +21,10 @@ public class CheckFunctionAdapter extends FunctionAdapter {
         super(next);
     }
 
+    public final boolean hasVisitedEnd() {
+        return visitedEnd;
+    }
+
     /**
      * {@inheritDoc}
      */

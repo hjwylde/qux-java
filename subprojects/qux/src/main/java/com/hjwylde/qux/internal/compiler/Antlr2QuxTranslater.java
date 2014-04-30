@@ -6,7 +6,6 @@ import static com.hjwylde.qux.util.Op.ACC_PUBLIC;
 import static com.hjwylde.qux.util.Op.ACC_STATIC;
 
 import com.hjwylde.common.error.MethodNotImplementedError;
-import com.hjwylde.common.lang.annotation.Alpha;
 import com.hjwylde.qux.api.FunctionVisitor;
 import com.hjwylde.qux.api.QuxVisitor;
 import com.hjwylde.qux.internal.antlr.QuxBaseVisitor;
@@ -239,7 +238,6 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         return new StmtNode.If(condition, trueBlock, falseBlock, generateAttributeSource(ctx));
     }
 
-    @Alpha
     @Override
     public StmtNode.Print visitStmtPrint(@NotNull QuxParser.StmtPrintContext ctx) {
         ExprNode expr = visitExpr(ctx.expr());

@@ -28,16 +28,29 @@ public final class CompilerErrors {
         return new SourceCompilerError(message, source, line, col, length);
     }
 
+    public static CompilerError undeclaredVariableAccess(String var, String source, int line,
+            int col, int length) {
+        String message = String.format("access to undeclared variable '%s'", var);
+
+        return new SourceCompilerError(message, source, line, col, length);
+    }
+
     public static CompilerError undeclaredVariableAccess(String var) {
         String message = String.format("access to undeclared variable '%s'", var);
 
         return new CompilerError(message);
     }
 
-    public static CompilerError undeclaredVariableAccess(String var, String source, int line,
+    public static CompilerError unreachableStatement(String statement, String source, int line,
             int col, int length) {
-        String message = String.format("access to undeclared variable '%s'", var);
+        String message = String.format("unreachable statement detected, '%s'", statement);
 
         return new SourceCompilerError(message, source, line, col, length);
+    }
+
+    public static CompilerError unreachableStatement(String statement) {
+        String message = String.format("unreachable statement detected, '%s'", statement);
+
+        return new CompilerError(message);
     }
 }
