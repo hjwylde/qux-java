@@ -43,6 +43,12 @@ public final class Qux2ClassBuildJob extends BuildJob {
 
     private final Context context;
 
+    /**
+     * Creates a new {@code Qux2ClassBuildJob} with the given path and context.
+     *
+     * @param source the source path.
+     * @param context the context.
+     */
     public Qux2ClassBuildJob(Path source, Context context) {
         this.source = checkNotNull(source, "source cannot be null");
 
@@ -81,14 +87,33 @@ public final class Qux2ClassBuildJob extends BuildJob {
         return BuildResult.success();
     }
 
+    /**
+     * Generates an output path based on the given output directory, name and extension.
+     *
+     * @param outdir the output directory the path should be resolved from.
+     * @param name the name of the output file.
+     * @param extension the extension of the output file.
+     * @return the generated output path.
+     */
     private static Path generateOutpath(Path outdir, String name, String extension) {
         return outdir.resolve(name + "." + extension);
     }
 
+    /**
+     * Gets the file name of the source file, excluding the extension.
+     *
+     * @return the file name, excluding the extension.
+     */
     private final String getFileName() {
         return com.google.common.io.Files.getNameWithoutExtension(source.toString());
     }
 
+    /**
+     * Parses the source file using the given {@link com.hjwylde.qux.api.QuxVisitor}.
+     *
+     * @param qv the visitor to read the source file.
+     * @throws IOException if the source file cannot be read.
+     */
     private void parse(QuxVisitor qv) throws IOException {
         logger.debug("{}: parsing", source);
 

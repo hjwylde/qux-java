@@ -2,6 +2,7 @@ package qux.lang;
 
 import static qux.lang.Bool.FALSE;
 import static qux.lang.Bool.TRUE;
+import static qux.lang.Meta.META_NULL;
 
 /**
  * TODO: Documentation
@@ -84,6 +85,14 @@ public final class Null extends Obj implements Comparable<Null>, Orderable<Null>
     @Override
     public int hashCode() {
         return 0;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Meta meta() {
+        return META_NULL;
     }
 }
 

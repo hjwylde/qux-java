@@ -3,7 +3,7 @@ package com.hjwylde.qux.internal.compiler;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.hjwylde.common.error.SourceCompilerError;
-import com.hjwylde.qux.internal.util.LoggerUtils;
+import com.hjwylde.common.util.LoggerUtils;
 
 import com.google.common.collect.ImmutableList;
 

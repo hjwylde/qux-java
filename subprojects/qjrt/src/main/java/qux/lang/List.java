@@ -40,6 +40,15 @@ public final class List extends Obj {
         return Str.valueOf(sb.toString());
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Meta meta() {
+        // TODO: Implement meta()
+        throw new InternalError("meta() not implemented");
+    }
+
     public static List valueOf(Obj... data) {
         return new List(data);
     }
