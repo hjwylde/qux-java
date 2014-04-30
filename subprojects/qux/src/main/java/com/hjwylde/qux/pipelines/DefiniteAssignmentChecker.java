@@ -1,8 +1,13 @@
-package com.hjwylde.qux.api;
+package com.hjwylde.qux.pipelines;
 
 import com.hjwylde.common.error.CompilerErrors;
 import com.hjwylde.common.error.MethodNotImplementedError;
-import com.hjwylde.qux.internal.builder.Environment;
+import com.hjwylde.qux.api.ExprVisitor;
+import com.hjwylde.qux.api.FunctionAdapter;
+import com.hjwylde.qux.api.FunctionVisitor;
+import com.hjwylde.qux.api.QuxAdapter;
+import com.hjwylde.qux.api.QuxVisitor;
+import com.hjwylde.qux.builder.Environment;
 import com.hjwylde.qux.tree.ExprNode;
 import com.hjwylde.qux.tree.StmtNode;
 import com.hjwylde.qux.util.Attribute;

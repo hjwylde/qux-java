@@ -133,7 +133,7 @@ public final class Quxc {
         spec.setOptions(optionsBuilder.build());
 
         for (Path path : source) {
-            if (!Files.exists(path)) {
+            if (!Files.exists(path) || Files.isDirectory(path)) {
                 throw new NoSuchFileException(path.toString());
             }
 
@@ -205,7 +205,7 @@ public final class Quxc {
             properties.setOutdir(cl.getOptionValue(OPT_OUTDIR));
         }
         if (cl.hasOption(OPT_VERBOSE)) {
-            properties.setVerbose(cl.getOptionValue(OPT_VERBOSE));
+            properties.setVerbose("true");
         }
 
         return properties;

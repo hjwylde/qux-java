@@ -1,4 +1,4 @@
-package com.hjwylde.qux.api;
+package com.hjwylde.qux.pipelines;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.hjwylde.qux.util.Type.TYPE_BOOL;
@@ -9,7 +9,12 @@ import static com.hjwylde.qux.util.Type.TYPE_STR;
 
 import com.hjwylde.common.error.CompilerErrors;
 import com.hjwylde.common.error.MethodNotImplementedError;
-import com.hjwylde.qux.internal.builder.Environment;
+import com.hjwylde.qux.api.ExprVisitor;
+import com.hjwylde.qux.api.FunctionAdapter;
+import com.hjwylde.qux.api.FunctionVisitor;
+import com.hjwylde.qux.api.QuxAdapter;
+import com.hjwylde.qux.api.QuxVisitor;
+import com.hjwylde.qux.builder.Environment;
 import com.hjwylde.qux.tree.ExprNode;
 import com.hjwylde.qux.tree.StmtNode;
 import com.hjwylde.qux.util.Attribute;
@@ -84,6 +89,11 @@ public final class TypeChecker extends QuxAdapter {
         return mergeEnvironments(Arrays.asList(envs));
     }
 
+    /**
+     * TODO: Documentation.
+     *
+     * @author Henry J. Wylde
+     */
     private static final class FunctionTypeChecker extends FunctionAdapter implements ExprVisitor {
 
         private static final String RETURN = "$";
@@ -120,6 +130,9 @@ public final class TypeChecker extends QuxAdapter {
             expr.accept(this);
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void visitExprBinary(ExprNode.Binary expr) {
             visitExpr(expr.getLhs());
@@ -154,6 +167,9 @@ public final class TypeChecker extends QuxAdapter {
             }
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void visitExprConstant(ExprNode.Constant expr) {
             switch (expr.getType()) {
@@ -177,6 +193,9 @@ public final class TypeChecker extends QuxAdapter {
             }
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void visitExprFunction(ExprNode.Function expr) {
             for (ExprNode argument : expr.getArguments()) {
@@ -187,6 +206,9 @@ public final class TypeChecker extends QuxAdapter {
             throw new MethodNotImplementedError();
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void visitExprList(ExprNode.List expr) {
             List<Type> types = new ArrayList<>();
@@ -201,6 +223,9 @@ public final class TypeChecker extends QuxAdapter {
             expr.addAttributes(new Attribute.Type(type));
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void visitExprUnary(ExprNode.Unary expr) {
             visitExpr(expr.getTarget());
@@ -221,6 +246,9 @@ public final class TypeChecker extends QuxAdapter {
             }
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void visitExprVariable(ExprNode.Variable expr) {
             expr.addAttributes(new Attribute.Type(env.getUnchecked(expr.getName())));

@@ -1,4 +1,4 @@
-package com.hjwylde.qux.internal.builder;
+package com.hjwylde.qux.builder;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -18,6 +18,7 @@ import java.util.Set;
 public final class Environment<K, V> implements Iterable<Map.Entry<K, V>> {
 
     private final Environment<K, V> previous;
+
     private Map<K, V> mapping = new HashMap<>();
 
     public Environment() {

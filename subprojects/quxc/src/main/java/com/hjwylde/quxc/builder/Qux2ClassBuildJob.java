@@ -10,15 +10,16 @@ import com.hjwylde.qbs.builder.BuildJob;
 import com.hjwylde.qbs.builder.BuildResult;
 import com.hjwylde.qbs.builder.Context;
 import com.hjwylde.qux.api.CheckQuxAdapter;
-import com.hjwylde.qux.api.DefiniteAssignmentChecker;
 import com.hjwylde.qux.api.QuxReader;
 import com.hjwylde.qux.api.QuxVisitor;
-import com.hjwylde.qux.api.TypeChecker;
+import com.hjwylde.qux.pipelines.DefiniteAssignmentChecker;
+import com.hjwylde.qux.pipelines.TypeChecker;
 import com.hjwylde.qux.tree.QuxNode;
 import com.hjwylde.quxc.compiler.MainFunctionInjector;
 import com.hjwylde.quxc.compiler.Qux2ClassTranslater;
 
 import com.google.common.base.Stopwatch;
+import com.google.common.collect.ImmutableList;
 
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.util.CheckClassAdapter;
@@ -29,6 +30,8 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * TODO: Documentation.
@@ -38,6 +41,12 @@ import java.nio.file.Path;
 public final class Qux2ClassBuildJob extends BuildJob {
 
     private static final Logger logger = LoggerFactory.getLogger(Qux2ClassBuildJob.class);
+
+    // TODO: Change the location of default pipelines into the properties / compiler
+    private static final ImmutableList<QuxVisitor> DEFAULT_PIPELINES = ImmutableList.<QuxVisitor>of(
+            new TypeChecker(), new DefiniteAssignmentChecker());
+
+    private final List<QuxVisitor> pipelines = new ArrayList<>(DEFAULT_PIPELINES);
 
     private final Path source;
 
@@ -67,11 +76,14 @@ public final class Qux2ClassBuildJob extends BuildJob {
 
             QuxNode node = new QuxNode();
 
-            // Check that the input is a valid representation of the qux grammar
+            // Check that the input is a valid representation of the qux grammar and read it into
+            // the node
             parse(node);
 
-            // Verify the semantics of the qux file
-            verify(node);
+            // Apply the pipelines
+            for (QuxVisitor pipeline : pipelines) {
+                apply(pipeline, node);
+            }
 
             // Translate the file to the java bytecode format
             byte[] bytecode = translate(node);
@@ -85,6 +97,18 @@ public final class Qux2ClassBuildJob extends BuildJob {
         }
 
         return BuildResult.success();
+    }
+
+    private void apply(QuxVisitor pipeline, QuxNode node) {
+        logger.debug("{}: applying pipeline '{}'", source, pipeline.getClass().getName());
+
+        Stopwatch stopwatch = Stopwatch.createStarted();
+
+        node.accept(pipeline);
+
+        stopwatch.stop();
+
+        logger.debug("{}: application finished in {}", source, stopwatch);
     }
 
     /**
@@ -104,7 +128,7 @@ public final class Qux2ClassBuildJob extends BuildJob {
      *
      * @return the file name, excluding the extension.
      */
-    private final String getFileName() {
+    private String getFileName() {
         return com.google.common.io.Files.getNameWithoutExtension(source.toString());
     }
 
@@ -148,21 +172,6 @@ public final class Qux2ClassBuildJob extends BuildJob {
         logger.debug("{}: translation finished in {}", source, stopwatch);
 
         return cw.toByteArray();
-    }
-
-    private void verify(QuxNode node) {
-        logger.debug("{}: verifying", source);
-
-        Stopwatch stopwatch = Stopwatch.createStarted();
-
-        TypeChecker tc = new TypeChecker();
-        DefiniteAssignmentChecker dac = new DefiniteAssignmentChecker(tc);
-
-        node.accept(dac);
-
-        stopwatch.stop();
-
-        logger.debug("{}: verification finished in {}", source, stopwatch);
     }
 
     private void write(byte[] bytecode) throws IOException {

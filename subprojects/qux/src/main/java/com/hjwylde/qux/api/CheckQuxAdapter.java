@@ -7,6 +7,9 @@ import static com.hjwylde.qux.util.Constants.SUPPORTED_VERSIONS;
 
 import com.hjwylde.qux.util.Type;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * TODO: Documentation
  *
@@ -16,6 +19,8 @@ public class CheckQuxAdapter extends QuxAdapter {
 
     private boolean visitedStart = false;
     private boolean visitedEnd = false;
+
+    private List<CheckFunctionAdapter> cfas = new ArrayList<>();
 
     public CheckQuxAdapter(QuxVisitor next) {
         super(next);
@@ -44,6 +49,11 @@ public class CheckQuxAdapter extends QuxAdapter {
         checkState(visitedStart, "must call visit(int, String) before visitEnd()");
         checkState(!visitedEnd, "may only call visitEnd() once");
 
+        for (CheckFunctionAdapter cfa : cfas) {
+            checkState(cfa.hasVisitedEnd(),
+                    "visitEnd() must be called after all function visitors have called visitEnd()");
+        }
+
         visitedEnd = true;
 
         super.visitEnd();
@@ -60,6 +70,8 @@ public class CheckQuxAdapter extends QuxAdapter {
         checkNotNull(name, "name cannot be null");
         checkNotNull(type, "type cannot be null");
 
-        return new CheckFunctionAdapter(super.visitFunction(flags, name, type));
+        cfas.add(new CheckFunctionAdapter(super.visitFunction(flags, name, type)));
+
+        return cfas.get(cfas.size() - 1);
     }
 }
