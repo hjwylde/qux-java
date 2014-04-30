@@ -97,7 +97,8 @@ typeTerm : typeKeyword
 typeList : '[' type ']'
          ;
 
-typeKeyword : BOOL
+typeKeyword : ANY
+            | BOOL
             | INT
             | NULL
             | REAL
@@ -168,6 +169,7 @@ Exponent : 'e' [+-] Numeral ;
 
 // Keywords
 
+ANY     : 'any' ;
 BOOL    : 'bool' ;
 ELSE    : 'else' ;
 FALSE   : 'false' ;

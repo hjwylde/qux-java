@@ -18,6 +18,7 @@ import qux.lang.operators.Eq;
  */
 public class Meta extends Obj implements Eq<Meta> {
 
+    static final Meta META_ANY = new Any();
     static final Meta META_BOOL = new Bool();
     static final Meta META_INT = new Int();
     static final Meta META_META = new Meta();
@@ -66,6 +67,23 @@ public class Meta extends Obj implements Eq<Meta> {
     @Override
     public Meta meta() {
         return META_META;
+    }
+
+    /**
+     * TODO: Documentation
+     *
+     * @author Henry J. Wylde
+     * @since 0.2.0
+     */
+    private static final class Any extends Meta {
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public qux.lang.Str _desc_() {
+            return qux.lang.Str.valueOf("any");
+        }
     }
 
     /**
