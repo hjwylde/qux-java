@@ -165,6 +165,7 @@ public final class TypeChecker extends Pipeline {
                 case SUB:
                 case MUL:
                 case DIV:
+                case REM:
                     // TODO: This feels wrong, what is the lhs and rhs are equivalent unions? Surely we can't do a binary operation then!
                     checkEquivalent(expr.getRhs(), lhsAttribute.getType());
                     expr.addAttributes(lhsAttribute);

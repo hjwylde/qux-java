@@ -78,6 +78,7 @@ import qux.lang.operators.Mul;
 import qux.lang.operators.Neg;
 import qux.lang.operators.Neq;
 import qux.lang.operators.Not;
+import qux.lang.operators.Rem;
 import qux.lang.operators.Sub;
 
 /**
@@ -316,6 +317,11 @@ public final class Qux2ClassTranslater extends QuxAdapter {
                     mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Neq.class), "_neq_",
                             getMethodDescriptor(Neq.class, "_neq_", Obj.class), true);
                     break;
+                case REM:
+                    mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Rem.class), "_rem_",
+                            getMethodDescriptor(Rem.class, "_rem_", Obj.class), true);
+                    visitCheckcast(expr.getLhs());
+                    break;
                 case SUB:
                     mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Sub.class), "_sub_",
                             getMethodDescriptor(Sub.class, "_sub_", Obj.class), true);
@@ -398,10 +404,10 @@ public final class Qux2ClassTranslater extends QuxAdapter {
             Type returnType = getType(expr);
             java.util.List<Type> argumentTypes = new ArrayList<>();
 
-            for (int i = 0; i < expr.getArguments().size(); i++) {
+            for (int i = expr.getArguments().size() - 1; i >= 0; i--) {
                 visitExpr(expr.getArguments().get(i));
 
-                argumentTypes.add(getType(expr.getArguments().get(i)));
+                argumentTypes.add(0, getType(expr.getArguments().get(i)));
             }
 
             Type type = Type.getMethodType(returnType, argumentTypes.toArray(new Type[0]));
@@ -505,10 +511,10 @@ public final class Qux2ClassTranslater extends QuxAdapter {
             Type returnType = Type.VOID_TYPE;
             java.util.List<Type> argumentTypes = new ArrayList<>();
 
-            for (int i = 0; i < stmt.getArguments().size(); i++) {
+            for (int i = stmt.getArguments().size() - 1; i >= 0; i--) {
                 visitExpr(stmt.getArguments().get(i));
 
-                argumentTypes.add(getType(stmt.getArguments().get(i)));
+                argumentTypes.add(0, getType(stmt.getArguments().get(i)));
             }
 
             Type type = Type.getMethodType(returnType, argumentTypes.toArray(new Type[0]));

@@ -13,13 +13,15 @@ import java.math.BigInteger;
 import java.util.Objects;
 
 import qux.errors.InternalError;
+import qux.lang.operators.Rem;
 
 /**
  * TODO: Documentation
  *
  * @author Henry J. Wylde
  */
-public final class Int extends Obj implements Integral<Int>, Comparable<Int>, Orderable<Int> {
+public final class Int extends Obj
+        implements Integral<Int>, Comparable<Int>, Orderable<Int>, Rem<Int> {
 
     private static final LoadingCache<BigInteger, Int> cache =
             CacheBuilder.<BigInteger, Int>newBuilder().weakKeys().build(
@@ -127,6 +129,14 @@ public final class Int extends Obj implements Integral<Int>, Comparable<Int>, Or
     @Override
     public Bool _neq_(Int t) {
         return value.equals(t.value) ? FALSE : TRUE;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Int _rem_(Int t) {
+        return valueOf(value.remainder(t.value));
     }
 
     /**

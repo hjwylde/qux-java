@@ -218,8 +218,7 @@ public abstract class Harness {
             List<String> expected = Files.readAllLines(getTestPath(id, OUT_EXT),
                     StandardCharsets.UTF_8);
 
-            assertEquals("test output does not match expected:\n" + Joiner.on("\n").join(received),
-                    expected, received);
+            assertEquals("mismatch in test output, ", expected, received);
         } catch (ExecutionException | IOException e) {
             throw new RuntimeException(e);
         }
