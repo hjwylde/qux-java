@@ -46,7 +46,7 @@ block : '{' stmt* '}' ;
 
 expr : exprBinary ;
 
-exprBinary : exprUnary ((BOP_MUL | BOP_DIV) expr)*
+exprBinary : exprUnary ((BOP_MUL | BOP_DIV | BOP_REM) expr)*
            | exprUnary ((BOP_ADD | BOP_SUB) expr)*
            | exprUnary ((BOP_EQ | BOP_NEQ | BOP_LT | BOP_LTE | BOP_GT | BOP_GTE) expr)*
            ;
@@ -208,6 +208,7 @@ BOP_ADD : '+' ;
 BOP_SUB : '-' ;
 BOP_MUL : '*' ;
 BOP_DIV : '/' ;
+BOP_REM : '%' ;
 
 UOP_NOT    : '!' ;
 

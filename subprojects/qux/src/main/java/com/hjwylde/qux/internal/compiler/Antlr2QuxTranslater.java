@@ -122,6 +122,8 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
                 op = Op.Binary.MUL;
             } else if (ctx.BOP_DIV(i) != null) {
                 op = Op.Binary.DIV;
+            } else if (ctx.BOP_REM(i) != null) {
+                op = Op.Binary.REM;
             } else if (ctx.BOP_ADD(i) != null) {
                 op = Op.Binary.ADD;
             } else if (ctx.BOP_SUB(i) != null) {

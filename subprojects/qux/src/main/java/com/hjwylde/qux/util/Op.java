@@ -34,7 +34,7 @@ public interface Op {
      * @author Henry J. Wylde
      */
     public static enum Binary implements Op {
-        EQ, NEQ, LT, LTE, GT, GTE, ADD, SUB, MUL, DIV;
+        EQ, NEQ, LT, LTE, GT, GTE, ADD, SUB, MUL, DIV, REM;
     }
 
     /**
