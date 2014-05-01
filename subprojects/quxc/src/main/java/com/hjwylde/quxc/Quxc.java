@@ -344,6 +344,6 @@ public final class Quxc {
      * Prints the version of the compiler language and intermediate language.
      */
     private static void printVersion() {
-        logger.info(QuxProperties.VERSION_NAME);
+        logger.warn(QuxProperties.VERSION_NAME);
     }
 }

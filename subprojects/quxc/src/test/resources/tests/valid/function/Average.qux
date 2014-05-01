@@ -1,0 +1,16 @@
+int average([int] list) {
+    int total = 0;
+    for (int i : list) {
+        total = total + i;
+    }
+
+    return total / |list|;
+}
+
+void main([str] args) {
+    print average([0, 1, 2, 3]);
+    print average([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    print average([5, 5, 10, 10, 10]);
+    print average([7, 5, 3]);
+}
+

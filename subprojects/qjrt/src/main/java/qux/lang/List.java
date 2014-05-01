@@ -3,6 +3,8 @@ package qux.lang;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * TODO: Documentation
@@ -27,6 +29,7 @@ public final class List extends Obj {
     @Override
     public Str _desc_() {
         StringBuilder sb = new StringBuilder();
+
         sb.append("[");
         for (int i = 0; i < count; i++) {
             sb.append(data[i]._desc_());
@@ -45,8 +48,23 @@ public final class List extends Obj {
      */
     @Override
     public Meta meta() {
-        // TODO: Implement meta()
-        throw new InternalError("meta() not implemented");
+        Set<Meta> types = new HashSet<>();
+
+        for (Obj datum : data) {
+            types.add(datum.meta());
+        }
+
+        // TODO: Normalise the list before the checks
+
+        if (types.isEmpty()) {
+            return Meta.forList(Meta.META_ANY);
+        }
+
+        if (types.size() == 1) {
+            return Meta.forList(types.iterator().next());
+        }
+
+        return Meta.forList(Meta.forUnion(types));
     }
 
     public static List valueOf(Obj... data) {

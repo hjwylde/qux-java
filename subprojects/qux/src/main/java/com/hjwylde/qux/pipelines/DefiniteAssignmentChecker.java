@@ -5,10 +5,10 @@ import com.hjwylde.common.error.MethodNotImplementedError;
 import com.hjwylde.qux.api.ExprVisitor;
 import com.hjwylde.qux.api.FunctionAdapter;
 import com.hjwylde.qux.api.FunctionVisitor;
-import com.hjwylde.qux.api.QuxAdapter;
 import com.hjwylde.qux.api.QuxVisitor;
 import com.hjwylde.qux.builder.Environment;
 import com.hjwylde.qux.tree.ExprNode;
+import com.hjwylde.qux.tree.QuxNode;
 import com.hjwylde.qux.tree.StmtNode;
 import com.hjwylde.qux.util.Attribute;
 import com.hjwylde.qux.util.Attributes;
@@ -21,14 +21,14 @@ import com.google.common.base.Optional;
  *
  * @author Henry J. Wylde
  */
-public final class DefiniteAssignmentChecker extends QuxAdapter {
+public final class DefiniteAssignmentChecker extends Pipeline {
 
-    public DefiniteAssignmentChecker() {
-        super();
+    public DefiniteAssignmentChecker(QuxNode node) {
+        super(node);
     }
 
-    public DefiniteAssignmentChecker(QuxVisitor next) {
-        super(next);
+    public DefiniteAssignmentChecker(QuxVisitor next, QuxNode node) {
+        super(next, node);
     }
 
     /**

@@ -12,7 +12,7 @@ import com.hjwylde.qbs.builder.Context;
 import com.hjwylde.qux.api.CheckQuxAdapter;
 import com.hjwylde.qux.api.QuxReader;
 import com.hjwylde.qux.api.QuxVisitor;
-import com.hjwylde.qux.pipelines.DefiniteAssignmentChecker;
+import com.hjwylde.qux.pipelines.Pipeline;
 import com.hjwylde.qux.pipelines.TypeChecker;
 import com.hjwylde.qux.tree.QuxNode;
 import com.hjwylde.quxc.compiler.MainFunctionInjector;
@@ -27,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -43,10 +44,11 @@ public final class Qux2ClassBuildJob extends BuildJob {
     private static final Logger logger = LoggerFactory.getLogger(Qux2ClassBuildJob.class);
 
     // TODO: Change the location of default pipelines into the properties / compiler
-    private static final ImmutableList<QuxVisitor> DEFAULT_PIPELINES = ImmutableList.<QuxVisitor>of(
-            new TypeChecker(), new DefiniteAssignmentChecker());
+    private static final ImmutableList<Class<? extends Pipeline>> DEFAULT_PIPELINES =
+            ImmutableList.<Class<? extends Pipeline>>of(TypeChecker.class);
+    //      new TypeChecker(), new DefiniteAssignmentChecker());
 
-    private final List<QuxVisitor> pipelines = new ArrayList<>(DEFAULT_PIPELINES);
+    private final List<Class<? extends Pipeline>> pipelines = new ArrayList<>(DEFAULT_PIPELINES);
 
     private final Path source;
 
@@ -81,7 +83,9 @@ public final class Qux2ClassBuildJob extends BuildJob {
             parse(node);
 
             // Apply the pipelines
-            for (QuxVisitor pipeline : pipelines) {
+            for (Class<? extends Pipeline> clazz : pipelines) {
+                Pipeline pipeline = clazz.getConstructor(QuxNode.class).newInstance(node);
+
                 apply(pipeline, node);
             }
 
@@ -92,7 +96,7 @@ public final class Qux2ClassBuildJob extends BuildJob {
             write(bytecode);
 
             logger.debug("{}: building finished in {}", source, stopwatch);
-        } catch (IOException e) {
+        } catch (IOException | InvocationTargetException | NoSuchMethodException | InstantiationException | IllegalAccessException e) {
             throw new BuildError(e);
         }
 

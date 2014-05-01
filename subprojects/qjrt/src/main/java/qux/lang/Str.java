@@ -11,12 +11,15 @@ import com.google.common.cache.LoadingCache;
 
 import java.util.Objects;
 
+import qux.lang.operators.Add;
+import qux.lang.operators.Sub;
+
 /**
  * TODO: Documentation
  *
  * @author Henry J. Wylde
  */
-public final class Str extends Obj implements Comparable<Str>, Orderable<Str> {
+public final class Str extends Obj implements Comparable<Str>, Orderable<Str>, Add<Str>, Sub<Str> {
 
     private static final LoadingCache<String, Str> cache =
             CacheBuilder.<String, Str>newBuilder().weakKeys().build(new CacheLoader<String, Str>() {
@@ -30,8 +33,21 @@ public final class Str extends Obj implements Comparable<Str>, Orderable<Str> {
 
     private final String value;
 
+    /**
+     * Creates a new {@code Str} with the given value.
+     *
+     * @param value the string value.
+     */
     private Str(String value) {
         this.value = checkNotNull(value, "value cannot be null");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Str _add_(Str str) {
+        return valueOf(value.concat(str.value));
     }
 
     /**
@@ -88,6 +104,18 @@ public final class Str extends Obj implements Comparable<Str>, Orderable<Str> {
     @Override
     public Bool _neq_(Str t) {
         return value.equals(t.value) ? FALSE : TRUE;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Str _sub_(Str str) {
+        if (value.endsWith(str.value)) {
+            valueOf(value.substring(0, value.length()));
+        }
+
+        return this;
     }
 
     /**

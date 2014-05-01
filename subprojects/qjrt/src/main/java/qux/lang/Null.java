@@ -9,7 +9,7 @@ import static qux.lang.Meta.META_NULL;
  *
  * @author Henry J. Wylde
  */
-public final class Null extends Obj implements Comparable<Null>, Orderable<Null> {
+public final class Null extends Obj implements Comparable<Null> {
 
     public static final Null INSTANCE = new Null();
 
@@ -28,38 +28,6 @@ public final class Null extends Obj implements Comparable<Null>, Orderable<Null>
      */
     @Override
     public Bool _eq_(Null t) {
-        return TRUE;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Bool _gt_(Null t) {
-        return FALSE;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Bool _gte_(Null t) {
-        return TRUE;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Bool _lt_(Null t) {
-        return FALSE;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Bool _lte_(Null t) {
         return TRUE;
     }
 

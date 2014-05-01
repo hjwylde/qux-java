@@ -46,9 +46,6 @@ block : '{' stmt* '}' ;
 
 expr : exprBinary ;
 
-// TODO: Bug here where it doesn't properly create nested binary expressions, need to split up
-// so that it uses exprBinary1 exprBinary2 etc.
-
 exprBinary : exprUnary ((BOP_MUL | BOP_DIV) expr)*
            | exprUnary ((BOP_ADD | BOP_SUB) expr)*
            | exprUnary ((BOP_EQ | BOP_NEQ | BOP_LT | BOP_LTE | BOP_GT | BOP_GTE) expr)*

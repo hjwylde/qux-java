@@ -1,4 +1,4 @@
-package qux.lang;
+package qux.errors;
 
 /**
  * TODO: Documentation

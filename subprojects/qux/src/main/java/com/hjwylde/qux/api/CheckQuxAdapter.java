@@ -33,7 +33,7 @@ public class CheckQuxAdapter extends QuxAdapter {
     public void visit(int version, String name) {
         checkState(!visitedStart, "may only call visit(int, String) once");
         checkState(!visitedEnd, "must call visit(int, String) before visitEnd()");
-        checkArgument(SUPPORTED_VERSIONS.contains(version), "version %d not supported", version);
+        checkArgument(SUPPORTED_VERSIONS.contains(version), "version %s not supported", version);
         checkNotNull(name, "name cannot be null");
 
         visitedStart = true;
