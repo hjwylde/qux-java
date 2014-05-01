@@ -118,28 +118,38 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         for (int i = 0; i < ctx.expr().size(); i++) {
             Op.Binary op;
 
-            if (ctx.BOP_MUL(i) != null) {
-                op = Op.Binary.MUL;
+            if (ctx.BOP_ADD(i) != null) {
+                op = Op.Binary.ADD;
+            } else if (ctx.BOP_AND(i) != null) {
+                op = Op.Binary.AND;
             } else if (ctx.BOP_DIV(i) != null) {
                 op = Op.Binary.DIV;
-            } else if (ctx.BOP_REM(i) != null) {
-                op = Op.Binary.REM;
-            } else if (ctx.BOP_ADD(i) != null) {
-                op = Op.Binary.ADD;
-            } else if (ctx.BOP_SUB(i) != null) {
-                op = Op.Binary.SUB;
             } else if (ctx.BOP_EQ(i) != null) {
                 op = Op.Binary.EQ;
-            } else if (ctx.BOP_NEQ(i) != null) {
-                op = Op.Binary.NEQ;
-            } else if (ctx.BOP_LT(i) != null) {
-                op = Op.Binary.LT;
-            } else if (ctx.BOP_LTE(i) != null) {
-                op = Op.Binary.LTE;
             } else if (ctx.BOP_GT(i) != null) {
                 op = Op.Binary.GT;
             } else if (ctx.BOP_GTE(i) != null) {
                 op = Op.Binary.GTE;
+            } else if (ctx.BOP_IFF(i) != null) {
+                op = Op.Binary.IFF;
+            } else if (ctx.BOP_IMPLIES(i) != null) {
+                op = Op.Binary.IMPLIES;
+            } else if (ctx.BOP_LT(i) != null) {
+                op = Op.Binary.LT;
+            } else if (ctx.BOP_LTE(i) != null) {
+                op = Op.Binary.LTE;
+            } else if (ctx.BOP_MUL(i) != null) {
+                op = Op.Binary.MUL;
+            } else if (ctx.BOP_NEQ(i) != null) {
+                op = Op.Binary.NEQ;
+            } else if (ctx.BOP_OR(i) != null) {
+                op = Op.Binary.OR;
+            } else if (ctx.BOP_REM(i) != null) {
+                op = Op.Binary.REM;
+            } else if (ctx.BOP_SUB(i) != null) {
+                op = Op.Binary.SUB;
+            } else if (ctx.BOP_XOR(i) != null) {
+                op = Op.Binary.XOR;
             } else {
                 throw new MethodNotImplementedError(ctx.getText());
             }

@@ -2,14 +2,21 @@ package qux.lang;
 
 import static qux.lang.Meta.META_BOOL;
 
+import qux.lang.operators.And;
+import qux.lang.operators.Iff;
+import qux.lang.operators.Implies;
 import qux.lang.operators.Not;
+import qux.lang.operators.Or;
+import qux.lang.operators.Xor;
 
 /**
  * TODO: Documentation
  *
  * @author Henry J. Wylde
  */
-public final class Bool extends Obj implements Comparable<Bool>, Orderable<Bool>, Not {
+public final class Bool extends Obj
+        implements Comparable<Bool>, Orderable<Bool>, And<Bool>, Or<Bool>, Xor<Bool>, Iff<Bool>,
+        Implies<Bool>, Not {
 
     public static final Bool TRUE = new Bool(true);
     public static final Bool FALSE = new Bool(false);
@@ -18,6 +25,14 @@ public final class Bool extends Obj implements Comparable<Bool>, Orderable<Bool>
 
     private Bool(boolean value) {
         this.value = value;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Bool _and_(Bool t) {
+        return (this == TRUE && t == TRUE) ? TRUE : FALSE;
     }
 
     /**
@@ -56,6 +71,22 @@ public final class Bool extends Obj implements Comparable<Bool>, Orderable<Bool>
      * {@inheritDoc}
      */
     @Override
+    public Bool _iff_(Bool t) {
+        return (this == t) ? TRUE : FALSE;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Bool _implies_(Bool t) {
+        return (this == FALSE || t == TRUE) ? TRUE : FALSE;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public Bool _lt_(Bool t) {
         return (this == FALSE && t == TRUE) ? TRUE : FALSE;
     }
@@ -82,6 +113,22 @@ public final class Bool extends Obj implements Comparable<Bool>, Orderable<Bool>
     @Override
     public Bool _not_() {
         return value ? FALSE : TRUE;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Bool _or_(Bool t) {
+        return (this == TRUE || t == TRUE) ? TRUE : FALSE;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Bool _xor_(Bool t) {
+        return (this == TRUE ^ t == TRUE) ? TRUE : FALSE;
     }
 
     /**
