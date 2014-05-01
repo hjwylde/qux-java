@@ -17,47 +17,32 @@ public final class ValidPrintTests extends Harness {
     }
 
     @Test
-    public void PrintBool1() {
-        run("PrintBool1");
+    public void PrintBool() {
+        run("PrintBool");
     }
 
     @Test
-    public void PrintBool2() {
-        run("PrintBool2");
+    public void PrintInt() {
+        run("PrintInt");
     }
 
     @Test
-    public void PrintInt1() {
-        run("PrintInt1");
+    public void PrintList() {
+        run("PrintList");
     }
 
     @Test
-    public void PrintList1() {
-        run("PrintList1");
+    public void PrintNull() {
+        run("PrintNull");
     }
 
     @Test
-    public void PrintList2() {
-        run("PrintList2");
+    public void PrintReal() {
+        run("PrintReal");
     }
 
     @Test
-    public void PrintList3() {
-        run("PrintList3");
-    }
-
-    @Test
-    public void PrintNull1() {
-        run("PrintNull1");
-    }
-
-    @Test
-    public void PrintReal1() {
-        run("PrintReal1");
-    }
-
-    @Test
-    public void PrintStr1() {
-        run("PrintStr1");
+    public void PrintStr() {
+        run("PrintStr");
     }
 }

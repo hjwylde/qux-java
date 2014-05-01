@@ -40,6 +40,8 @@ import java.util.Set;
  */
 public final class TypeChecker extends Pipeline {
 
+    // TODO: Change this class over to using getType() and setType() methods
+
     private final ImmutableMap<String, Type> functions;
 
     public TypeChecker(QuxNode node) {
@@ -177,6 +179,15 @@ public final class TypeChecker extends Pipeline {
                 case LT:
                 case LTE:
                     checkEquivalent(expr.getRhs(), lhsAttribute.getType());
+                    expr.addAttributes(new Attribute.Type(TYPE_BOOL));
+                    break;
+                case AND:
+                case OR:
+                case XOR:
+                case IFF:
+                case IMPLIES:
+                    checkSubtype(expr.getLhs(), TYPE_BOOL);
+                    checkSubtype(expr.getRhs(), TYPE_BOOL);
                     expr.addAttributes(new Attribute.Type(TYPE_BOOL));
                     break;
                 default:

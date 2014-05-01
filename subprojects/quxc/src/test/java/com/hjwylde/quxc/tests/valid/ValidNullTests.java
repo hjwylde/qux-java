@@ -17,13 +17,13 @@ public final class ValidNullTests extends Harness {
     }
 
     @Test
-    public void NullEq1() {
-        run("NullEq1");
+    public void NullEq() {
+        run("NullEq");
     }
 
     @Test
-    public void NullNeq1() {
-        run("NullNeq1");
+    public void NullNeq() {
+        run("NullNeq");
     }
 }
 

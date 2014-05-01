@@ -49,6 +49,9 @@ expr : exprBinary ;
 exprBinary : exprUnary ((BOP_MUL | BOP_DIV | BOP_REM) expr)*
            | exprUnary ((BOP_ADD | BOP_SUB) expr)*
            | exprUnary ((BOP_EQ | BOP_NEQ | BOP_LT | BOP_LTE | BOP_GT | BOP_GTE) expr)*
+           | exprUnary ((BOP_AND | BOP_OR) expr)*
+           | exprUnary ((BOP_XOR | BOP_IFF) expr)*
+           | exprUnary ((BOP_IMPLIES) expr)*
            ;
 
 exprUnary : UOP_NEGATE? exprTerm
@@ -179,10 +182,6 @@ STR     : 'str' ;
 TRUE    : 'true' ;
 VOID    : 'void' ;
 
-// Identifier
-
-Identifier : [a-zA-Z_$][a-zA-Z0-9_$]* ;
-
 // Separators
 
 LPAREN      : '(' ;
@@ -204,21 +203,31 @@ BOP_LTE : '<=' ;
 BOP_GT : '>' ;
 BOP_GTE : '>=' ;
 
+BOP_AND : 'and' ;
+BOP_OR : 'or' ;
+BOP_XOR : 'xor' ;
+BOP_IFF : 'iff' ;
+BOP_IMPLIES : 'implies' ;
+
 BOP_ADD : '+' ;
 BOP_SUB : '-' ;
 BOP_MUL : '*' ;
 BOP_DIV : '/' ;
 BOP_REM : '%' ;
 
-UOP_NOT    : '!' ;
+UOP_NOT : 'not' ;
 
 UOP_NEGATE : '-' ;
 
+// Identifier
+
+Identifier : [a-zA-Z_$][a-zA-Z0-9_$]* ;
+
 // Miscellaneous
 
-WS : [ \n\r]+ -> skip ;
+WS : [ \n\r]+ -> skip;
 
-COMMENT_LINE : '//' ~[\r\n]*? -> skip ;
+COMMENT_LINE : '#' ~[\r\n]*? -> skip ;
 
 COMMENT_DOC : '/**' .*? '*/' -> skip ;
 

@@ -17,63 +17,63 @@ public final class ValidBoolTests extends Harness {
     }
 
     @Test
-    public void BoolEq1() {
-        run("BoolEq1");
+    public void BoolAnd() {
+        run("BoolAnd");
     }
 
     @Test
-    public void BoolEq2() {
-        run("BoolEq2");
+    public void BoolEq() {
+        run("BoolEq");
     }
 
     @Test
-    public void BoolGt1() {
-        run("BoolGt1");
+    public void BoolGt() {
+        run("BoolGt");
     }
 
     @Test
-    public void BoolGt2() {
-        run("BoolGt2");
+    public void BoolGte() {
+        run("BoolGte");
     }
 
     @Test
-    public void BoolGte1() {
-        run("BoolGte1");
+    public void BoolIff() {
+        run("BoolIff");
     }
 
     @Test
-    public void BoolGte2() {
-        run("BoolGte2");
+    public void BoolImplies() {
+        run("BoolImplies");
     }
 
     @Test
-    public void BoolLt1() {
-        run("BoolLt1");
+    public void BoolLt() {
+        run("BoolLt");
     }
 
     @Test
-    public void BoolLt2() {
-        run("BoolLt2");
+    public void BoolLte() {
+        run("BoolLte");
     }
 
     @Test
-    public void BoolLte1() {
-        run("BoolLte1");
+    public void BoolNeq() {
+        run("BoolNeq");
     }
 
     @Test
-    public void BoolLte2() {
-        run("BoolLte2");
+    public void BoolNot() {
+        run("BoolNot");
     }
 
     @Test
-    public void BoolNeq1() {
-        run("BoolNeq1");
+    public void BoolOr() {
+        run("BoolOr");
     }
 
     @Test
-    public void BoolNeq2() {
-        run("BoolNeq2");
+    public void BoolXor() {
+        run("BoolXor");
     }
 }
 

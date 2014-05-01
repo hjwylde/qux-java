@@ -3,7 +3,7 @@ package qux.lang.operators;
 import qux.lang.Bool;
 
 /**
- * TODO: Documentation
+ * Not operator. This operator is an unary operator for the 'not' character sequence.
  *
  * @author Henry J. Wylde
  */

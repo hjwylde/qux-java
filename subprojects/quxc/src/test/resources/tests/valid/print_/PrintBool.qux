@@ -1,0 +1,5 @@
+void main([str] args) {
+    print true;
+    print false;
+}
+
