@@ -1,6 +1,5 @@
-void main([str] args) {
-    print [true, false];
-    print [null, true, null];
-    print [0, [null, 0], 0.0, 'foo'];
-}
+void main([str] args):
+    print [true, false]
+    print [null, true, null]
+    print [0, [null, 0], 0.0, 'foo']
 

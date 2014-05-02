@@ -1,4 +1,3 @@
-void main([str] args) {
-    print 0;
-}
+void main([str] args):
+    print 0
 

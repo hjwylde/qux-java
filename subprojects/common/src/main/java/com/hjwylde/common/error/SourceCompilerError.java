@@ -26,14 +26,14 @@ public class SourceCompilerError extends CompilerError {
      * @param source the source file.
      * @param line the line number, starting from 1.
      * @param col the column number, starting from 0.
-     * @param length the length, greater than 0.
+     * @param length the length, greater than or equal to 0.
      */
     public SourceCompilerError(String source, int line, int col, int length) {
         super();
 
-        checkArgument(line >= 1, "line cannot be less than 1");
-        checkArgument(col >= 0, "col cannot be less than 0");
-        checkArgument(length >= 1, "length cannot be less than 1");
+        checkArgument(line >= 1, "line cannot be less than 1 (line=%s)", line);
+        checkArgument(col >= 0, "col cannot be less than 0 (col=%s)", col);
+        checkArgument(length >= 0, "length cannot be less than 0 (length=%s)", length);
 
         this.source = checkNotNull(source, "source cannot be null");
 
@@ -50,14 +50,14 @@ public class SourceCompilerError extends CompilerError {
      * @param source the source file.
      * @param line the line number, starting from 1.
      * @param col the column number, starting from 0.
-     * @param length the length, greater than 0.
+     * @param length the length, greater than or equal to 0.
      */
     public SourceCompilerError(String message, String source, int line, int col, int length) {
         super(message);
 
-        checkArgument(line >= 1, "line cannot be less than 1");
-        checkArgument(col >= 0, "col cannot be less than 0");
-        checkArgument(length >= 1, "length cannot be less than 1");
+        checkArgument(line >= 1, "line cannot be less than 1 (line=%s)", line);
+        checkArgument(col >= 0, "col cannot be less than 0 (col=%s)", col);
+        checkArgument(length >= 0, "length cannot be less than 0 (length=%s)", length);
 
         this.source = checkNotNull(source, "source cannot be null");
 
@@ -75,15 +75,15 @@ public class SourceCompilerError extends CompilerError {
      * @param source the source file.
      * @param line the line number, starting from 1.
      * @param col the column number, starting from 0.
-     * @param length the length, greater than 0.
+     * @param length the length, greater than or equal to 0.
      */
     public SourceCompilerError(String message, Throwable cause, String source, int line, int col,
             int length) {
         super(message, cause);
 
-        checkArgument(line >= 1, "line cannot be less than 1");
-        checkArgument(col >= 0, "col cannot be less than 0");
-        checkArgument(length >= 1, "length cannot be less than 1");
+        checkArgument(line >= 1, "line cannot be less than 1 (line=%s)", line);
+        checkArgument(col >= 0, "col cannot be less than 0 (col=%s)", col);
+        checkArgument(length >= 0, "length cannot be less than 0 (length=%s)", length);
 
         this.source = checkNotNull(source, "source cannot be null");
 
@@ -100,14 +100,14 @@ public class SourceCompilerError extends CompilerError {
      * @param source the source file.
      * @param line the line number, starting from 1.
      * @param col the column number, starting from 0.
-     * @param length the length, greater than 0.
+     * @param length the length, greater than or equal to 0.
      */
     public SourceCompilerError(Throwable cause, String source, int line, int col, int length) {
         super(cause);
 
-        checkArgument(line >= 1, "line cannot be less than 1");
-        checkArgument(col >= 0, "col cannot be less than 0");
-        checkArgument(length >= 1, "length cannot be less than 1");
+        checkArgument(line >= 1, "line cannot be less than 1 (line=%s)", line);
+        checkArgument(col >= 0, "col cannot be less than 0 (col=%s)", col);
+        checkArgument(length >= 0, "length cannot be less than 0 (length=%s)", length);
 
         this.source = checkNotNull(source, "source cannot be null");
 
@@ -127,7 +127,8 @@ public class SourceCompilerError extends CompilerError {
     }
 
     /**
-     * Gets the length of the token that caused this error. The length is greater than 0.
+     * Gets the length of the token that caused this error. The length is greater than or equal to
+     * 0.
      *
      * @return the length.
      */

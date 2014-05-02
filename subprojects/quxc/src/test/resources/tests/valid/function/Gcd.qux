@@ -1,18 +1,15 @@
-int gcd(int a, int b) {
-    if (b == 0) {
-        return a;
-    }
+int gcd(int a, int b):
+    if (b == 0):
+        return a
 
-    return gcd(b, a % b);
-}
+    return gcd(b, a % b)
 
-void main([str] args) {
-    print gcd(1, 5);
-    print gcd(2, 2);
-    print gcd(5, 50);
-    print gcd(8, 50);
-    print gcd(10, 88);
-    print gcd(7, 31);
-    print gcd(8, 0);
-}
+void main([str] args):
+    print gcd(1, 5)
+    print gcd(2, 2)
+    print gcd(5, 50)
+    print gcd(8, 50)
+    print gcd(10, 88)
+    print gcd(7, 31)
+    print gcd(8, 0)
 

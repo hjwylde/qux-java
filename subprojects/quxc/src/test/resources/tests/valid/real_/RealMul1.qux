@@ -1,3 +1,0 @@
-void main([str] args) {
-    print 0.0 * 1.9;
-}

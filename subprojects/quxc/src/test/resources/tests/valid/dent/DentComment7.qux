@@ -1,0 +1,8 @@
+void main([str] args):
+    print 'foo'
+        /* 
+Comment
+  */
+    
+    print 'bar'
+

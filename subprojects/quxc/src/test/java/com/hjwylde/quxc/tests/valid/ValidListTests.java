@@ -17,58 +17,28 @@ public final class ValidListTests extends Harness {
     }
 
     @Test
-    public void ListAdd1() {
-        run("ListAdd1");
+    public void ListAdd() {
+        run("ListAdd");
     }
 
     @Test
-    public void ListAdd2() {
-        run("ListAdd2");
+    public void ListEq() {
+        run("ListEq");
     }
 
     @Test
-    public void ListEq1() {
-        run("ListEq1");
+    public void ListMul() {
+        run("ListMul");
     }
 
     @Test
-    public void ListEq2() {
-        run("ListEq2");
+    public void ListNeq() {
+        run("ListNeq");
     }
 
     @Test
-    public void ListEq3() {
-        run("ListEq3");
-    }
-
-    @Test
-    public void ListMul1() {
-        run("ListMul1");
-    }
-
-    @Test
-    public void ListMul2() {
-        run("ListMul2");
-    }
-
-    @Test
-    public void ListNeq1() {
-        run("ListNeq1");
-    }
-
-    @Test
-    public void ListNeq2() {
-        run("ListNeq2");
-    }
-
-    @Test
-    public void ListSub1() {
-        run("ListSub1");
-    }
-
-    @Test
-    public void ListSub2() {
-        run("ListSub2");
+    public void ListSub() {
+        run("ListSub");
     }
 }
 
