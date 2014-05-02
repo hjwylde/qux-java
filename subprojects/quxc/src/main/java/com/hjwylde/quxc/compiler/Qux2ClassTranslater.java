@@ -75,6 +75,7 @@ import qux.lang.operators.Gt;
 import qux.lang.operators.Gte;
 import qux.lang.operators.Iff;
 import qux.lang.operators.Implies;
+import qux.lang.operators.Len;
 import qux.lang.operators.Lt;
 import qux.lang.operators.Lte;
 import qux.lang.operators.Mul;
@@ -316,8 +317,9 @@ public final class Qux2ClassTranslater extends QuxAdapter {
                     visitCheckcast(expr.getLhs());
                     break;
                 case IMPLIES:
-                    mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Implies.class), "_implies_",
-                            getMethodDescriptor(Implies.class, "_implies_", Obj.class), true);
+                    mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Implies.class),
+                            "_implies_", getMethodDescriptor(Implies.class, "_implies_", Obj.class),
+                            true);
                     visitCheckcast(expr.getLhs());
                     break;
                 case LT:
@@ -473,6 +475,10 @@ public final class Qux2ClassTranslater extends QuxAdapter {
             visitExpr(expr.getTarget());
 
             switch (expr.getOp()) {
+                case LEN:
+                    mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Len.class), "_len_",
+                            getMethodDescriptor(Len.class, "_len_"), true);
+                    break;
                 case NEG:
                     mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Neg.class), "_neg_",
                             getMethodDescriptor(Neg.class, "_neg_"), true);

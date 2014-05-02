@@ -6,12 +6,14 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+import qux.lang.operators.Len;
+
 /**
  * TODO: Documentation
  *
  * @author Henry J. Wylde
  */
-public final class List extends Obj {
+public final class List extends Obj implements Len {
 
     private Obj[] data;
     private int count;
@@ -41,6 +43,14 @@ public final class List extends Obj {
         sb.append("]");
 
         return Str.valueOf(sb.toString());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Int _len_() {
+        return Int.valueOf(count);
     }
 
     /**

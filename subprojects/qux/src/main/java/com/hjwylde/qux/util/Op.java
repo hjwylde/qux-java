@@ -43,6 +43,6 @@ public interface Op {
      * @author Henry J. Wylde
      */
     public static enum Unary implements Op {
-        NEG, NOT;
+        LEN, NEG, NOT;
     }
 }

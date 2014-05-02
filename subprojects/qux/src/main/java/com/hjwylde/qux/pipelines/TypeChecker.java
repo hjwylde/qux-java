@@ -1,6 +1,7 @@
 package com.hjwylde.qux.pipelines;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.hjwylde.qux.util.Type.TYPE_ANY;
 import static com.hjwylde.qux.util.Type.TYPE_BOOL;
 import static com.hjwylde.qux.util.Type.TYPE_INT;
 import static com.hjwylde.qux.util.Type.TYPE_NULL;
@@ -248,7 +249,7 @@ public final class TypeChecker extends Pipeline {
 
             Type type;
             if (types.isEmpty()) {
-                type = Type.forList(Type.TYPE_ANY);
+                type = Type.forList(TYPE_ANY);
             } else if (types.size() == 1) {
                 type = Type.forList(types.iterator().next());
             } else {
@@ -271,6 +272,12 @@ public final class TypeChecker extends Pipeline {
                     Attribute.Type.class);
 
             switch (expr.getOp()) {
+                case LEN:
+                    // TODO: Somewhere I've done 'Type.TYPE_ANY' for this, find it and replace with just 'TYPE_ANY'
+                    checkSubtype(expr.getTarget(), Type.forList(TYPE_ANY));
+                    expr.addAttributes(new Attribute.Type(
+                            ((Type.List) targetAttribute.getType()).getInnerType()));
+                    break;
                 case NEG:
                     expr.addAttributes(targetAttribute);
                     break;
