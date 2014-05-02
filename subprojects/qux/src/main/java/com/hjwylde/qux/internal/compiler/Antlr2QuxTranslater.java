@@ -195,6 +195,15 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
      * {@inheritDoc}
      */
     @Override
+    public ExprNode visitExprLength(@NotNull QuxParser.ExprLengthContext ctx) {
+        return new ExprNode.Unary(Op.Unary.LEN, visitExprTerm(ctx.exprTerm()),
+                generateAttributeSource(ctx));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public ExprNode visitExprParen(@NotNull QuxParser.ExprParenContext ctx) {
         return visitExpr(ctx.expr());
     }
@@ -226,10 +235,12 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
     public ExprNode visitExprUnary(@NotNull QuxParser.ExprUnaryContext ctx) {
         Op.Unary op;
 
-        if (ctx.UOP_NEGATE() != null) {
+        if (ctx.UOP_NEG() != null) {
             op = Op.Unary.NEG;
         } else if (ctx.UOP_NOT() != null) {
             op = Op.Unary.NOT;
+        } else if (ctx.exprLength() != null) {
+            return visitExprLength(ctx.exprLength());
         } else {
             return visitExprTerm(ctx.exprTerm());
         }

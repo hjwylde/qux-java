@@ -138,8 +138,9 @@ exprBinary : exprUnary ((BOP_MUL | BOP_DIV | BOP_REM) expr)*
            | exprUnary ((BOP_IMPLIES) expr)*
            ;
 
-exprUnary : UOP_NEGATE? exprTerm
+exprUnary : UOP_NEG? exprTerm
           | UOP_NOT? exprTerm
+          | exprLength
           ;
 
 exprTerm : exprBracket
@@ -148,6 +149,9 @@ exprTerm : exprBracket
          | exprVariable
          | value
          ;
+
+exprLength : UOP_LEN exprTerm UOP_LEN
+           ;
 
 exprBracket : '[' (expr (',' expr)*)? ']'
             ;
@@ -301,7 +305,9 @@ BOP_REM : '%' ;
 
 UOP_NOT : 'not' ;
 
-UOP_NEGATE : '-' ;
+UOP_NEG: '-' ;
+
+UOP_LEN: '|' ;
 
 // Identifier
 
