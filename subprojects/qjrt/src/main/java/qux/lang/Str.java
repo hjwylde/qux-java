@@ -112,7 +112,7 @@ public final class Str extends Obj implements Comparable<Str>, Orderable<Str>, A
     @Override
     public Str _sub_(Str str) {
         if (value.endsWith(str.value)) {
-            valueOf(value.substring(0, value.length()));
+            return valueOf(value.substring(0, value.length() - str.value.length()));
         }
 
         return this;

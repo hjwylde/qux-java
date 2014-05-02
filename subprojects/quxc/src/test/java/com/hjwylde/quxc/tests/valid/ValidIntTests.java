@@ -17,123 +17,63 @@ public final class ValidIntTests extends Harness {
     }
 
     @Test
-    public void IntAdd1() {
-        run("IntAdd1");
+    public void IntAdd() {
+        run("IntAdd");
     }
 
     @Test
-    public void IntAdd2() {
-        run("IntAdd2");
+    public void IntDiv() {
+        run("IntDiv");
     }
 
     @Test
-    public void IntDiv1() {
-        run("IntDiv1");
+    public void IntEq() {
+        run("IntEq");
     }
 
     @Test
-    public void IntEq1() {
-        run("IntEq1");
+    public void IntGt() {
+        run("IntGt");
     }
 
     @Test
-    public void IntEq2() {
-        run("IntEq2");
+    public void IntGte() {
+        run("IntGte");
     }
 
     @Test
-    public void IntGt1() {
-        run("IntGt1");
+    public void IntLt() {
+        run("IntLt");
     }
 
     @Test
-    public void IntGt2() {
-        run("IntGt2");
+    public void IntLte() {
+        run("IntLte");
     }
 
     @Test
-    public void IntGte1() {
-        run("IntGte1");
+    public void IntMul() {
+        run("IntMul");
     }
 
     @Test
-    public void IntGte2() {
-        run("IntGte2");
+    public void IntNeg() {
+        run("IntNeg");
     }
 
     @Test
-    public void IntLt1() {
-        run("IntLt1");
+    public void IntNeq() {
+        run("IntNeq");
     }
 
     @Test
-    public void IntLt2() {
-        run("IntLt2");
+    public void IntRem() {
+        run("IntRem");
     }
 
     @Test
-    public void IntLte1() {
-        run("IntLte1");
-    }
-
-    @Test
-    public void IntLte2() {
-        run("IntLte2");
-    }
-
-    @Test
-    public void IntMul1() {
-        run("IntMul1");
-    }
-
-    @Test
-    public void IntMul2() {
-        run("IntMul2");
-    }
-
-    @Test
-    public void IntNeg1() {
-        run("IntNeg1");
-    }
-
-    @Test
-    public void IntNeq1() {
-        run("IntNeq1");
-    }
-
-    @Test
-    public void IntNeq2() {
-        run("IntNeq2");
-    }
-
-    @Test
-    public void IntRem1() {
-        run("IntRem1");
-    }
-
-    @Test
-    public void IntRem2() {
-        run("IntRem2");
-    }
-
-    @Test
-    public void IntRem3() {
-        run("IntRem3");
-    }
-
-    @Test
-    public void IntRem4() {
-        run("IntRem4");
-    }
-
-    @Test
-    public void IntSub1() {
-        run("IntSub1");
-    }
-
-    @Test
-    public void IntSub2() {
-        run("IntSub2");
+    public void IntSub() {
+        run("IntSub");
     }
 }
 

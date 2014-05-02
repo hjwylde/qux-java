@@ -14,6 +14,29 @@ public final class CompilerErrors {
     private CompilerErrors() {}
 
     /**
+     * Creates a new {@link com.hjwylde.common.error.CompilerError} representing an invalid dedent.
+     *
+     * @return the created {@link com.hjwylde.common.error.CompilerError}.
+     */
+    public static CompilerError invalidDedent() {
+        return new CompilerError("invalid dedent");
+    }
+
+    /**
+     * Creates a new {@link com.hjwylde.common.error.SourceCompilerError} representing an invalid
+     * dedent with the provided source information.
+     *
+     * @param source the source file name.
+     * @param line the line number.
+     * @param col the column number.
+     * @param length the length.
+     * @return the created {@link com.hjwylde.common.error.SourceCompilerError}.
+     */
+    public static SourceCompilerError invalidDedent(String source, int line, int col, int length) {
+        return new SourceCompilerError("invalid dedent", source, line, col, length);
+    }
+
+    /**
      * Creates a new {@link com.hjwylde.common.error.CompilerError} representing an invalid type.
      *
      * @param received the received type.

@@ -1,0 +1,4 @@
+void main([str] args):
+    print '012345' - '45'
+    print '0123' - '4'
+

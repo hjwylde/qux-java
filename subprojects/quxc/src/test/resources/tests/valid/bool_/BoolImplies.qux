@@ -1,6 +1,6 @@
-void main([str] args) {
-    print true implies true;
-    print true implies false;
-    print false implies true;
-    print false implies false;
-}
+void main([str] args):
+    print true implies true
+    print true implies false
+    print false implies true
+    print false implies false
+

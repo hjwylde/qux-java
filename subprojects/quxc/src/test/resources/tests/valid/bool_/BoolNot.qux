@@ -1,4 +1,4 @@
-void main([str] args) {
-    print not true;
-    print not false;
-}
+void main([str] args):
+    print not true
+    print not false
+

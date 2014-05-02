@@ -1,6 +1,6 @@
-void main([str] args) {
-    print true iff true;
-    print true iff false;
-    print false iff true;
-    print false iff false;
-}
+void main([str] args):
+    print true iff true
+    print true iff false
+    print false iff true
+    print false iff false
+

@@ -17,103 +17,58 @@ public final class ValidRealTests extends Harness {
     }
 
     @Test
-    public void RealAdd1() {
-        run("RealAdd1");
+    public void RealAdd() {
+        run("RealAdd");
     }
 
     @Test
-    public void RealAdd2() {
-        run("RealAdd2");
+    public void RealDiv() {
+        run("RealDiv");
     }
 
     @Test
-    public void RealDiv1() {
-        run("RealDiv1");
+    public void RealEq() {
+        run("RealEq");
     }
 
     @Test
-    public void RealEq1() {
-        run("RealEq1");
+    public void RealGt() {
+        run("RealGt");
     }
 
     @Test
-    public void RealEq2() {
-        run("RealEq2");
+    public void RealGte() {
+        run("RealGte");
     }
 
     @Test
-    public void RealGt1() {
-        run("RealGt1");
+    public void RealLt() {
+        run("RealLt");
     }
 
     @Test
-    public void RealGt2() {
-        run("RealGt2");
+    public void RealLte() {
+        run("RealLte");
     }
 
     @Test
-    public void RealGte1() {
-        run("RealGte1");
+    public void RealMul() {
+        run("RealMul");
     }
 
     @Test
-    public void RealGte2() {
-        run("RealGte2");
+    public void RealNeg() {
+        run("RealNeg");
     }
 
     @Test
-    public void RealLt1() {
-        run("RealLt1");
+    public void RealNeq() {
+        run("RealNeq");
     }
 
     @Test
-    public void RealLt2() {
-        run("RealLt2");
-    }
-
-    @Test
-    public void RealLte1() {
-        run("RealLte1");
-    }
-
-    @Test
-    public void RealLte2() {
-        run("RealLte2");
-    }
-
-    @Test
-    public void RealMul1() {
-        run("RealMul1");
-    }
-
-    @Test
-    public void RealMul2() {
-        run("RealMul2");
-    }
-
-    @Test
-    public void RealNeg1() {
-        run("RealNeg1");
-    }
-
-    @Test
-    public void RealNeq1() {
-        run("RealNeq1");
-    }
-
-    @Test
-    public void RealNeq2() {
-        run("RealNeq2");
-    }
-
-    @Test
-    public void RealSub1() {
-        run("RealSub1");
-    }
-
-    @Test
-    public void RealSub2() {
-        run("RealSub2");
+    public void RealSub() {
+        run("RealSub");
     }
 }
 

@@ -1,0 +1,7 @@
+void main([str] args):
+    print 'abc' < 'abc'
+    print 'abc' < 'def'
+    print 'def' < 'abc'
+    print 'def' < 'def'
+    print '-1' < '-1'
+

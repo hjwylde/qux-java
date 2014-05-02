@@ -17,93 +17,48 @@ public final class ValidStrTests extends Harness {
     }
 
     @Test
-    public void StrAdd1() {
-        run("StrAdd1");
+    public void StrAdd() {
+        run("StrAdd");
     }
 
     @Test
-    public void StrAdd2() {
-        run("StrAdd2");
+    public void StrEq() {
+        run("StrEq");
     }
 
     @Test
-    public void StrEq1() {
-        run("StrEq1");
+    public void StrGt() {
+        run("StrGt");
     }
 
     @Test
-    public void StrEq2() {
-        run("StrEq2");
+    public void StrGte() {
+        run("StrGte");
     }
 
     @Test
-    public void StrGt1() {
-        run("StrGt1");
+    public void StrLt() {
+        run("StrLt");
     }
 
     @Test
-    public void StrGt2() {
-        run("StrGt2");
+    public void StrLte() {
+        run("StrLte");
     }
 
     @Test
-    public void StrGte1() {
-        run("StrGte1");
+    public void StrMul() {
+        run("StrMul");
     }
 
     @Test
-    public void StrGte2() {
-        run("StrGte2");
+    public void StrNeq() {
+        run("StrNeq");
     }
 
     @Test
-    public void StrLt1() {
-        run("StrLt1");
-    }
-
-    @Test
-    public void StrLt2() {
-        run("StrLt2");
-    }
-
-    @Test
-    public void StrLte1() {
-        run("StrLte1");
-    }
-
-    @Test
-    public void StrLte2() {
-        run("StrLte2");
-    }
-
-    @Test
-    public void StrMul1() {
-        run("StrMul1");
-    }
-
-    @Test
-    public void StrMul2() {
-        run("StrMul2");
-    }
-
-    @Test
-    public void StrNeq1() {
-        run("StrNeq1");
-    }
-
-    @Test
-    public void StrNeq2() {
-        run("StrNeq2");
-    }
-
-    @Test
-    public void StrSub1() {
-        run("StrSub1");
-    }
-
-    @Test
-    public void StrSub2() {
-        run("StrSub2");
+    public void StrSub() {
+        run("StrSub");
     }
 }
 
