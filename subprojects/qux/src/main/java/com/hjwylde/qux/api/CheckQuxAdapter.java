@@ -65,8 +65,9 @@ public class CheckQuxAdapter extends QuxAdapter {
     @Override
     public FunctionVisitor visitFunction(int flags, String name, Type.Function type) {
         checkState(visitedStart,
-                "must call visit(int, String) before visitFunction(int, String, String)");
-        checkState(!visitedEnd, "must call visitFunction(int, String, String) before visitEnd()");
+                "must call visit(int, String) before visitFunction(int, String, Type.Function)");
+        checkState(!visitedEnd,
+                "must call visitFunction(int, String, Type.Function) before visitEnd()");
         checkNotNull(name, "name cannot be null");
         checkNotNull(type, "type cannot be null");
 

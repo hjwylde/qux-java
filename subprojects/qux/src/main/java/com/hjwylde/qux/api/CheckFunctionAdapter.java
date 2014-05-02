@@ -85,8 +85,8 @@ public class CheckFunctionAdapter extends FunctionAdapter {
      */
     @Override
     public void visitStmtAssign(StmtNode.Assign stmt) {
-        checkState(visitedCode, "must call visitCode() before visitStmtAssign(String, ExprNode)");
-        checkState(!visitedEnd, "must call visitStmtAssign(String, ExprNode) before visitEnd()");
+        checkState(visitedCode, "must call visitCode() before visitStmtAssign(StmtNode.Assign)");
+        checkState(!visitedEnd, "must call visitStmtAssign(StmtNode.Assign) before visitEnd()");
         checkNotNull(stmt, "stmt cannot be null");
 
         super.visitStmtAssign(stmt);
@@ -96,11 +96,22 @@ public class CheckFunctionAdapter extends FunctionAdapter {
      * {@inheritDoc}
      */
     @Override
+    public void visitStmtFor(StmtNode.For stmt) {
+        checkState(visitedCode, "must call visitCode() before visitStmtFor(StmtNode.For)");
+        checkState(!visitedEnd, "must call visitStmtFor(StmtNode.For) before visitEnd()");
+        checkNotNull(stmt, "stmt cannot be null");
+
+        super.visitStmtFor(stmt);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void visitStmtFunction(StmtNode.Function stmt) {
         checkState(visitedCode,
-                "must call visitCode() before visitStmtFunction(String, ImmutablelistList<ExprNode>)");
-        checkState(!visitedEnd,
-                "must call visitStmtFunction(String, ImmutableList<ExprNode>) before visitEnd()");
+                "must call visitCode() before visitStmtFunction(StmtNode.Function)");
+        checkState(!visitedEnd, "must call visitStmtFunction(StmtNode.Function) before visitEnd()");
         checkNotNull(stmt, "stmt cannot be null");
 
         super.visitStmtFunction(stmt);
@@ -111,10 +122,8 @@ public class CheckFunctionAdapter extends FunctionAdapter {
      */
     @Override
     public void visitStmtIf(StmtNode.If stmt) {
-        checkState(visitedCode,
-                "must call visitCode() before visitStmtIf(ExprNode, ImmutableList<StmtNode>, ImmutableList<StmtNode>)");
-        checkState(!visitedEnd,
-                "must call visitStmtIf(ExprNode, ImmutableList<StmtNode>, ImmutableList<StmtNode>) before visitEnd()");
+        checkState(visitedCode, "must call visitCode() before visitStmtIf(StmtNode.If)");
+        checkState(!visitedEnd, "must call visitStmtIf(StmtNode.If) before visitEnd()");
         checkNotNull(stmt, "stmt cannot be null");
 
         super.visitStmtIf(stmt);
@@ -125,8 +134,8 @@ public class CheckFunctionAdapter extends FunctionAdapter {
      */
     @Override
     public void visitStmtPrint(StmtNode.Print stmt) {
-        checkState(visitedCode, "must call visitCode() before visitStmtAssign(String, ExprNode)");
-        checkState(!visitedEnd, "must call visitStmtPrint(ExprNode) before visitEnd()");
+        checkState(visitedCode, "must call visitCode() before visitStmtPrint(StmtNode.Print)");
+        checkState(!visitedEnd, "must call visitStmtPrint(StmtNode.Print) before visitEnd()");
         checkNotNull(stmt, "stmt cannot be null");
 
         super.visitStmtPrint(stmt);
@@ -137,8 +146,8 @@ public class CheckFunctionAdapter extends FunctionAdapter {
      */
     @Override
     public void visitStmtReturn(StmtNode.Return stmt) {
-        checkState(visitedCode, "must call visitCode() before visitStmtReturn(Optional<ExprNode>)");
-        checkState(!visitedEnd, "must call visitStmtReturn(Optional<ExprNode>) before visitEnd()");
+        checkState(visitedCode, "must call visitCode() before visitStmtReturn(StmtNode.Return)");
+        checkState(!visitedEnd, "must call visitStmtReturn(StmtNode.Return) before visitEnd()");
         checkNotNull(stmt, "stmt cannot be null");
 
         super.visitStmtReturn(stmt);

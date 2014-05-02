@@ -10,5 +10,5 @@ import qux.lang.Obj;
  */
 public interface Implies<T extends Obj> {
 
-    public Bool _implies_(T t);
+    Bool _implies_(T t);
 }

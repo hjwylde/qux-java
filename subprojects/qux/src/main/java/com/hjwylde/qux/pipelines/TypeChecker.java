@@ -17,6 +17,7 @@ import com.hjwylde.qux.api.QuxVisitor;
 import com.hjwylde.qux.builder.Environment;
 import com.hjwylde.qux.tree.ExprNode;
 import com.hjwylde.qux.tree.FunctionNode;
+import com.hjwylde.qux.tree.Node;
 import com.hjwylde.qux.tree.QuxNode;
 import com.hjwylde.qux.tree.StmtNode;
 import com.hjwylde.qux.util.Attribute;
@@ -40,8 +41,6 @@ import java.util.Set;
  * @author Henry J. Wylde
  */
 public final class TypeChecker extends Pipeline {
-
-    // TODO: Change this class over to using getType() and setType() methods
 
     private final ImmutableMap<String, Type> functions;
 
@@ -69,6 +68,10 @@ public final class TypeChecker extends Pipeline {
         return fvc;
     }
 
+    private static Type getType(Node node) {
+        return Attributes.getAttributeUnchecked(node, Attribute.Type.class).getType();
+    }
+
     private static ImmutableMap<String, Type> initialiseFunctions(QuxNode node) {
         ImmutableMap.Builder<String, Type> builder = ImmutableMap.builder();
 
@@ -77,6 +80,11 @@ public final class TypeChecker extends Pipeline {
         }
 
         return builder.build();
+    }
+
+    @SafeVarargs
+    private static Environment<String, Type> mergeEnvironments(Environment<String, Type>... envs) {
+        return mergeEnvironments(Arrays.asList(envs));
     }
 
     private static Environment<String, Type> mergeEnvironments(
@@ -106,9 +114,19 @@ public final class TypeChecker extends Pipeline {
         return merged;
     }
 
-    @SafeVarargs
-    private static Environment<String, Type> mergeEnvironments(Environment<String, Type>... envs) {
-        return mergeEnvironments(Arrays.asList(envs));
+    private static void setType(Node node, Type type) {
+        Optional<Attribute.Type> opt = Attributes.getAttribute(node, Attribute.Type.class);
+
+        if (!opt.isPresent()) {
+            node.addAttributes(new Attribute.Type(type));
+
+            opt = Attributes.getAttribute(node, Attribute.Type.class);
+        }
+
+        Attribute.Type attribute = opt.get();
+
+        // Combine the two types and create a normalised union of them
+        attribute.setType(Type.forUnion(type, attribute.getType()));
     }
 
     /**
@@ -144,11 +162,6 @@ public final class TypeChecker extends Pipeline {
         }
 
         public void visitExpr(ExprNode expr) {
-            // If the type has already been resovled
-            if (Attributes.getAttribute(expr, Attribute.Type.class).isPresent()) {
-                return;
-            }
-
             expr.accept(this);
         }
 
@@ -160,8 +173,8 @@ public final class TypeChecker extends Pipeline {
             visitExpr(expr.getLhs());
             visitExpr(expr.getRhs());
 
-            Attribute.Type lhsAttribute = Attributes.getAttributeUnchecked(expr.getLhs(),
-                    Attribute.Type.class);
+            Type lhsType = getType(expr.getLhs());
+            Type rhsType = getType(expr.getRhs());
 
             switch (expr.getOp()) {
                 case ADD:
@@ -170,8 +183,8 @@ public final class TypeChecker extends Pipeline {
                 case DIV:
                 case REM:
                     // TODO: This feels wrong, what is the lhs and rhs are equivalent unions? Surely we can't do a binary operation then!
-                    checkEquivalent(expr.getRhs(), lhsAttribute.getType());
-                    expr.addAttributes(lhsAttribute);
+                    checkEquivalent(expr.getRhs(), lhsType);
+                    setType(expr, lhsType);
                     break;
                 case EQ:
                 case NEQ:
@@ -179,8 +192,13 @@ public final class TypeChecker extends Pipeline {
                 case GTE:
                 case LT:
                 case LTE:
-                    checkEquivalent(expr.getRhs(), lhsAttribute.getType());
-                    expr.addAttributes(new Attribute.Type(TYPE_BOOL));
+                    checkEquivalent(expr.getRhs(), lhsType);
+                    setType(expr, TYPE_BOOL);
+                    break;
+                case IN:
+                    checkSubtype(expr.getRhs(), Type.forList(TYPE_ANY));
+                    checkSubtype(expr.getLhs(), ((Type.List) rhsType).getInnerType());
+                    setType(expr, TYPE_BOOL);
                     break;
                 case AND:
                 case OR:
@@ -189,7 +207,7 @@ public final class TypeChecker extends Pipeline {
                 case IMPLIES:
                     checkSubtype(expr.getLhs(), TYPE_BOOL);
                     checkSubtype(expr.getRhs(), TYPE_BOOL);
-                    expr.addAttributes(new Attribute.Type(TYPE_BOOL));
+                    setType(expr, TYPE_BOOL);
                     break;
                 default:
                     throw new MethodNotImplementedError(expr.getOp().toString());
@@ -203,19 +221,19 @@ public final class TypeChecker extends Pipeline {
         public void visitExprConstant(ExprNode.Constant expr) {
             switch (expr.getType()) {
                 case BOOL:
-                    expr.addAttributes(new Attribute.Type(TYPE_BOOL));
+                    setType(expr, TYPE_BOOL);
                     break;
                 case INT:
-                    expr.addAttributes(new Attribute.Type(TYPE_INT));
+                    setType(expr, TYPE_INT);
                     break;
                 case NULL:
-                    expr.addAttributes(new Attribute.Type(TYPE_NULL));
+                    setType(expr, TYPE_NULL);
                     break;
                 case REAL:
-                    expr.addAttributes(new Attribute.Type(TYPE_REAL));
+                    setType(expr, TYPE_REAL);
                     break;
                 case STR:
-                    expr.addAttributes(new Attribute.Type(TYPE_STR));
+                    setType(expr, TYPE_STR);
                     break;
                 default:
                     throw new MethodNotImplementedError(expr.getType().toString());
@@ -231,8 +249,7 @@ public final class TypeChecker extends Pipeline {
                 visitExpr(argument);
             }
 
-            // TODO: Change this to use setType() once merged with issue22
-            expr.addAttributes(new Attribute.Type(functions.get(expr.getName())));
+            setType(expr, functions.get(expr.getName()));
         }
 
         /**
@@ -244,7 +261,7 @@ public final class TypeChecker extends Pipeline {
 
             for (ExprNode value : expr.getValues()) {
                 visitExpr(value);
-                types.add(Attributes.getAttributeUnchecked(value, Attribute.Type.class).getType());
+                types.add(getType(value));
             }
 
             Type type;
@@ -258,7 +275,7 @@ public final class TypeChecker extends Pipeline {
 
             type = Types.normalise(type);
 
-            expr.addAttributes(new Attribute.Type(type));
+            setType(expr, type);
         }
 
         /**
@@ -268,22 +285,19 @@ public final class TypeChecker extends Pipeline {
         public void visitExprUnary(ExprNode.Unary expr) {
             visitExpr(expr.getTarget());
 
-            Attribute.Type targetAttribute = Attributes.getAttributeUnchecked(expr.getTarget(),
-                    Attribute.Type.class);
+            Type targetType = getType(expr.getTarget());
 
             switch (expr.getOp()) {
                 case LEN:
-                    // TODO: Somewhere I've done 'Type.TYPE_ANY' for this, find it and replace with just 'TYPE_ANY'
                     checkSubtype(expr.getTarget(), Type.forList(TYPE_ANY));
-                    expr.addAttributes(new Attribute.Type(
-                            ((Type.List) targetAttribute.getType()).getInnerType()));
+                    setType(expr, ((Type.List) targetType).getInnerType());
                     break;
                 case NEG:
-                    expr.addAttributes(targetAttribute);
+                    setType(expr, targetType);
                     break;
                 case NOT:
                     checkSubtype(expr.getTarget(), TYPE_BOOL);
-                    expr.addAttributes(new Attribute.Type(TYPE_BOOL));
+                    setType(expr, TYPE_BOOL);
                     break;
                 default:
                     throw new MethodNotImplementedError(expr.getOp().toString());
@@ -295,7 +309,7 @@ public final class TypeChecker extends Pipeline {
          */
         @Override
         public void visitExprVariable(ExprNode.Variable expr) {
-            expr.addAttributes(new Attribute.Type(env.getUnchecked(expr.getName())));
+            setType(expr, env.getUnchecked(expr.getName()));
         }
 
         /**
@@ -325,11 +339,36 @@ public final class TypeChecker extends Pipeline {
         public void visitStmtAssign(StmtNode.Assign stmt) {
             visitExpr(stmt.getExpr());
 
-            Attribute.Type attribute = Attributes.getAttributeUnchecked(stmt.getExpr(),
-                    Attribute.Type.class);
-            env.put(stmt.getVar(), attribute.getType());
+            env.put(stmt.getVar(), getType(stmt.getExpr()));
 
             super.visitStmtAssign(stmt);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void visitStmtFor(StmtNode.For stmt) {
+            visitExpr(stmt.getExpr());
+
+            Type type = getType(stmt.getExpr());
+
+            // TODO: Make this generic, like with an iterable interface
+            Type inner;
+            if (type instanceof Type.List) {
+                inner = ((Type.List) type).getInnerType();
+            } else {
+                throw new MethodNotImplementedError(type.toString());
+            }
+
+            env = env.push();
+            env.put(stmt.getVar(), inner);
+
+            visitBlock(stmt.getBody());
+
+            env = env.pop();
+
+            super.visitStmtFor(stmt);
         }
 
         /**
@@ -342,9 +381,6 @@ public final class TypeChecker extends Pipeline {
             }
 
             super.visitStmtFunction(stmt);
-
-            // TODO: Implement visitStmtFunction(String, ImmutableList<ExprNode>)
-            throw new MethodNotImplementedError();
         }
 
         /**
@@ -399,21 +435,20 @@ public final class TypeChecker extends Pipeline {
         private void checkEquivalent(ExprNode expr, Type expected) {
             visitExpr(expr);
 
-            Attribute.Type attribute = Attributes.getAttributeUnchecked(expr, Attribute.Type.class);
+            Type type = getType(expr);
 
-            if (!Types.isEquivalent(attribute.getType(), expected)) {
+            if (!Types.isEquivalent(type, expected)) {
                 Optional<Attribute.Source> opt = Attributes.getAttribute(expr,
                         Attribute.Source.class);
 
                 if (opt.isPresent()) {
                     Attribute.Source source = opt.get();
 
-                    throw CompilerErrors.invalidType(attribute.getType().toString(),
-                            expected.toString(), source.getSource(), source.getLine(),
-                            source.getCol(), source.getLength());
+                    throw CompilerErrors.invalidType(type.toString(), expected.toString(),
+                            source.getSource(), source.getLine(), source.getCol(),
+                            source.getLength());
                 } else {
-                    throw CompilerErrors.invalidType(attribute.getType().toString(),
-                            expected.toString());
+                    throw CompilerErrors.invalidType(type.toString(), expected.toString());
                 }
             }
         }
@@ -421,21 +456,20 @@ public final class TypeChecker extends Pipeline {
         private void checkSubtype(ExprNode expr, Type rhs) {
             visitExpr(expr);
 
-            Attribute.Type attribute = Attributes.getAttributeUnchecked(expr, Attribute.Type.class);
+            Type type = getType(expr);
 
-            if (!Types.isSubtype(attribute.getType(), rhs)) {
+            if (!Types.isSubtype(type, rhs)) {
                 Optional<Attribute.Source> opt = Attributes.getAttribute(expr,
                         Attribute.Source.class);
 
                 if (opt.isPresent()) {
                     Attribute.Source source = opt.get();
 
-                    throw CompilerErrors.invalidType(attribute.getType().toString(), rhs.toString(),
+                    throw CompilerErrors.invalidType(type.toString(), rhs.toString(),
                             source.getSource(), source.getLine(), source.getCol(),
                             source.getLength());
                 } else {
-                    throw CompilerErrors.invalidType(attribute.getType().toString(),
-                            rhs.toString());
+                    throw CompilerErrors.invalidType(type.toString(), rhs.toString());
                 }
             }
         }

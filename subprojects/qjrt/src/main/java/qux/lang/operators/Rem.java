@@ -15,5 +15,5 @@ public interface Rem<T extends Obj> {
      * @param t the T to remainder.
      * @return the result.
      */
-    public T _rem_(T t);
+    T _rem_(T t);
 }

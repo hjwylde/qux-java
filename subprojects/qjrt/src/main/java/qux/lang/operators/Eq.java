@@ -10,5 +10,5 @@ import qux.lang.Obj;
  */
 public interface Eq<T extends Obj> {
 
-    public Bool _eq_(T t);
+    Bool _eq_(T t);
 }

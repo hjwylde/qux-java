@@ -10,5 +10,5 @@ import qux.lang.Obj;
  */
 public interface And<T extends Obj> {
 
-    public Bool _and_(T t);
+    Bool _and_(T t);
 }

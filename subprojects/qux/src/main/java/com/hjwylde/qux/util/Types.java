@@ -21,6 +21,21 @@ public final class Types {
      */
     private Types() {}
 
+    public static Type.Union flatten(Type.Union type) {
+        List<Type> types = new ArrayList<>();
+
+        for (Type inner : type.getTypes()) {
+            if (inner instanceof Type.Union) {
+                types.addAll(((Type.Union) inner).getTypes());
+            } else {
+                types.add(inner);
+            }
+        }
+
+        // Create a new union using the constructor to avoid an infinite recursive call to normalise
+        return new Type.Union(types);
+    }
+
     public static boolean isEquivalent(Type lhs, Type rhs) {
         // Because union types are represented with sets, we can just use standard equality
         return lhs.equals(rhs);
@@ -56,19 +71,6 @@ public final class Types {
         return lhs.equals(rhs);
     }
 
-    public static Type normalise(Type type) {
-        if (type instanceof Type.Function) {
-            return normalise((Type.Function) type);
-        } else if (type instanceof Type.List) {
-            return normalise((Type.List) type);
-        } else if (type instanceof Type.Union) {
-            return normalise((Type.Union) type);
-        }
-
-        // Rest of the types are already normalised
-        return type;
-    }
-
     public static Type.Function normalise(Type.Function type) {
         List<Type> parameterTypes = new ArrayList<>();
 
@@ -85,8 +87,24 @@ public final class Types {
         return new Type.List(normalise(type.getInnerType()));
     }
 
+    public static Type normalise(Type type) {
+        if (type instanceof Type.Function) {
+            return normalise((Type.Function) type);
+        } else if (type instanceof Type.List) {
+            return normalise((Type.List) type);
+        } else if (type instanceof Type.Union) {
+            return normalise((Type.Union) type);
+        }
+
+        // Rest of the types are already normalised
+        return type;
+    }
+
     public static Type normalise(Type.Union type) {
         List<Type> types = new ArrayList<>();
+
+        // Flatten out any inner unions
+        type = flatten(type);
 
         OUTER:
         for (Type inner : type.getTypes()) {
@@ -115,7 +133,7 @@ public final class Types {
 
         Set<Type> union = ImmutableSet.copyOf(types);
 
-        checkState(union.size() > 0, "normalisation of union resulted in union of size 0: {}",
+        checkState(!union.isEmpty(), "normalisation of union resulted in union of size 0: {}",
                 type);
 
         if (union.size() == 1) {

@@ -23,6 +23,7 @@ import static org.objectweb.asm.Opcodes.ICONST_4;
 import static org.objectweb.asm.Opcodes.ICONST_5;
 import static org.objectweb.asm.Opcodes.ICONST_M1;
 import static org.objectweb.asm.Opcodes.IF_ACMPEQ;
+import static org.objectweb.asm.Opcodes.IF_ACMPNE;
 import static org.objectweb.asm.Opcodes.INVOKEINTERFACE;
 import static org.objectweb.asm.Opcodes.INVOKESTATIC;
 import static org.objectweb.asm.Opcodes.INVOKEVIRTUAL;
@@ -62,6 +63,8 @@ import java.util.Map;
 
 import qux.lang.Bool;
 import qux.lang.Int;
+import qux.lang.Iterable;
+import qux.lang.Iterator;
 import qux.lang.List;
 import qux.lang.Null;
 import qux.lang.Obj;
@@ -69,6 +72,7 @@ import qux.lang.Real;
 import qux.lang.Str;
 import qux.lang.operators.Add;
 import qux.lang.operators.And;
+import qux.lang.operators.Contains;
 import qux.lang.operators.Div;
 import qux.lang.operators.Eq;
 import qux.lang.operators.Gt;
@@ -222,6 +226,11 @@ public final class Qux2ClassTranslater extends QuxAdapter {
         private String returnType;
 
         /**
+         * Unique number for generating variable names.
+         */
+        private int gen;
+
+        /**
          * Stores a map of variable names to jvm local indices.
          * <p/>
          * TODO: Change this so that the number of local variables are minimized, i.e. can be used
@@ -287,17 +296,17 @@ public final class Qux2ClassTranslater extends QuxAdapter {
                 case ADD:
                     mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Add.class), "_add_",
                             getMethodDescriptor(Add.class, "_add_", Obj.class), true);
-                    visitCheckcast(expr.getLhs());
+                    visitCheckcast(expr);
                     break;
                 case AND:
                     mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(And.class), "_and_",
                             getMethodDescriptor(And.class, "_and_", Obj.class), true);
-                    visitCheckcast(expr.getLhs());
+                    visitCheckcast(expr);
                     break;
                 case DIV:
                     mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Div.class), "_div_",
                             getMethodDescriptor(Div.class, "_div_", Obj.class), true);
-                    visitCheckcast(expr.getLhs());
+                    visitCheckcast(expr);
                     break;
                 case EQ:
                     mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Eq.class), "_eq_",
@@ -314,13 +323,17 @@ public final class Qux2ClassTranslater extends QuxAdapter {
                 case IFF:
                     mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Iff.class), "_iff_",
                             getMethodDescriptor(Iff.class, "_iff_", Obj.class), true);
-                    visitCheckcast(expr.getLhs());
                     break;
                 case IMPLIES:
                     mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Implies.class),
                             "_implies_", getMethodDescriptor(Implies.class, "_implies_", Obj.class),
                             true);
-                    visitCheckcast(expr.getLhs());
+                    break;
+                case IN:
+                    mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Contains.class),
+                            "_contains_", getMethodDescriptor(Contains.class, "_contains_",
+                                    Obj.class), true
+                    );
                     break;
                 case LT:
                     mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Lt.class), "_lt_",
@@ -333,7 +346,7 @@ public final class Qux2ClassTranslater extends QuxAdapter {
                 case MUL:
                     mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Mul.class), "_mul_",
                             getMethodDescriptor(Mul.class, "_mul_", Obj.class), true);
-                    visitCheckcast(expr.getLhs());
+                    visitCheckcast(expr);
                     break;
                 case NEQ:
                     mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Neq.class), "_neq_",
@@ -342,22 +355,20 @@ public final class Qux2ClassTranslater extends QuxAdapter {
                 case OR:
                     mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Or.class), "_or_",
                             getMethodDescriptor(Or.class, "_or_", Obj.class), true);
-                    visitCheckcast(expr.getLhs());
                     break;
                 case REM:
                     mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Rem.class), "_rem_",
                             getMethodDescriptor(Rem.class, "_rem_", Obj.class), true);
-                    visitCheckcast(expr.getLhs());
+                    visitCheckcast(expr);
                     break;
                 case SUB:
                     mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Sub.class), "_sub_",
                             getMethodDescriptor(Sub.class, "_sub_", Obj.class), true);
-                    visitCheckcast(expr.getLhs());
+                    visitCheckcast(expr);
                     break;
                 case XOR:
                     mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Xor.class), "_xor_",
                             getMethodDescriptor(Xor.class, "_xor_", Obj.class), true);
-                    visitCheckcast(expr.getLhs());
                     break;
                 default:
                     throw new MethodNotImplementedError(expr.getOp().toString());
@@ -543,6 +554,47 @@ public final class Qux2ClassTranslater extends QuxAdapter {
          * {@inheritDoc}
          */
         @Override
+        public void visitStmtFor(StmtNode.For stmt) {
+            visitExpr(stmt.getExpr());
+
+            // The local variable holding each element of the iterable
+            locals.add(stmt.getVar());
+            int var = locals.indexOf(stmt.getVar());
+            Type varType = getTypeFromQuxType(((com.hjwylde.qux.util.Type.List) getQuxType(
+                    stmt.getExpr())).getInnerType());
+            // The local variable index holding the iterator object
+            int iter = locals.indexOf(generateVariable());
+            Label startLabel = new Label();
+            Label endLabel = new Label();
+
+            mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Iterable.class), "_iter_",
+                    getMethodDescriptor(Iterable.class, "_iter_"), true);
+            mv.visitVarInsn(ASTORE, iter);
+
+            mv.visitLabel(startLabel);
+
+            mv.visitVarInsn(ALOAD, iter);
+            mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Iterator.class), "hasNext",
+                    getMethodDescriptor(Iterator.class, "hasNext"), true);
+            mv.visitFieldInsn(GETSTATIC, Type.getInternalName(Bool.class), "TRUE",
+                    Type.getDescriptor(Bool.class));
+            mv.visitJumpInsn(IF_ACMPNE, endLabel);
+            mv.visitVarInsn(ALOAD, iter);
+            mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Iterator.class), "next",
+                    getMethodDescriptor(Iterator.class, "next"), true);
+            mv.visitTypeInsn(CHECKCAST, varType.getInternalName());
+            mv.visitVarInsn(ASTORE, var);
+
+            visitBlock(stmt.getBody());
+
+            mv.visitJumpInsn(GOTO, startLabel);
+            mv.visitLabel(endLabel);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
         public void visitStmtFunction(StmtNode.Function stmt) {
             Type returnType = Type.VOID_TYPE;
             java.util.List<Type> argumentTypes = new ArrayList<>();
@@ -625,9 +677,16 @@ public final class Qux2ClassTranslater extends QuxAdapter {
             }
         }
 
+        private String generateVariable() {
+            String name = "$gen" + gen++;
+
+            locals.add(name);
+
+            return name;
+        }
+
         private void visitCheckcast(Node node) {
-            Attribute.Type attribute = Attributes.getAttributeUnchecked(node, Attribute.Type.class);
-            mv.visitTypeInsn(CHECKCAST, getTypeFromQuxType(attribute.getType()).getInternalName());
+            mv.visitTypeInsn(CHECKCAST, getType(node).getInternalName());
         }
 
         private void visitValue(BigInteger value) {

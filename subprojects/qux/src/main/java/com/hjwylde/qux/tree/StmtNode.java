@@ -59,9 +59,58 @@ public abstract class StmtNode extends Node {
             this.expr = checkNotNull(expr, "expr cannot be null");
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void accept(StmtVisitor sv) {
             sv.visitStmtAssign(this);
+        }
+
+        public ExprNode getExpr() {
+            return expr;
+        }
+
+        public String getVar() {
+            return var;
+        }
+    }
+
+    /**
+     * TODO: Documentation
+     *
+     * @author Henry J. Wylde
+     * @since 0.2.0
+     */
+    public static final class For extends StmtNode {
+
+        private final String var;
+        private final ExprNode expr;
+        private final ImmutableList<StmtNode> body;
+
+        public For(String var, ExprNode expr, List<StmtNode> body, Attribute... attributes) {
+            this(var, expr, body, Arrays.asList(attributes));
+        }
+
+        public For(String var, ExprNode expr, List<StmtNode> body,
+                Collection<Attribute> attributes) {
+            super(attributes);
+
+            this.var = checkNotNull(var, "var cannot be null");
+            this.expr = checkNotNull(expr, "expr cannot be null");
+            this.body = ImmutableList.copyOf(body);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void accept(StmtVisitor sv) {
+            sv.visitStmtFor(this);
+        }
+
+        public ImmutableList<StmtNode> getBody() {
+            return body;
         }
 
         public ExprNode getExpr() {
@@ -94,6 +143,9 @@ public abstract class StmtNode extends Node {
             this.arguments = ImmutableList.copyOf(arguments);
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void accept(StmtVisitor sv) {
             sv.visitStmtFunction(this);
@@ -133,6 +185,9 @@ public abstract class StmtNode extends Node {
             this.falseBlock = ImmutableList.copyOf(falseBlock);
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void accept(StmtVisitor sv) {
             sv.visitStmtIf(this);
@@ -171,6 +226,9 @@ public abstract class StmtNode extends Node {
             this.expr = checkNotNull(expr, "expr cannot be null");
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void accept(StmtVisitor sv) {
             sv.visitStmtPrint(this);
@@ -216,6 +274,9 @@ public abstract class StmtNode extends Node {
             this(Optional.fromNullable(expr), attributes);
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void accept(StmtVisitor sv) {
             sv.visitStmtReturn(this);

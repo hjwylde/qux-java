@@ -9,5 +9,5 @@ import qux.lang.Obj;
  */
 public interface Neg<T extends Obj> {
 
-    public T _neg_();
+    T _neg_();
 }

@@ -9,5 +9,5 @@ import qux.lang.Obj;
  */
 public interface Add<T extends Obj> {
 
-    public T _add_(T t);
+    T _add_(T t);
 }
