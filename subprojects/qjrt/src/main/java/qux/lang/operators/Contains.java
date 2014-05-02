@@ -10,5 +10,5 @@ import qux.lang.Obj;
  */
 public interface Contains<T extends Obj> {
 
-    public Bool _contains_(T t);
+    Bool _contains_(T t);
 }

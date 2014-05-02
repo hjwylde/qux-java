@@ -42,8 +42,6 @@ import java.util.Set;
  */
 public final class TypeChecker extends Pipeline {
 
-    // TODO: Change this class over to using getType() and setType() methods
-
     private final ImmutableMap<String, Type> functions;
 
     public TypeChecker(QuxNode node) {
@@ -198,7 +196,7 @@ public final class TypeChecker extends Pipeline {
                     setType(expr, TYPE_BOOL);
                     break;
                 case IN:
-                    checkSubtype(expr.getRhs(), Type.forList(Type.TYPE_ANY));
+                    checkSubtype(expr.getRhs(), Type.forList(TYPE_ANY));
                     checkSubtype(expr.getLhs(), ((Type.List) rhsType).getInnerType());
                     setType(expr, TYPE_BOOL);
                     break;
@@ -209,7 +207,7 @@ public final class TypeChecker extends Pipeline {
                 case IMPLIES:
                     checkSubtype(expr.getLhs(), TYPE_BOOL);
                     checkSubtype(expr.getRhs(), TYPE_BOOL);
-                    expr.addAttributes(new Attribute.Type(TYPE_BOOL));
+                    setType(expr, TYPE_BOOL);
                     break;
                 default:
                     throw new MethodNotImplementedError(expr.getOp().toString());
@@ -291,10 +289,8 @@ public final class TypeChecker extends Pipeline {
 
             switch (expr.getOp()) {
                 case LEN:
-                    // TODO: Somewhere I've done 'Type.TYPE_ANY' for this, find it and replace with just 'TYPE_ANY'
                     checkSubtype(expr.getTarget(), Type.forList(TYPE_ANY));
-                    expr.addAttributes(new Attribute.Type(
-                            ((Type.List) targetAttribute.getType()).getInnerType()));
+                    setType(expr, ((Type.List) targetType).getInnerType());
                     break;
                 case NEG:
                     setType(expr, targetType);

@@ -9,5 +9,5 @@ import qux.lang.Int;
  */
 public interface Len {
 
-    public Int _len_();
+    Int _len_();
 }

@@ -10,5 +10,5 @@ import qux.lang.Obj;
  */
 public interface Iff<T extends Obj> {
 
-    public Bool _iff_(T t);
+    Bool _iff_(T t);
 }

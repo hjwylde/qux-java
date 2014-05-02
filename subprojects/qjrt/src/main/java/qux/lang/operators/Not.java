@@ -9,5 +9,5 @@ import qux.lang.Bool;
  */
 public interface Not {
 
-    public Bool _not_();
+    Bool _not_();
 }

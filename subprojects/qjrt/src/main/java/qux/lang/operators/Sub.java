@@ -15,5 +15,5 @@ public interface Sub<T extends Obj> {
      * @param t the T to subtract.
      * @return the result.
      */
-    public T _sub_(T t);
+    T _sub_(T t);
 }

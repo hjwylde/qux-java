@@ -9,5 +9,5 @@ import qux.lang.Obj;
  */
 public interface Mul<T extends Obj> {
 
-    public T _mul_(T t);
+    T _mul_(T t);
 }

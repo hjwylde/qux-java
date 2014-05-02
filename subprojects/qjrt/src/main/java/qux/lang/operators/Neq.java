@@ -10,5 +10,5 @@ import qux.lang.Obj;
  */
 public interface Neq<T extends Obj> {
 
-    public Bool _neq_(T t);
+    Bool _neq_(T t);
 }

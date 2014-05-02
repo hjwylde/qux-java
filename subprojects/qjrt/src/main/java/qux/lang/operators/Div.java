@@ -9,5 +9,5 @@ import qux.lang.Obj;
  */
 public interface Div<T extends Obj> {
 
-    public T _div_(T t);
+    T _div_(T t);
 }

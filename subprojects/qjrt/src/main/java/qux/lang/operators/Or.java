@@ -10,5 +10,5 @@ import qux.lang.Obj;
  */
 public interface Or<T extends Obj> {
 
-    public Bool _or_(T t);
+    Bool _or_(T t);
 }

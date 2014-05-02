@@ -23,6 +23,7 @@ import static org.objectweb.asm.Opcodes.ICONST_4;
 import static org.objectweb.asm.Opcodes.ICONST_5;
 import static org.objectweb.asm.Opcodes.ICONST_M1;
 import static org.objectweb.asm.Opcodes.IF_ACMPEQ;
+import static org.objectweb.asm.Opcodes.IF_ACMPNE;
 import static org.objectweb.asm.Opcodes.INVOKEINTERFACE;
 import static org.objectweb.asm.Opcodes.INVOKESTATIC;
 import static org.objectweb.asm.Opcodes.INVOKEVIRTUAL;
@@ -62,6 +63,8 @@ import java.util.Map;
 
 import qux.lang.Bool;
 import qux.lang.Int;
+import qux.lang.Iterable;
+import qux.lang.Iterator;
 import qux.lang.List;
 import qux.lang.Null;
 import qux.lang.Obj;
@@ -221,6 +224,11 @@ public final class Qux2ClassTranslater extends QuxAdapter {
          * Stores the return type as a jvm type.
          */
         private String returnType;
+
+        /**
+         * Unique number for generating variable names.
+         */
+        private int gen;
 
         /**
          * Stores a map of variable names to jvm local indices.
@@ -547,8 +555,40 @@ public final class Qux2ClassTranslater extends QuxAdapter {
          */
         @Override
         public void visitStmtFor(StmtNode.For stmt) {
-            // TODO: Implement visitStmtFor(StmtNode.For)
-            throw new MethodNotImplementedError();
+            visitExpr(stmt.getExpr());
+
+            // The local variable holding each element of the iterable
+            locals.add(stmt.getVar());
+            int var = locals.indexOf(stmt.getVar());
+            Type varType = getTypeFromQuxType(((com.hjwylde.qux.util.Type.List) getQuxType(
+                    stmt.getExpr())).getInnerType());
+            // The local variable index holding the iterator object
+            int iter = locals.indexOf(generateVariable());
+            Label startLabel = new Label();
+            Label endLabel = new Label();
+
+            mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Iterable.class), "_iter_",
+                    getMethodDescriptor(Iterable.class, "_iter_"), true);
+            mv.visitVarInsn(ASTORE, iter);
+
+            mv.visitLabel(startLabel);
+
+            mv.visitVarInsn(ALOAD, iter);
+            mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Iterator.class), "hasNext",
+                    getMethodDescriptor(Iterator.class, "hasNext"), true);
+            mv.visitFieldInsn(GETSTATIC, Type.getInternalName(Bool.class), "TRUE",
+                    Type.getDescriptor(Bool.class));
+            mv.visitJumpInsn(IF_ACMPNE, endLabel);
+            mv.visitVarInsn(ALOAD, iter);
+            mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Iterator.class), "next",
+                    getMethodDescriptor(Iterator.class, "next"), true);
+            mv.visitTypeInsn(CHECKCAST, varType.getInternalName());
+            mv.visitVarInsn(ASTORE, var);
+
+            visitBlock(stmt.getBody());
+
+            mv.visitJumpInsn(GOTO, startLabel);
+            mv.visitLabel(endLabel);
         }
 
         /**
@@ -637,9 +677,16 @@ public final class Qux2ClassTranslater extends QuxAdapter {
             }
         }
 
+        private String generateVariable() {
+            String name = "$gen" + gen++;
+
+            locals.add(name);
+
+            return name;
+        }
+
         private void visitCheckcast(Node node) {
-            Attribute.Type attribute = Attributes.getAttributeUnchecked(node, Attribute.Type.class);
-            mv.visitTypeInsn(CHECKCAST, getTypeFromQuxType(attribute.getType()).getInternalName());
+            mv.visitTypeInsn(CHECKCAST, getType(node).getInternalName());
         }
 
         private void visitValue(BigInteger value) {

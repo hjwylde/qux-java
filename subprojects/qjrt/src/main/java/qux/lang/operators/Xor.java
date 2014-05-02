@@ -10,5 +10,5 @@ import qux.lang.Obj;
  */
 public interface Xor<T extends Obj> {
 
-    public Bool _xor_(T t);
+    Bool _xor_(T t);
 }

@@ -10,5 +10,5 @@ import qux.lang.Obj;
  */
 public interface Gt<T extends Obj> {
 
-    public Bool _gt_(T t);
+    Bool _gt_(T t);
 }

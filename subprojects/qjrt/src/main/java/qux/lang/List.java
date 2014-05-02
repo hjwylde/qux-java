@@ -16,7 +16,7 @@ import qux.lang.operators.Len;
  *
  * @author Henry J. Wylde
  */
-public final class List extends Obj implements Contains<Obj>, Len {
+public final class List extends Obj implements Contains<Obj>, Len, Iterable<Obj> {
 
     private Obj[] data;
     private int count;
@@ -60,6 +60,28 @@ public final class List extends Obj implements Contains<Obj>, Len {
         sb.append("]");
 
         return Str.valueOf(sb.toString());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Iterator<Obj> _iter_() {
+        return new Iterator<Obj>() {
+
+            private Obj[] data = Arrays.copyOf(List.this.data, count);
+            private int index = 0;
+
+            @Override
+            public Bool hasNext() {
+                return index < data.length ? TRUE : FALSE;
+            }
+
+            @Override
+            public Obj next() {
+                return data[index++];
+            }
+        };
     }
 
     /**

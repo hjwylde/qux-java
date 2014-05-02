@@ -9,5 +9,5 @@ import qux.lang.Str;
  */
 public interface Desc {
 
-    public Str _desc_();
+    Str _desc_();
 }
