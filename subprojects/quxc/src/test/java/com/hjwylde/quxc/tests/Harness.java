@@ -36,7 +36,7 @@ import java.util.concurrent.TimeoutException;
  * TODO: Documentation
  *
  * @author Henry J. Wylde
- * @since 0.2.0
+ * @since 0.1.2
  */
 public abstract class Harness {
 
@@ -228,7 +228,7 @@ public abstract class Harness {
      * TODO: Documentation
      *
      * @author Henry J. Wylde
-     * @since 0.2.0
+     * @since 0.1.2
      */
     private static final class FutureProcess extends FutureTask<Integer> {
 

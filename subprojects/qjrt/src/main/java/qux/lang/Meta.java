@@ -17,7 +17,7 @@ import java.util.Set;
  * TODO: Documentation
  *
  * @author Henry J. Wylde
- * @since 0.2.0
+ * @since 0.1.2
  */
 public class Meta extends Obj {
 
@@ -92,7 +92,7 @@ public class Meta extends Obj {
      * TODO: Documentation
      *
      * @author Henry J. Wylde
-     * @since 0.2.0
+     * @since 0.1.2
      */
     private static final class Any extends Meta {
 
@@ -109,7 +109,7 @@ public class Meta extends Obj {
      * TODO: Documentation
      *
      * @author Henry J. Wylde
-     * @since 0.2.0
+     * @since 0.1.2
      */
     private static final class Bool extends Meta {
 
@@ -126,7 +126,7 @@ public class Meta extends Obj {
      * TODO: Documentation
      *
      * @author Henry J. Wylde
-     * @since 0.2.0
+     * @since 0.1.2
      */
     private static final class Int extends Meta {
 
@@ -143,7 +143,7 @@ public class Meta extends Obj {
      * TODO: Documentation
      *
      * @author Henry J. Wylde
-     * @since 0.2.0
+     * @since 0.1.2
      */
     private static final class List extends Meta {
 
@@ -190,7 +190,7 @@ public class Meta extends Obj {
      * TODO: Documentation
      *
      * @author Henry J. Wylde
-     * @since 0.2.0
+     * @since 0.1.2
      */
     private static final class Null extends Meta {
 
@@ -207,7 +207,7 @@ public class Meta extends Obj {
      * TODO: Documentation
      *
      * @author Henry J. Wylde
-     * @since 0.2.0
+     * @since 0.1.2
      */
     private static final class Real extends Meta {
 
@@ -224,7 +224,7 @@ public class Meta extends Obj {
      * TODO: Documentation
      *
      * @author Henry J. Wylde
-     * @since 0.2.0
+     * @since 0.1.2
      */
     private static final class Str extends Meta {
 
@@ -241,7 +241,7 @@ public class Meta extends Obj {
      * TODO: Documentation
      *
      * @author Henry J. Wylde
-     * @since 0.2.0
+     * @since 0.1.2
      */
     private static final class Union extends Meta {
 

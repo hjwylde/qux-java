@@ -8,7 +8,7 @@ import org.junit.Test;
  * Valid {@code null} tests.
  *
  * @author Henry J. Wylde
- * @since 0.2.0
+ * @since 0.1.2
  */
 public final class ValidNullTests extends Harness {
 

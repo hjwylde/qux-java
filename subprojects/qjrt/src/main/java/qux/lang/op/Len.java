@@ -6,7 +6,7 @@ import qux.lang.Int;
  * TODO: Documentation.
  *
  * @author Henry J. Wylde
- * @since TODO: SINCE
+ * @since 0.1.2
  */
 public interface Len {
 
