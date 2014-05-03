@@ -16,41 +16,41 @@ import qux.util.Iterator;
  * TODO: Documentation
  *
  * @author Henry J. Wylde
+ * @since TODO: SINCE
  */
-public final class List extends Obj implements Len, Iterable {
+public final class Set extends Obj implements Len, Iterable {
 
     private Obj[] data;
     private int count;
 
     private int refs;
 
-    private List() {
+    private Set() {
         this.data = new Obj[10];
         count = 0;
     }
 
-    private List(List list) {
-        this.data = list.data;
-        this.count = list.count;
+    private Set(Set set) {
+        this.data = set.data;
+        this.count = set.count;
     }
 
-    private List(Obj[] data) {
+    private Set(Obj[] data) {
+        this();
+
         checkArgument(!Arrays.asList(data).contains(null), "data cannot contain null");
 
-        this.data = data.clone();
-        this.count = data.length;
-
-        if (count == 0) {
-            this.data = new Obj[10];
+        for (Obj datum : data) {
+            add(datum);
         }
     }
 
-    public List _add_(List list) {
-        List union = new List(this);
+    public Set _add_(Set set) {
+        Set union = new Set(this);
 
-        union.ensureCapacity(list._len_());
+        union.ensureCapacity(set._len_());
 
-        for (Iterator it = list._iter_(); it.hasNext() == TRUE; ) {
+        for (Iterator it = set._iter_(); it.hasNext() == TRUE; ) {
             union.add(it.next());
         }
 
@@ -66,7 +66,7 @@ public final class List extends Obj implements Len, Iterable {
             return meta()._comp_(obj.meta());
         }
 
-        List that = (List) obj;
+        Set that = (Set) obj;
 
         Int comp = _len_()._comp_(that._len_());
         if (comp._eq_(Int.ZERO) == FALSE) {
@@ -97,7 +97,7 @@ public final class List extends Obj implements Len, Iterable {
     public Str _desc_() {
         StringBuilder sb = new StringBuilder();
 
-        sb.append("[");
+        sb.append("{");
         for (Iterator it = _iter_(); it.hasNext() == TRUE; ) {
             sb.append(it.next()._desc_());
             sb.append(", ");
@@ -105,7 +105,7 @@ public final class List extends Obj implements Len, Iterable {
         if (sb.length() > 2) {
             sb.setLength(sb.length() - 2);
         }
-        sb.append("]");
+        sb.append("}");
 
         return Str.valueOf(sb.toString());
     }
@@ -119,7 +119,7 @@ public final class List extends Obj implements Len, Iterable {
             return FALSE;
         }
 
-        List that = (List) obj;
+        Set that = (Set) obj;
 
         if (_len_()._eq_(that._len_()) == FALSE) {
             return FALSE;
@@ -160,8 +160,8 @@ public final class List extends Obj implements Len, Iterable {
 
         return new Iterator() {
 
-            private Obj[] data = List.this.data;
-            private int count = List.this.count;
+            private Obj[] data = Set.this.data;
+            private int count = Set.this.count;
             private int index = 0;
 
             @Override
@@ -171,7 +171,7 @@ public final class List extends Obj implements Len, Iterable {
                 }
 
                 // Check if the list is still the same, if it is we can decrement the refs count
-                if (List.this.data == data) {
+                if (Set.this.data == data) {
                     refs--;
                 }
 
@@ -193,28 +193,10 @@ public final class List extends Obj implements Len, Iterable {
         return Int.valueOf(count);
     }
 
-    public List _mul_(Int value) {
-        checkArgument(value._gte_(Int.ZERO) == TRUE, "cannot multiply a list by negative value");
+    public Set _sub_(Set set) {
+        Set difference = new Set(this);
 
-        List mul = new List();
-
-        if (value._eq_(Int.ZERO) == TRUE) {
-            return mul;
-        }
-
-        while (value._gt_(Int.ZERO) == TRUE) {
-            mul = mul._add_(this);
-
-            value = value._sub_(Int.ONE);
-        }
-
-        return mul;
-    }
-
-    public List _sub_(List list) {
-        List difference = new List(this);
-
-        for (Iterator it = list._iter_(); it.hasNext() == TRUE; ) {
+        for (Iterator it = set._iter_(); it.hasNext() == TRUE; ) {
             difference.remove(it.next());
         }
 
@@ -222,11 +204,24 @@ public final class List extends Obj implements Len, Iterable {
     }
 
     public synchronized void add(Obj obj) {
+        checkNotNull(obj, "obj cannot be null");
+
         checkRefs();
 
         ensureCapacity();
 
-        data[count++] = checkNotNull(obj, "obj cannot be null");
+        int index = indexOf(obj);
+
+        if (index >= 0) {
+            return;
+        }
+
+        index = -index - 1;
+
+        System.arraycopy(data, index, data, index + 1, count - index);
+
+        data[index] = obj;
+        count++;
     }
 
     public synchronized void clear() {
@@ -235,19 +230,6 @@ public final class List extends Obj implements Len, Iterable {
         ensureCapacity();
 
         count = 0;
-    }
-
-    public int indexOf(Obj obj) {
-        int index = 0;
-        for (Iterator it = _iter_(); it.hasNext() == TRUE; ) {
-            if (it.next().equals(obj)) {
-                return index;
-            }
-
-            index++;
-        }
-
-        return -index;
     }
 
     public Bool isEmpty() {
@@ -259,24 +241,29 @@ public final class List extends Obj implements Len, Iterable {
      */
     @Override
     public Meta meta() {
-        Set types = Set.valueOf();
+        Set types = new Set();
 
         for (Iterator it = _iter_(); it.hasNext() == TRUE; ) {
             types.add(it.next().meta());
         }
+
+        // TODO: Normalise the set before the checks
+        // The normalisation should happen in the Meta.forSet methods
 
         if (types.isEmpty() == TRUE) {
             return Meta.forSet(Meta.META_ANY);
         }
 
         if (types._len_()._eq_(Int.ONE) == TRUE) {
-            return Meta.forSet((Meta) types._iter_().next());
+            return Meta.forSet((Meta) types.data[0]);
         }
 
         return Meta.forSet(Meta.forUnion(types));
     }
 
     public synchronized void remove(Obj obj) {
+        checkNotNull(obj, "obj cannot be null");
+
         checkRefs();
 
         int index = indexOf(obj);
@@ -290,8 +277,8 @@ public final class List extends Obj implements Len, Iterable {
         count--;
     }
 
-    public static List valueOf(Obj... data) {
-        return new List(data);
+    public static Set valueOf(Obj... data) {
+        return new Set(data);
     }
 
     private synchronized void checkRefs() {
@@ -322,5 +309,27 @@ public final class List extends Obj implements Len, Iterable {
         while (count + capacity > data.length) {
             data = Arrays.copyOf(data, data.length * 2);
         }
+    }
+
+    private int indexOf(Obj obj) {
+        return indexOf(obj, 0, count);
+    }
+
+    private int indexOf(Obj obj, int low, int high) {
+        if (low == high) {
+            return -low - 1;
+        }
+
+        int mid = low + high / 2;
+
+        if (obj.equals(data[mid])) {
+            return mid;
+        } else if (obj._comp_(data[mid])._lt_(Int.ZERO) == TRUE) {
+            high = mid;
+        } else {
+            low = mid + 1;
+        }
+
+        return indexOf(obj, low, high);
     }
 }

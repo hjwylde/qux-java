@@ -1,0 +1,44 @@
+package com.hjwylde.quxc.tests.valid;
+
+import com.hjwylde.quxc.tests.Harness;
+
+import org.junit.Test;
+
+/**
+ * Valid {@code list} tests.
+ *
+ * @author Henry J. Wylde
+ * @since 0.1.2
+ */
+public final class ValidSetTests extends Harness {
+
+    public ValidSetTests() {
+        super("tests/valid/set_/");
+    }
+
+    @Test
+    public void SetAdd() {
+        run("SetAdd");
+    }
+
+    @Test
+    public void SetEq() {
+        run("SetEq");
+    }
+
+    @Test
+    public void SetLen() {
+        run("SetLen");
+    }
+
+    @Test
+    public void SetNeq() {
+        run("SetNeq");
+    }
+
+    @Test
+    public void SetSub() {
+        run("SetSub");
+    }
+}
+

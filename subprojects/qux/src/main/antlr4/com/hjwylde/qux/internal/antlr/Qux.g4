@@ -146,7 +146,8 @@ exprUnary : UOP_NEG? exprTerm
           | exprLength
           ;
 
-exprTerm : exprBracket
+exprTerm : exprBrace
+         | exprBracket
          | exprFunction
          | exprParen
          | exprVariable
@@ -155,6 +156,9 @@ exprTerm : exprBracket
 
 exprLength : UOP_LEN exprTerm UOP_LEN
            ;
+
+exprBrace : '{' (expr (',' expr)*)? '}'
+          ;
 
 exprBracket : '[' (expr (',' expr)*)? ']'
             ;
@@ -266,9 +270,11 @@ ELSE    : 'else' ;
 FALSE   : 'false' ;
 IF      : 'if' ;
 INT     : 'int' ;
+LIST    : 'list' ;
 NULL    : 'null' ;
 REAL    : 'real' ;
 RETURN  : 'return' ;
+SET     : 'set' ;
 STR     : 'str' ;
 TRUE    : 'true' ;
 VOID    : 'void' ;

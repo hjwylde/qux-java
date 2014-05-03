@@ -18,6 +18,8 @@ public interface ExprVisitor {
 
     void visitExprList(ExprNode.List expr);
 
+    void visitExprSet(ExprNode.Set expr);
+
     void visitExprUnary(ExprNode.Unary expr);
 
     void visitExprVariable(ExprNode.Variable expr);

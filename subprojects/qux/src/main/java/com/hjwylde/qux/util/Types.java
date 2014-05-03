@@ -63,6 +63,12 @@ public final class Types {
             }
 
             return isSubtype(((Type.List) lhs).getInnerType(), ((Type.List) rhs).getInnerType());
+        } else if (lhs instanceof Type.Set) {
+            if (!(rhs instanceof Type.Set)) {
+                return false;
+            }
+
+            return isSubtype(((Type.Set) lhs).getInnerType(), ((Type.Set) rhs).getInnerType());
         } else if (lhs instanceof Type.Union) {
             return isSubtype((Type.Union) lhs, rhs);
         }
@@ -82,6 +88,11 @@ public final class Types {
         return new Type.Function(normalise(type.getReturnType()), parameterTypes);
     }
 
+    public static Type.Set normalise(Type.Set type) {
+        // Create a new set using the constructor to avoid an infinite recursive call to normalise
+        return new Type.Set(normalise(type.getInnerType()));
+    }
+
     public static Type.List normalise(Type.List type) {
         // Create a new list using the constructor to avoid an infinite recursive call to normalise
         return new Type.List(normalise(type.getInnerType()));
@@ -92,6 +103,8 @@ public final class Types {
             return normalise((Type.Function) type);
         } else if (type instanceof Type.List) {
             return normalise((Type.List) type);
+        } else if (type instanceof Type.Set) {
+            return normalise((Type.Set) type);
         } else if (type instanceof Type.Union) {
             return normalise((Type.Union) type);
         }
@@ -133,7 +146,7 @@ public final class Types {
 
         Set<Type> union = ImmutableSet.copyOf(types);
 
-        checkState(!union.isEmpty(), "normalisation of union resulted in union of size 0: {}",
+        checkState(!union.isEmpty(), "normalisation of union resulted in union of size 0: %s",
                 type);
 
         if (union.size() == 1) {

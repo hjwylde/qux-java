@@ -19,6 +19,14 @@ public final class Null extends Obj {
      * {@inheritDoc}
      */
     @Override
+    public Int _comp_(Obj obj) {
+        return meta()._comp_(obj.meta());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public Str _desc_() {
         return Str.valueOf("null");
     }

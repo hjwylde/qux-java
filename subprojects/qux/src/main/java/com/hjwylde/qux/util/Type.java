@@ -68,6 +68,8 @@ public abstract class Type {
 
     static final String LIST_START = "[";
 
+    static final String SET_START = "{";
+
     static final String UNION_START = "U";
     static final String UNION_END = ";";
 
@@ -102,6 +104,10 @@ public abstract class Type {
 
     public static Type.List forList(Type innerType) {
         return Types.normalise(new Type.List(innerType));
+    }
+
+    public static Type.Set forSet(Type innerType) {
+        return Types.normalise(new Type.Set(innerType));
     }
 
     public static Type forUnion(Collection<Type> types) {
@@ -519,6 +525,61 @@ public abstract class Type {
         @Override
         public String toString() {
             return "real";
+        }
+    }
+
+    /**
+     * TODO: Documentation
+     *
+     * @author Henry J. Wylde
+     * @since TODO: SINCE
+     */
+    public static final class Set extends Type {
+
+        private final Type innerType;
+
+        Set(Type innerType) {
+            this.innerType = checkNotNull(innerType, "innerType cannot be null");
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean equals(Object obj) {
+            if (!super.equals(obj)) {
+                return false;
+            }
+
+            return innerType.equals(((Type.Set) obj).innerType);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getDescriptor() {
+            return SET_START + innerType.getDescriptor();
+        }
+
+        public Type getInnerType() {
+            return innerType;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int hashCode() {
+            return 10 + 31 * innerType.hashCode();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String toString() {
+            return "{" + innerType + "}";
         }
     }
 

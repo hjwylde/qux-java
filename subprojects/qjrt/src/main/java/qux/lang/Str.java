@@ -49,6 +49,18 @@ public final class Str extends Obj implements Len {
      * {@inheritDoc}
      */
     @Override
+    public Int _comp_(Obj obj) {
+        if (!(obj instanceof Str)) {
+            return meta()._comp_(obj.meta());
+        }
+
+        return Int.valueOf(value.compareTo(((Str) obj).value));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public Str _desc_() {
         return this;
     }
@@ -98,10 +110,9 @@ public final class Str extends Obj implements Len {
     }
 
     public synchronized Str _mul_(Int value) {
-        checkArgument(value._gte_(Int.valueOf(0)) == TRUE,
-                "cannot multiply a str by negative value");
+        checkArgument(value._gte_(Int.ZERO) == TRUE, "cannot multiply a str by negative value");
 
-        if (value._eq_(Int.valueOf(0)) == TRUE) {
+        if (value._eq_(Int.ZERO) == TRUE) {
             return valueOf("");
         }
 
@@ -110,10 +121,10 @@ public final class Str extends Obj implements Len {
         }
 
         Str ret = this;
-        while (value._gt_(Int.valueOf(1)) == TRUE) {
+        while (value._gt_(Int.ONE) == TRUE) {
             ret = ret._add_(this);
 
-            value = value._sub_(Int.valueOf(1));
+            value = value._sub_(Int.ONE);
         }
 
         return ret;

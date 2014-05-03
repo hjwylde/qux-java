@@ -20,6 +20,11 @@ import qux.errors.InternalError;
  */
 public final class Int extends Obj {
 
+    public static final Int M_ONE;
+    public static final Int ZERO;
+    public static final Int ONE;
+    public static final Int TWO;
+
     private static final LoadingCache<BigInteger, Int> cache =
             CacheBuilder.<BigInteger, Int>newBuilder().weakKeys().build(
                     new CacheLoader<BigInteger, Int>() {
@@ -29,8 +34,14 @@ public final class Int extends Obj {
                         }
                     }
             );
-
     private final BigInteger value;
+
+    static {
+        M_ONE = valueOf(-1);
+        ZERO = valueOf(0);
+        ONE = valueOf(1);
+        TWO = valueOf(2);
+    }
 
     private Int(BigInteger value) {
         this.value = checkNotNull(value, "value cannot be null");
@@ -38,6 +49,18 @@ public final class Int extends Obj {
 
     public Int _add_(Int t) {
         return valueOf(value.add(t.value));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Int _comp_(Obj obj) {
+        if (!(obj instanceof Int)) {
+            return meta()._comp_(obj.meta());
+        }
+
+        return valueOf(value.compareTo(((Int) obj).value));
     }
 
     /**

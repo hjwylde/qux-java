@@ -1,5 +1,8 @@
 package qux.lang.op;
 
+import qux.lang.Int;
+import qux.lang.Obj;
+
 /**
  * TODO: Documentation.
  *
@@ -8,4 +11,5 @@ package qux.lang.op;
  */
 public interface Comp {
 
+    public Int _comp_(Obj obj);
 }
