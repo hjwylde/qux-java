@@ -1,0 +1,6 @@
+void main([str] args):
+    print true xor true
+    print true xor false
+    print false xor true
+    print false xor false
+

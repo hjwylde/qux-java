@@ -1,0 +1,8 @@
+void main([str] args):
+
+    if true:
+        print 'foo'
+      
+    else:
+        print 'bar'
+

@@ -575,7 +575,7 @@ public abstract class Type {
         }
 
         Union(Collection<Type> types) {
-            checkArgument(types.size() > 1, "types must contain at least 2 elements");
+            checkArgument(!types.isEmpty(), "types must contain at least 1 element");
 
             this.types = ImmutableSet.copyOf(types);
         }

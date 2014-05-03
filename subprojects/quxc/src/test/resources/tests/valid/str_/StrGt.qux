@@ -1,0 +1,6 @@
+void main([str] args):
+    print 'hello' > 'hello'
+    print 'hello' > 'abc'
+    print 'abc' > 'hello'
+    print 'abc' > 'abc'
+

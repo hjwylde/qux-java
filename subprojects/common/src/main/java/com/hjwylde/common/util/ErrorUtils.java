@@ -174,21 +174,22 @@ public final class ErrorUtils {
         // The source line that caused the error
         String line = source.get(e.getLine() - 1);
 
-        if (e.getCol() < 0 || e.getCol() >= line.length()) {
+        if (e.getCol() < 0 || e.getCol() > line.length()) {
             logger.warn("col number '{}' is out of line bounds '{}'", e.getCol(), line.length());
 
             return toString(e);
         }
 
-        if (e.getCol() + e.getLength() > line.length()) {
-            logger.warn("error location spans more than one line @{}:{}-{}", e.getLine(),
+        if (e.getCol() + e.getLength() > line.length() + 1) {
+            logger.warn("erroneous token spans more than one line @{}:{}-{}", e.getLine(),
                     e.getCol(), e.getCol() + e.getLength());
 
             return toString(e);
         }
 
-        // A space padded string of '^' characters to point out where in the line the error occured
-        String helper = Strings.repeat(" ", e.getCol()) + Strings.repeat("^", e.getLength());
+        // A space padded string of '^' characters to point out where in the line the error occurred
+        String helper = Strings.repeat(" ", e.getCol()) + Strings.repeat("^", Math.max(1,
+                e.getLength()));
 
         return toString(e) + "\n" + line + "\n" + helper + "\n";
     }

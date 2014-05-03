@@ -3,7 +3,8 @@ package com.hjwylde.qux.tree;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.hjwylde.common.lang.annotation.Alpha;
-import com.hjwylde.qux.api.FunctionVisitor;
+import com.hjwylde.common.lang.annotation.Beta;
+import com.hjwylde.qux.api.StmtVisitor;
 import com.hjwylde.qux.util.Attribute;
 
 import com.google.common.base.Optional;
@@ -34,13 +35,14 @@ public abstract class StmtNode extends Node {
         super(attributes);
     }
 
-    public abstract void accept(FunctionVisitor fv);
+    public abstract void accept(StmtVisitor sv);
 
     /**
      * TODO: Documentation
      *
      * @author Henry J. Wylde
      */
+    @Beta
     public static final class Assign extends StmtNode {
 
         private final String var;
@@ -57,9 +59,58 @@ public abstract class StmtNode extends Node {
             this.expr = checkNotNull(expr, "expr cannot be null");
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
-        public void accept(FunctionVisitor fv) {
-            fv.visitStmtAssign(this);
+        public void accept(StmtVisitor sv) {
+            sv.visitStmtAssign(this);
+        }
+
+        public ExprNode getExpr() {
+            return expr;
+        }
+
+        public String getVar() {
+            return var;
+        }
+    }
+
+    /**
+     * TODO: Documentation
+     *
+     * @author Henry J. Wylde
+     * @since 0.2.0
+     */
+    public static final class For extends StmtNode {
+
+        private final String var;
+        private final ExprNode expr;
+        private final ImmutableList<StmtNode> body;
+
+        public For(String var, ExprNode expr, List<StmtNode> body, Attribute... attributes) {
+            this(var, expr, body, Arrays.asList(attributes));
+        }
+
+        public For(String var, ExprNode expr, List<StmtNode> body,
+                Collection<Attribute> attributes) {
+            super(attributes);
+
+            this.var = checkNotNull(var, "var cannot be null");
+            this.expr = checkNotNull(expr, "expr cannot be null");
+            this.body = ImmutableList.copyOf(body);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void accept(StmtVisitor sv) {
+            sv.visitStmtFor(this);
+        }
+
+        public ImmutableList<StmtNode> getBody() {
+            return body;
         }
 
         public ExprNode getExpr() {
@@ -92,9 +143,12 @@ public abstract class StmtNode extends Node {
             this.arguments = ImmutableList.copyOf(arguments);
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
-        public void accept(FunctionVisitor fv) {
-            fv.visitStmtFunction(this);
+        public void accept(StmtVisitor sv) {
+            sv.visitStmtFunction(this);
         }
 
         public ImmutableList<ExprNode> getArguments() {
@@ -131,9 +185,12 @@ public abstract class StmtNode extends Node {
             this.falseBlock = ImmutableList.copyOf(falseBlock);
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
-        public void accept(FunctionVisitor fv) {
-            fv.visitStmtIf(this);
+        public void accept(StmtVisitor sv) {
+            sv.visitStmtIf(this);
         }
 
         public ExprNode getCondition() {
@@ -169,9 +226,12 @@ public abstract class StmtNode extends Node {
             this.expr = checkNotNull(expr, "expr cannot be null");
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
-        public void accept(FunctionVisitor fv) {
-            fv.visitStmtPrint(this);
+        public void accept(StmtVisitor sv) {
+            sv.visitStmtPrint(this);
         }
 
         public ExprNode getExpr() {
@@ -214,9 +274,12 @@ public abstract class StmtNode extends Node {
             this(Optional.fromNullable(expr), attributes);
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
-        public void accept(FunctionVisitor fv) {
-            fv.visitStmtReturn(this);
+        public void accept(StmtVisitor sv) {
+            sv.visitStmtReturn(this);
         }
 
         public Optional<ExprNode> getExpr() {
