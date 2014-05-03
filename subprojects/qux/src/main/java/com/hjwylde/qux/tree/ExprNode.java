@@ -102,6 +102,9 @@ public abstract class ExprNode extends Node {
             this.value = value;
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void accept(ExprVisitor ev) {
             ev.visitExprConstant(this);
@@ -147,6 +150,9 @@ public abstract class ExprNode extends Node {
             this.arguments = ImmutableList.copyOf(arguments);
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void accept(ExprVisitor ev) {
             ev.visitExprFunction(this);
@@ -180,9 +186,45 @@ public abstract class ExprNode extends Node {
             this.values = ImmutableList.copyOf(values);
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void accept(ExprVisitor ev) {
             ev.visitExprList(this);
+        }
+
+        public ImmutableList<ExprNode> getValues() {
+            return values;
+        }
+    }
+
+    /**
+     * TODO: Documentation
+     *
+     * @author Henry J. Wylde
+     * @since TODO: SINCE
+     */
+    public static final class Set extends ExprNode {
+
+        private final ImmutableList<ExprNode> values;
+
+        public Set(java.util.List<ExprNode> values, Attribute... attributes) {
+            this(values, Arrays.asList(attributes));
+        }
+
+        public Set(java.util.List<ExprNode> values, Collection<Attribute> attributes) {
+            super(attributes);
+
+            this.values = ImmutableList.copyOf(values);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void accept(ExprVisitor ev) {
+            ev.visitExprSet(this);
         }
 
         public ImmutableList<ExprNode> getValues() {
@@ -211,6 +253,9 @@ public abstract class ExprNode extends Node {
             this.target = checkNotNull(target, "target cannot be null");
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void accept(ExprVisitor ev) {
             ev.visitExprUnary(this);
@@ -244,6 +289,9 @@ public abstract class ExprNode extends Node {
             this.name = checkNotNull(name, "name cannot be null");
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void accept(ExprVisitor ev) {
             ev.visitExprVariable(this);

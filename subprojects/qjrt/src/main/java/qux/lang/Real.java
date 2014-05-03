@@ -45,6 +45,18 @@ public final class Real extends Obj {
      * {@inheritDoc}
      */
     @Override
+    public Int _comp_(Obj obj) {
+        if (!(obj instanceof Int)) {
+            return meta()._comp_(obj.meta());
+        }
+
+        return Int.valueOf(value.compareTo(((Real) obj).value));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public Str _desc_() {
         return Str.valueOf(value.toString());
     }

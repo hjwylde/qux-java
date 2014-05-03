@@ -185,6 +185,7 @@ public final class TypeChecker extends Pipeline {
                 case REM:
                     setType(expr, lhsType);
                     break;
+                case IN:
                 case EQ:
                 case NEQ:
                     setType(expr, TYPE_BOOL);
@@ -195,11 +196,6 @@ public final class TypeChecker extends Pipeline {
                 case LTE:
                     // TODO: This feels wrong, what is the lhs and rhs are equivalent unions? Surely we can't do a binary operation then!
                     checkEquivalent(expr.getRhs(), lhsType);
-                    setType(expr, TYPE_BOOL);
-                    break;
-                case IN:
-                    checkSubtype(expr.getRhs(), Type.forList(TYPE_ANY));
-                    checkSubtype(expr.getLhs(), ((Type.List) rhsType).getInnerType());
                     setType(expr, TYPE_BOOL);
                     break;
                 case AND:
@@ -266,18 +262,30 @@ public final class TypeChecker extends Pipeline {
                 types.add(getType(value));
             }
 
-            Type type;
             if (types.isEmpty()) {
-                type = Type.forList(TYPE_ANY);
-            } else if (types.size() == 1) {
-                type = Type.forList(types.iterator().next());
+                setType(expr, Type.forList(TYPE_ANY));
             } else {
-                type = Type.forList(Type.forUnion(types));
+                setType(expr, Type.forList(Type.forUnion(types)));
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void visitExprSet(ExprNode.Set expr) {
+            Set<Type> types = new HashSet<>();
+
+            for (ExprNode value : expr.getValues()) {
+                visitExpr(value);
+                types.add(getType(value));
             }
 
-            type = Types.normalise(type);
-
-            setType(expr, type);
+            if (types.isEmpty()) {
+                setType(expr, Type.forSet(TYPE_ANY));
+            } else {
+                setType(expr, Type.forSet(Type.forUnion(types)));
+            }
         }
 
         /**
@@ -291,8 +299,18 @@ public final class TypeChecker extends Pipeline {
 
             switch (expr.getOp()) {
                 case LEN:
-                    checkSubtype(expr.getTarget(), Type.forUnion(Type.forList(TYPE_ANY), TYPE_STR));
-                    setType(expr, ((Type.List) targetType).getInnerType());
+                    // TODO: Not quite right, when we introduce union types this is going to break
+                    if (targetType instanceof Type.List) {
+                        checkSubtype(expr.getTarget(), Type.forList(TYPE_ANY));
+                        setType(expr, ((Type.List) targetType).getInnerType());
+                    } else if (targetType instanceof Type.Set) {
+                        checkSubtype(expr.getTarget(), Type.forSet(TYPE_ANY));
+                        setType(expr, ((Type.Set) targetType).getInnerType());
+                    } else if (targetType instanceof Type.Str) {
+                        checkSubtype(expr.getTarget(), Type.forList(TYPE_ANY));
+                        setType(expr, TYPE_STR);
+                    }
+
                     break;
                 case NEG:
                     setType(expr, targetType);

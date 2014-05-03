@@ -1,0 +1,6 @@
+void main([str] args):
+    print {1} + {0} + {'foo'}
+    print {} + {3} + {}
+    print {2} + {1} + {2}
+    print {1, 1}
+

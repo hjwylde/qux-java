@@ -167,6 +167,19 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
      * {@inheritDoc}
      */
     @Override
+    public ExprNode visitExprBrace(@NotNull QuxParser.ExprBraceContext ctx) {
+        List<ExprNode> values = new ArrayList<>();
+        for (QuxParser.ExprContext ectx : ctx.expr()) {
+            values.add(visitExpr(ectx));
+        }
+
+        return new ExprNode.Set(values, generateAttributeSource(ctx));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public ExprNode visitExprBracket(@NotNull QuxParser.ExprBracketContext ctx) {
         List<ExprNode> values = new ArrayList<>();
         for (QuxParser.ExprContext ectx : ctx.expr()) {
@@ -215,6 +228,8 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
     public ExprNode visitExprTerm(@NotNull QuxParser.ExprTermContext ctx) {
         if (ctx.value() != null) {
             return visitValue(ctx.value());
+        } else if (ctx.exprBrace() != null) {
+            return visitExprBrace(ctx.exprBrace());
         } else if (ctx.exprBracket() != null) {
             return visitExprBracket(ctx.exprBracket());
         } else if (ctx.exprFunction() != null) {

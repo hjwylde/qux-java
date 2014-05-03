@@ -9,9 +9,9 @@ import qux.lang.Obj;
  * @author Henry J. Wylde
  * @since 0.1.2
  */
-public interface Iterator<T extends Obj> {
+public interface Iterator {
 
     Bool hasNext();
 
-    T next();
+    Obj next();
 }

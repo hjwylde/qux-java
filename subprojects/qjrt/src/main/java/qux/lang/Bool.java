@@ -37,6 +37,24 @@ public final class Bool extends Obj implements And, Or, Xor, Iff, Implies, Not {
      * {@inheritDoc}
      */
     @Override
+    public Int _comp_(Obj obj) {
+        if (!(obj instanceof Bool)) {
+            return meta()._comp_(obj.meta());
+        }
+
+        Bool that = (Bool) obj;
+
+        if (this == that) {
+            return Int.ZERO;
+        }
+
+        return this == TRUE ? Int.M_ONE : Int.ONE;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public Str _desc_() {
         return Str.valueOf(value ? "true" : "false");
     }

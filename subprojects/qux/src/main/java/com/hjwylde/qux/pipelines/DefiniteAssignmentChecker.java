@@ -78,17 +78,26 @@ public final class DefiniteAssignmentChecker extends Pipeline {
             expr.accept(this);
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void visitExprBinary(ExprNode.Binary expr) {
             visitExpr(expr.getLhs());
             visitExpr(expr.getRhs());
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void visitExprConstant(ExprNode.Constant expr) {
             // Do nothing
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void visitExprFunction(ExprNode.Function expr) {
             for (ExprNode argument : expr.getArguments()) {
@@ -96,6 +105,9 @@ public final class DefiniteAssignmentChecker extends Pipeline {
             }
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void visitExprList(ExprNode.List expr) {
             for (ExprNode value : expr.getValues()) {
@@ -103,11 +115,27 @@ public final class DefiniteAssignmentChecker extends Pipeline {
             }
         }
 
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void visitExprSet(ExprNode.Set expr) {
+            for (ExprNode value : expr.getValues()) {
+                visitExpr(value);
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void visitExprUnary(ExprNode.Unary expr) {
             visitExpr(expr.getTarget());
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void visitExprVariable(ExprNode.Variable expr) {
             // Check to see if the variable exists

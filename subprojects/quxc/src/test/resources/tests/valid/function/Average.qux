@@ -1,9 +1,9 @@
-int average([int] list):
+int average([int] is):
     total = 0
-    for i in list:
+    for i in is:
         total = total + i
 
-    return total / |list|
+    return total / |is|
 
 void main([str] args):
     print average([0, 1, 2, 3])

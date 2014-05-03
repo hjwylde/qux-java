@@ -67,6 +67,7 @@ import qux.lang.List;
 import qux.lang.Null;
 import qux.lang.Obj;
 import qux.lang.Real;
+import qux.lang.Set;
 import qux.lang.Str;
 import qux.lang.op.And;
 import qux.lang.op.Eq;
@@ -187,6 +188,8 @@ public final class Qux2ClassTranslater extends QuxAdapter {
             return Type.getType(Null.class);
         } else if (type instanceof com.hjwylde.qux.util.Type.Real) {
             return Type.getType(Real.class);
+        } else if (type instanceof com.hjwylde.qux.util.Type.Set) {
+            return Type.getType(Set.class);
         } else if (type instanceof com.hjwylde.qux.util.Type.Str) {
             return Type.getType(Str.class);
         } else if (type instanceof com.hjwylde.qux.util.Type.Union) {
@@ -475,6 +478,25 @@ public final class Qux2ClassTranslater extends QuxAdapter {
 
             mv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(List.class), "valueOf",
                     getMethodDescriptor(List.class, "valueOf", Obj[].class), false);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void visitExprSet(ExprNode.Set expr) {
+            visitValue(expr.getValues().size());
+            mv.visitTypeInsn(ANEWARRAY, Type.getInternalName(Obj.class));
+
+            for (int i = 0; i < expr.getValues().size(); i++) {
+                mv.visitInsn(DUP);
+                visitValue(i);
+                visitExpr(expr.getValues().get(i));
+                mv.visitInsn(AASTORE);
+            }
+
+            mv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(Set.class), "valueOf",
+                    getMethodDescriptor(Set.class, "valueOf", Obj[].class), false);
         }
 
         /**
