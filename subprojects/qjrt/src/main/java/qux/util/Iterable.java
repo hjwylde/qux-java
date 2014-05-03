@@ -1,4 +1,6 @@
-package qux.lang;
+package qux.util;
+
+import qux.lang.Obj;
 
 /**
  * TODO: Documentation

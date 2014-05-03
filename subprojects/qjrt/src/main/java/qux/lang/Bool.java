@@ -2,21 +2,19 @@ package qux.lang;
 
 import static qux.lang.Meta.META_BOOL;
 
-import qux.lang.operators.And;
-import qux.lang.operators.Iff;
-import qux.lang.operators.Implies;
-import qux.lang.operators.Not;
-import qux.lang.operators.Or;
-import qux.lang.operators.Xor;
+import qux.lang.op.And;
+import qux.lang.op.Iff;
+import qux.lang.op.Implies;
+import qux.lang.op.Not;
+import qux.lang.op.Or;
+import qux.lang.op.Xor;
 
 /**
  * TODO: Documentation
  *
  * @author Henry J. Wylde
  */
-public final class Bool extends Obj
-        implements Comparable<Bool>, Orderable<Bool>, And<Bool>, Or<Bool>, Xor<Bool>, Iff<Bool>,
-        Implies<Bool>, Not {
+public final class Bool extends Obj implements And, Or, Xor, Iff, Implies, Not {
 
     public static final Bool TRUE = new Bool(true);
     public static final Bool FALSE = new Bool(false);
@@ -47,22 +45,18 @@ public final class Bool extends Obj
      * {@inheritDoc}
      */
     @Override
-    public Bool _eq_(Bool t) {
-        return (this == t) ? TRUE : FALSE;
+    public Bool _eq_(Obj obj) {
+        if (super._eq_(obj) == FALSE) {
+            return FALSE;
+        }
+
+        return this == obj ? TRUE : FALSE;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Bool _gt_(Bool t) {
         return (this == TRUE && t == FALSE) ? TRUE : FALSE;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Bool _gte_(Bool t) {
         return (this == TRUE || t == FALSE) ? TRUE : FALSE;
     }
@@ -83,28 +77,12 @@ public final class Bool extends Obj
         return (this == FALSE || t == TRUE) ? TRUE : FALSE;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Bool _lt_(Bool t) {
         return (this == FALSE && t == TRUE) ? TRUE : FALSE;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Bool _lte_(Bool t) {
         return (this == FALSE || t == TRUE) ? TRUE : FALSE;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Bool _neq_(Bool t) {
-        return this != t ? TRUE : FALSE;
     }
 
     /**
@@ -129,22 +107,6 @@ public final class Bool extends Obj
     @Override
     public Bool _xor_(Bool t) {
         return (this == TRUE ^ t == TRUE) ? TRUE : FALSE;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean equals(Object obj) {
-        return this == obj;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int hashCode() {
-        return value ? 1 : 0;
     }
 
     /**
