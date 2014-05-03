@@ -10,15 +10,16 @@ import com.hjwylde.qbs.builder.BuildJob;
 import com.hjwylde.qbs.builder.BuildResult;
 import com.hjwylde.qbs.builder.Context;
 import com.hjwylde.qux.api.CheckQuxAdapter;
-import com.hjwylde.qux.api.DefiniteAssignmentChecker;
 import com.hjwylde.qux.api.QuxReader;
 import com.hjwylde.qux.api.QuxVisitor;
-import com.hjwylde.qux.api.TypeChecker;
+import com.hjwylde.qux.pipelines.Pipeline;
+import com.hjwylde.qux.pipelines.TypeChecker;
 import com.hjwylde.qux.tree.QuxNode;
 import com.hjwylde.quxc.compiler.MainFunctionInjector;
 import com.hjwylde.quxc.compiler.Qux2ClassTranslater;
 
 import com.google.common.base.Stopwatch;
+import com.google.common.collect.ImmutableList;
 
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.util.CheckClassAdapter;
@@ -26,9 +27,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * TODO: Documentation.
@@ -39,10 +43,23 @@ public final class Qux2ClassBuildJob extends BuildJob {
 
     private static final Logger logger = LoggerFactory.getLogger(Qux2ClassBuildJob.class);
 
+    // TODO: Change the location of default pipelines into the properties / compiler
+    private static final ImmutableList<Class<? extends Pipeline>> DEFAULT_PIPELINES =
+            ImmutableList.<Class<? extends Pipeline>>of(TypeChecker.class);
+    //      new TypeChecker(), new DefiniteAssignmentChecker());
+
+    private final List<Class<? extends Pipeline>> pipelines = new ArrayList<>(DEFAULT_PIPELINES);
+
     private final Path source;
 
     private final Context context;
 
+    /**
+     * Creates a new {@code Qux2ClassBuildJob} with the given path and context.
+     *
+     * @param source the source path.
+     * @param context the context.
+     */
     public Qux2ClassBuildJob(Path source, Context context) {
         this.source = checkNotNull(source, "source cannot be null");
 
@@ -61,11 +78,16 @@ public final class Qux2ClassBuildJob extends BuildJob {
 
             QuxNode node = new QuxNode();
 
-            // Check that the input is a valid representation of the qux grammar
+            // Check that the input is a valid representation of the qux grammar and read it into
+            // the node
             parse(node);
 
-            // Verify the semantics of the qux file
-            verify(node);
+            // Apply the pipelines
+            for (Class<? extends Pipeline> clazz : pipelines) {
+                Pipeline pipeline = clazz.getConstructor(QuxNode.class).newInstance(node);
+
+                apply(pipeline, node);
+            }
 
             // Translate the file to the java bytecode format
             byte[] bytecode = translate(node);
@@ -74,21 +96,52 @@ public final class Qux2ClassBuildJob extends BuildJob {
             write(bytecode);
 
             logger.debug("{}: building finished in {}", source, stopwatch);
-        } catch (IOException e) {
+        } catch (IOException | InvocationTargetException | NoSuchMethodException | InstantiationException | IllegalAccessException e) {
             throw new BuildError(e);
         }
 
         return BuildResult.success();
     }
 
+    private void apply(QuxVisitor pipeline, QuxNode node) {
+        logger.debug("{}: applying pipeline '{}'", source, pipeline.getClass().getName());
+
+        Stopwatch stopwatch = Stopwatch.createStarted();
+
+        node.accept(pipeline);
+
+        stopwatch.stop();
+
+        logger.debug("{}: application finished in {}", source, stopwatch);
+    }
+
+    /**
+     * Generates an output path based on the given output directory, name and extension.
+     *
+     * @param outdir the output directory the path should be resolved from.
+     * @param name the name of the output file.
+     * @param extension the extension of the output file.
+     * @return the generated output path.
+     */
     private static Path generateOutpath(Path outdir, String name, String extension) {
         return outdir.resolve(name + "." + extension);
     }
 
-    private final String getFileName() {
+    /**
+     * Gets the file name of the source file, excluding the extension.
+     *
+     * @return the file name, excluding the extension.
+     */
+    private String getFileName() {
         return com.google.common.io.Files.getNameWithoutExtension(source.toString());
     }
 
+    /**
+     * Parses the source file using the given {@link com.hjwylde.qux.api.QuxVisitor}.
+     *
+     * @param qv the visitor to read the source file.
+     * @throws IOException if the source file cannot be read.
+     */
     private void parse(QuxVisitor qv) throws IOException {
         logger.debug("{}: parsing", source);
 
@@ -123,21 +176,6 @@ public final class Qux2ClassBuildJob extends BuildJob {
         logger.debug("{}: translation finished in {}", source, stopwatch);
 
         return cw.toByteArray();
-    }
-
-    private void verify(QuxNode node) {
-        logger.debug("{}: verifying", source);
-
-        Stopwatch stopwatch = Stopwatch.createStarted();
-
-        TypeChecker tc = new TypeChecker();
-        DefiniteAssignmentChecker dac = new DefiniteAssignmentChecker(tc);
-
-        node.accept(dac);
-
-        stopwatch.stop();
-
-        logger.debug("{}: verification finished in {}", source, stopwatch);
     }
 
     private void write(byte[] bytecode) throws IOException {

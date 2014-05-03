@@ -1,12 +1,11 @@
 package com.hjwylde.qux.internal.compiler;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.hjwylde.qux.util.Constants.QUX0_1_0;
+import static com.hjwylde.qux.util.Constants.QUX0_1_1;
 import static com.hjwylde.qux.util.Op.ACC_PUBLIC;
 import static com.hjwylde.qux.util.Op.ACC_STATIC;
 
 import com.hjwylde.common.error.MethodNotImplementedError;
-import com.hjwylde.common.lang.annotation.Alpha;
 import com.hjwylde.qux.api.FunctionVisitor;
 import com.hjwylde.qux.api.QuxVisitor;
 import com.hjwylde.qux.internal.antlr.QuxBaseVisitor;
@@ -45,6 +44,9 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         this.qv = checkNotNull(qv, "qv cannot be null");
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<StmtNode> visitBlock(@NotNull QuxParser.BlockContext ctx) {
         List<StmtNode> stmts = new ArrayList<>();
@@ -55,6 +57,9 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         return stmts;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Object visitDeclFunction(@NotNull QuxParser.DeclFunctionContext ctx) {
         String name = ctx.Identifier(0).getText();
@@ -92,11 +97,17 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         return null;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public ExprNode visitExpr(@NotNull QuxParser.ExprContext ctx) {
         return (ExprNode) super.visitExpr(ctx);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public ExprNode visitExprBinary(@NotNull QuxParser.ExprBinaryContext ctx) {
         ParserRuleContext start = ctx.exprUnary();
@@ -107,26 +118,38 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         for (int i = 0; i < ctx.expr().size(); i++) {
             Op.Binary op;
 
-            if (ctx.BOP_MUL(i) != null) {
-                op = Op.Binary.MUL;
+            if (ctx.BOP_ADD(i) != null) {
+                op = Op.Binary.ADD;
+            } else if (ctx.BOP_AND(i) != null) {
+                op = Op.Binary.AND;
             } else if (ctx.BOP_DIV(i) != null) {
                 op = Op.Binary.DIV;
-            } else if (ctx.BOP_ADD(i) != null) {
-                op = Op.Binary.ADD;
-            } else if (ctx.BOP_SUB(i) != null) {
-                op = Op.Binary.SUB;
             } else if (ctx.BOP_EQ(i) != null) {
                 op = Op.Binary.EQ;
-            } else if (ctx.BOP_NEQ(i) != null) {
-                op = Op.Binary.NEQ;
-            } else if (ctx.BOP_LT(i) != null) {
-                op = Op.Binary.LT;
-            } else if (ctx.BOP_LTE(i) != null) {
-                op = Op.Binary.LTE;
             } else if (ctx.BOP_GT(i) != null) {
                 op = Op.Binary.GT;
             } else if (ctx.BOP_GTE(i) != null) {
                 op = Op.Binary.GTE;
+            } else if (ctx.BOP_IFF(i) != null) {
+                op = Op.Binary.IFF;
+            } else if (ctx.BOP_IMPLIES(i) != null) {
+                op = Op.Binary.IMPLIES;
+            } else if (ctx.BOP_LT(i) != null) {
+                op = Op.Binary.LT;
+            } else if (ctx.BOP_LTE(i) != null) {
+                op = Op.Binary.LTE;
+            } else if (ctx.BOP_MUL(i) != null) {
+                op = Op.Binary.MUL;
+            } else if (ctx.BOP_NEQ(i) != null) {
+                op = Op.Binary.NEQ;
+            } else if (ctx.BOP_OR(i) != null) {
+                op = Op.Binary.OR;
+            } else if (ctx.BOP_REM(i) != null) {
+                op = Op.Binary.REM;
+            } else if (ctx.BOP_SUB(i) != null) {
+                op = Op.Binary.SUB;
+            } else if (ctx.BOP_XOR(i) != null) {
+                op = Op.Binary.XOR;
             } else {
                 throw new MethodNotImplementedError(ctx.getText());
             }
@@ -140,6 +163,9 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         return expr;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public ExprNode visitExprBracket(@NotNull QuxParser.ExprBracketContext ctx) {
         List<ExprNode> values = new ArrayList<>();
@@ -150,6 +176,9 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         return new ExprNode.List(values, generateAttributeSource(ctx));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public ExprNode.Function visitExprFunction(@NotNull QuxParser.ExprFunctionContext ctx) {
         String name = ctx.Identifier().getText();
@@ -162,11 +191,26 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         return new ExprNode.Function(name, arguments, generateAttributeSource(ctx));
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ExprNode visitExprLength(@NotNull QuxParser.ExprLengthContext ctx) {
+        return new ExprNode.Unary(Op.Unary.LEN, visitExprTerm(ctx.exprTerm()),
+                generateAttributeSource(ctx));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public ExprNode visitExprParen(@NotNull QuxParser.ExprParenContext ctx) {
         return visitExpr(ctx.expr());
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public ExprNode visitExprTerm(@NotNull QuxParser.ExprTermContext ctx) {
         if (ctx.value() != null) {
@@ -184,14 +228,19 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public ExprNode visitExprUnary(@NotNull QuxParser.ExprUnaryContext ctx) {
         Op.Unary op;
 
-        if (ctx.UOP_NEGATE() != null) {
+        if (ctx.UOP_NEG() != null) {
             op = Op.Unary.NEG;
         } else if (ctx.UOP_NOT() != null) {
             op = Op.Unary.NOT;
+        } else if (ctx.exprLength() != null) {
+            return visitExprLength(ctx.exprLength());
         } else {
             return visitExprTerm(ctx.exprTerm());
         }
@@ -199,14 +248,20 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         return new ExprNode.Unary(op, visitExprTerm(ctx.exprTerm()), generateAttributeSource(ctx));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public ExprNode.Variable visitExprVariable(@NotNull QuxParser.ExprVariableContext ctx) {
         return new ExprNode.Variable(ctx.Identifier().getText(), generateAttributeSource(ctx));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Object visitFile(@NotNull QuxParser.FileContext ctx) {
-        qv.visit(QUX0_1_0, name);
+        qv.visit(QUX0_1_1, name);
 
         super.visitFile(ctx);
 
@@ -215,11 +270,17 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         return null;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public StmtNode visitStmt(@NotNull QuxParser.StmtContext ctx) {
         return (StmtNode) super.visitStmt(ctx);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public StmtNode.Assign visitStmtAssign(@NotNull QuxParser.StmtAssignContext ctx) {
         String var = ctx.Identifier().getText();
@@ -229,17 +290,39 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         return new StmtNode.Assign(var, expr, generateAttributeSource(ctx));
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public StmtNode.For visitStmtFor(@NotNull QuxParser.StmtForContext ctx) {
+        String var = ctx.Identifier().getText();
+
+        ExprNode expr = visitExpr(ctx.expr());
+
+        List<StmtNode> body = visitBlock(ctx.block());
+
+        return new StmtNode.For(var, expr, body, generateAttributeSource(ctx));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public StmtNode.If visitStmtIf(@NotNull QuxParser.StmtIfContext ctx) {
         ExprNode condition = visitExpr(ctx.expr());
 
         List<StmtNode> trueBlock = visitBlock(ctx.block(0));
-        List<StmtNode> falseBlock = visitBlock(ctx.block(1));
+        List<StmtNode> falseBlock = new ArrayList<>();
+        if (ctx.block(1) != null) {
+            falseBlock.addAll(visitBlock(ctx.block(1)));
+        }
 
         return new StmtNode.If(condition, trueBlock, falseBlock, generateAttributeSource(ctx));
     }
 
-    @Alpha
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public StmtNode.Print visitStmtPrint(@NotNull QuxParser.StmtPrintContext ctx) {
         ExprNode expr = visitExpr(ctx.expr());
@@ -247,6 +330,9 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         return new StmtNode.Print(expr, generateAttributeSource(ctx));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public StmtNode.Return visitStmtReturn(@NotNull QuxParser.StmtReturnContext ctx) {
         ExprNode expr = null;
@@ -257,16 +343,25 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         return new StmtNode.Return(expr, generateAttributeSource(ctx));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Type visitType(@NotNull QuxParser.TypeContext ctx) {
         return (Type) super.visitType(ctx);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Type visitTypeKeyword(@NotNull QuxParser.TypeKeywordContext ctx) {
         return getType(ctx.getText().toLowerCase(Locale.ENGLISH));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Type visitTypeList(@NotNull QuxParser.TypeListContext ctx) {
         Type innerType = visitType(ctx.type());
@@ -274,6 +369,9 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         return Type.forList(innerType);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Type visitTypeReturn(@NotNull QuxParser.TypeReturnContext ctx) {
         if (ctx.VOID() != null) {
@@ -283,11 +381,17 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         return (Type) super.visitTypeReturn(ctx);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Type visitTypeTerm(@NotNull QuxParser.TypeTermContext ctx) {
         return (Type) super.visitTypeTerm(ctx);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public ExprNode.Constant visitValue(@NotNull QuxParser.ValueContext ctx) {
         ExprNode.Constant.Type type = null;

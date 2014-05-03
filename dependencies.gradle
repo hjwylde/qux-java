@@ -2,13 +2,14 @@ ext {
     libraries = [:]
 }
 
-libraries.antlr_runtime = 'org.antlr:antlr4-runtime:4.2.1'
-libraries.asm = 'org.ow2.asm:asm-all:5.0.1'
+libraries.antlr_runtime = 'org.antlr:antlr4-runtime:4.2.2'
+libraries.asm = 'org.ow2.asm:asm-all:5.0.2'
 libraries.commons_cli = 'commons-cli:commons-cli:1.2'
-libraries.groovy_all = 'org.codehaus.groovy:groovy-all:2.2.2'
+libraries.groovy_all = 'org.codehaus.groovy:groovy-all:2.3.0-rc-2'
 libraries.gson = 'com.google.code.gson:gson:2.2.4'
-libraries.guava = 'com.google.guava:guava:16.0.1'
+libraries.guava = 'com.google.guava:guava:17.0'
+libraries.jgrapht_core = 'org.jgrapht:jgrapht-core:0.9.0'
 libraries.junit = 'junit:junit:4.11'
 libraries.jsr305 = 'com.google.code.findbugs:jsr305:2.0.3'
-libraries.logback_classic = 'ch.qos.logback:logback-classic:1.1.2'
+libraries.slf4j_log4j13 = 'org.slf4j:slf4j-log4j12:1.7.7'
 

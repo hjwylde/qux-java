@@ -42,3 +42,10 @@ subprojects {
     }
 }
 
+task wrapper(type: Wrapper) {
+    group 'Help'
+    description 'Generates the Gradle wrapper files'
+
+    gradleVersion = '1.11'
+}
+

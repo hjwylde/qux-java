@@ -2,6 +2,7 @@ apply from: 'antlr.gradle'
 
 dependencies {
     compile libraries.antlr_runtime
+    compile libraries.jgrapht_core
 
     compile project(':common')
 }

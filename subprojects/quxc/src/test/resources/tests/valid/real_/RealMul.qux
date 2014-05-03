@@ -1,0 +1,4 @@
+void main([str] args):
+    print 0.0 * 1.9
+    print 1.0 + 2.0 * 3.5
+

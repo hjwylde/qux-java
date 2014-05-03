@@ -78,10 +78,10 @@ public interface Attribute {
      */
     public static final class Type implements Attribute {
 
-        private final com.hjwylde.qux.util.Type type;
+        private com.hjwylde.qux.util.Type type;
 
         public Type(com.hjwylde.qux.util.Type type) {
-            this.type = checkNotNull(type, "type cannot be null");
+            setType(type);
         }
 
         /**
@@ -91,6 +91,10 @@ public interface Attribute {
          */
         public com.hjwylde.qux.util.Type getType() {
             return type;
+        }
+
+        public void setType(com.hjwylde.qux.util.Type type) {
+            this.type = checkNotNull(type, "type cannot be null");
         }
     }
 }

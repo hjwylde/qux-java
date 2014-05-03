@@ -1,6 +1,7 @@
 package com.hjwylde.quxc.compiler;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.hjwylde.quxc.compiler.Qux2ClassTranslater.getMethodDescriptor;
 import static com.hjwylde.quxc.compiler.Qux2ClassTranslater.getTypeFromQuxType;
 import static org.objectweb.asm.Opcodes.AALOAD;
 import static org.objectweb.asm.Opcodes.AASTORE;
@@ -76,13 +77,7 @@ public class MainFunctionInjector extends ClassVisitor {
             logger.debug("main function detected, injecting proxy function for {}.{}:{}", this.name,
                     name, desc);
 
-            try {
-                injectMainFunction();
-            } catch (NoSuchMethodException e) {
-                logger.error(e.getMessage(), e);
-
-                throw new InternalError(e.getMessage());
-            }
+            injectMainFunction();
         }
 
         return super.visitMethod(access, name, desc, signature, exceptions);
@@ -91,10 +86,8 @@ public class MainFunctionInjector extends ClassVisitor {
     /**
      * Injects a Java main function in that will act as a proxy for the equivalent Qux main
      * function.
-     *
-     * @throws NoSuchMethodException should never occur.
      */
-    private void injectMainFunction() throws NoSuchMethodException {
+    private void injectMainFunction() {
         MethodVisitor mv = super.visitMethod(FUNCTION_MAIN_FLAGS, FUNCTION_MAIN_NAME,
                 Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(String[].class)), null,
                 new String[0]);
@@ -142,7 +135,7 @@ public class MainFunctionInjector extends ClassVisitor {
         mv.visitInsn(DUP_X1);
         mv.visitInsn(AALOAD);
         mv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(Str.class), "valueOf",
-                Type.getMethodDescriptor(Str.class.getMethod("valueOf", String.class)), false);
+                getMethodDescriptor(Str.class, "valueOf", String.class), false);
         mv.visitInsn(AASTORE);
         // For loop increment
         mv.visitIincInsn(i, 1);
@@ -153,7 +146,7 @@ public class MainFunctionInjector extends ClassVisitor {
         // Call the Qux main function
         mv.visitVarInsn(ALOAD, strs);
         mv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(List.class), "valueOf",
-                Type.getMethodDescriptor(List.class.getMethod("valueOf", Obj[].class)), false);
+                getMethodDescriptor(List.class, "valueOf", Obj[].class), false);
         mv.visitMethodInsn(INVOKESTATIC, this.name, FUNCTION_MAIN_NAME, getTypeFromQuxType(
                 FUNCTION_MAIN_TYPE).getDescriptor(), false);
         mv.visitInsn(RETURN);

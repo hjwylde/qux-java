@@ -5,9 +5,11 @@ dependencies {
     compile libraries.commons_cli
 
     compile project(':qbs')
-    compile project(':qrt')
+    compile project(':qjrt')
     compile project(':qux')
 }
 
 mainClassName = 'com.hjwylde.quxc.Quxc' 
+
+test.dependsOn installApp
 
