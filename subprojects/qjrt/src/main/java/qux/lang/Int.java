@@ -10,18 +10,15 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
 import java.math.BigInteger;
-import java.util.Objects;
 
 import qux.errors.InternalError;
-import qux.lang.operators.Rem;
 
 /**
  * TODO: Documentation
  *
  * @author Henry J. Wylde
  */
-public final class Int extends Obj
-        implements Integral<Int>, Comparable<Int>, Orderable<Int>, Rem<Int> {
+public final class Int extends Obj {
 
     private static final LoadingCache<BigInteger, Int> cache =
             CacheBuilder.<BigInteger, Int>newBuilder().weakKeys().build(
@@ -39,10 +36,6 @@ public final class Int extends Obj
         this.value = checkNotNull(value, "value cannot be null");
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Int _add_(Int t) {
         return valueOf(value.add(t.value));
     }
@@ -55,10 +48,6 @@ public final class Int extends Obj
         return Str.valueOf(value.toString());
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Int _div_(Int t) {
         if (t.value.equals(BigInteger.ZERO)) {
             throw new InternalError("attempted division by zero");
@@ -71,22 +60,18 @@ public final class Int extends Obj
      * {@inheritDoc}
      */
     @Override
-    public Bool _eq_(Int t) {
-        return value.equals(t.value) ? TRUE : FALSE;
+    public Bool _eq_(Obj obj) {
+        if (super._eq_(obj) == FALSE) {
+            return FALSE;
+        }
+
+        return value.equals(((Int) obj).value) ? TRUE : FALSE;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Bool _gt_(Int t) {
         return value.compareTo(t.value) > 0 ? TRUE : FALSE;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Bool _gte_(Int t) {
         return value.compareTo(t.value) >= 0 ? TRUE : FALSE;
     }
@@ -95,76 +80,36 @@ public final class Int extends Obj
      * {@inheritDoc}
      */
     @Override
+    public Int _hash_() {
+        return valueOf(value.hashCode());
+    }
+
     public Bool _lt_(Int t) {
         return value.compareTo(t.value) < 0 ? TRUE : FALSE;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Bool _lte_(Int t) {
         return value.compareTo(t.value) <= 0 ? TRUE : FALSE;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Int _mul_(Int t) {
         return valueOf(value.multiply(t.value));
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Int _neg_() {
         return valueOf(value.negate());
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Bool _neq_(Int t) {
-        return value.equals(t.value) ? FALSE : TRUE;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Int _rem_(Int t) {
         return valueOf(value.remainder(t.value));
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Int _sub_(Int t) {
         return valueOf(value.subtract(t.value));
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == null || getClass() != obj.getClass()) {
-            return false;
-        }
-
-        return Objects.equals(value, ((Int) obj).value);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int hashCode() {
-        return value.hashCode();
+    public BigInteger _value_() {
+        return value;
     }
 
     /**

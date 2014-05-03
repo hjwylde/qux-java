@@ -11,7 +11,6 @@ import com.google.common.cache.LoadingCache;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.Objects;
 
 import qux.errors.InternalError;
 
@@ -20,7 +19,7 @@ import qux.errors.InternalError;
  *
  * @author Henry J. Wylde
  */
-public final class Real extends Obj implements Integral<Real>, Comparable<Real>, Orderable<Real> {
+public final class Real extends Obj {
 
     private static final LoadingCache<BigDecimal, Real> cache =
             CacheBuilder.<BigInteger, Real>newBuilder().weakKeys().build(
@@ -38,10 +37,6 @@ public final class Real extends Obj implements Integral<Real>, Comparable<Real>,
         this.value = checkNotNull(value, "value cannot be null");
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Real _add_(Real t) {
         return valueOf(value.add(t.value));
     }
@@ -54,10 +49,6 @@ public final class Real extends Obj implements Integral<Real>, Comparable<Real>,
         return Str.valueOf(value.toString());
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Real _div_(Real t) {
         if (t.value.equals(BigDecimal.ZERO)) {
             throw new InternalError("attempted division by zero");
@@ -70,22 +61,18 @@ public final class Real extends Obj implements Integral<Real>, Comparable<Real>,
      * {@inheritDoc}
      */
     @Override
-    public Bool _eq_(Real t) {
-        return value.equals(t.value) ? TRUE : FALSE;
+    public Bool _eq_(Obj obj) {
+        if (super._eq_(obj) == FALSE) {
+            return FALSE;
+        }
+
+        return value.equals(((Real) obj).value) ? TRUE : FALSE;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Bool _gt_(Real t) {
         return value.compareTo(t.value) > 0 ? TRUE : FALSE;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Bool _gte_(Real t) {
         return value.compareTo(t.value) >= 0 ? TRUE : FALSE;
     }
@@ -94,68 +81,28 @@ public final class Real extends Obj implements Integral<Real>, Comparable<Real>,
      * {@inheritDoc}
      */
     @Override
+    public Int _hash_() {
+        return Int.valueOf(value.hashCode());
+    }
+
     public Bool _lt_(Real t) {
         return value.compareTo(t.value) < 0 ? TRUE : FALSE;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Bool _lte_(Real t) {
         return value.compareTo(t.value) <= 0 ? TRUE : FALSE;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Real _mul_(Real t) {
         return valueOf(value.multiply(t.value));
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Real _neg_() {
         return valueOf(value.negate());
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Bool _neq_(Real t) {
-        return value.equals(t.value) ? FALSE : TRUE;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Real _sub_(Real t) {
         return valueOf(value.subtract(t.value));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == null || getClass() != obj.getClass()) {
-            return false;
-        }
-
-        return Objects.equals(value, ((Real) obj).value);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int hashCode() {
-        return value.hashCode();
     }
 
     /**

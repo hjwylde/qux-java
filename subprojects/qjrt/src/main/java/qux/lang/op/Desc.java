@@ -1,11 +1,12 @@
-package qux.lang.operators;
+package qux.lang.op;
 
 import qux.lang.Str;
 
 /**
- * TODO: Documentation
+ * TODO: Documentation.
  *
  * @author Henry J. Wylde
+ * @since TODO: SINCE
  */
 public interface Desc {
 

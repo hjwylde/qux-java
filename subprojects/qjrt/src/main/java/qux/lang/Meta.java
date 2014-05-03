@@ -13,15 +13,13 @@ import com.google.common.collect.ImmutableSet;
 
 import java.util.Set;
 
-import qux.lang.operators.Eq;
-
 /**
  * TODO: Documentation
  *
  * @author Henry J. Wylde
  * @since 0.2.0
  */
-public class Meta extends Obj implements Eq<Meta> {
+public class Meta extends Obj {
 
     static final Meta META_ANY = new Any();
     static final Meta META_BOOL = new Bool();
@@ -66,8 +64,12 @@ public class Meta extends Obj implements Eq<Meta> {
      * {@inheritDoc}
      */
     @Override
-    public qux.lang.Bool _eq_(Meta meta) {
-        return this == meta ? TRUE : FALSE;
+    public qux.lang.Bool _eq_(Obj obj) {
+        if (super._eq_(obj) == FALSE) {
+            return FALSE;
+        }
+
+        return this == obj ? TRUE : FALSE;
     }
 
     public static Meta forList(Meta inner) {
@@ -159,6 +161,26 @@ public class Meta extends Obj implements Eq<Meta> {
             return qux.lang.Str.valueOf("[" + inner + "]");
         }
 
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public qux.lang.Bool _eq_(Obj obj) {
+            if (super._eq_(obj) == FALSE) {
+                return FALSE;
+            }
+
+            return inner._eq_(((List) obj).inner);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public qux.lang.Int _hash_() {
+            return inner._hash_();
+        }
+
         public Meta getInner() {
             return inner;
         }
@@ -238,6 +260,26 @@ public class Meta extends Obj implements Eq<Meta> {
         @Override
         public qux.lang.Str _desc_() {
             return qux.lang.Str.valueOf(Joiner.on("|").join(types));
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public qux.lang.Bool _eq_(Obj obj) {
+            if (super._eq_(obj) == FALSE) {
+                return FALSE;
+            }
+
+            return types.equals(((Union) obj).types) ? TRUE : FALSE;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public qux.lang.Int _hash_() {
+            return qux.lang.Int.valueOf(types.hashCode());
         }
 
         public ImmutableSet<Meta> getTypes() {

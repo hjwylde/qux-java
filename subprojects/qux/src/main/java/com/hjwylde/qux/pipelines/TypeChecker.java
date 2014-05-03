@@ -176,22 +176,24 @@ public final class TypeChecker extends Pipeline {
             Type lhsType = getType(expr.getLhs());
             Type rhsType = getType(expr.getRhs());
 
+            // TODO: Properly type check using references to methods that exist
             switch (expr.getOp()) {
                 case ADD:
                 case SUB:
                 case MUL:
                 case DIV:
                 case REM:
-                    // TODO: This feels wrong, what is the lhs and rhs are equivalent unions? Surely we can't do a binary operation then!
-                    checkEquivalent(expr.getRhs(), lhsType);
                     setType(expr, lhsType);
                     break;
                 case EQ:
                 case NEQ:
+                    setType(expr, TYPE_BOOL);
+                    break;
                 case GT:
                 case GTE:
                 case LT:
                 case LTE:
+                    // TODO: This feels wrong, what is the lhs and rhs are equivalent unions? Surely we can't do a binary operation then!
                     checkEquivalent(expr.getRhs(), lhsType);
                     setType(expr, TYPE_BOOL);
                     break;
@@ -289,7 +291,7 @@ public final class TypeChecker extends Pipeline {
 
             switch (expr.getOp()) {
                 case LEN:
-                    checkSubtype(expr.getTarget(), Type.forList(TYPE_ANY));
+                    checkSubtype(expr.getTarget(), Type.forUnion(Type.forList(TYPE_ANY), TYPE_STR));
                     setType(expr, ((Type.List) targetType).getInnerType());
                     break;
                 case NEG:

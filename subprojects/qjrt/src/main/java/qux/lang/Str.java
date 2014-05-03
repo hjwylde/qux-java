@@ -1,25 +1,24 @@
 package qux.lang;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static qux.lang.Bool.FALSE;
 import static qux.lang.Bool.TRUE;
 import static qux.lang.Meta.META_STR;
 
+import com.google.common.base.Strings;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
-import java.util.Objects;
-
-import qux.lang.operators.Add;
-import qux.lang.operators.Sub;
+import qux.lang.op.Len;
 
 /**
  * TODO: Documentation
  *
  * @author Henry J. Wylde
  */
-public final class Str extends Obj implements Comparable<Str>, Orderable<Str>, Add<Str>, Sub<Str> {
+public final class Str extends Obj implements Len {
 
     private static final LoadingCache<String, Str> cache =
             CacheBuilder.<String, Str>newBuilder().weakKeys().build(new CacheLoader<String, Str>() {
@@ -42,10 +41,6 @@ public final class Str extends Obj implements Comparable<Str>, Orderable<Str>, A
         this.value = checkNotNull(value, "value cannot be null");
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Str _add_(Str str) {
         return valueOf(value.concat(str.value));
     }
@@ -62,22 +57,18 @@ public final class Str extends Obj implements Comparable<Str>, Orderable<Str>, A
      * {@inheritDoc}
      */
     @Override
-    public Bool _eq_(Str t) {
-        return value.equals(t.value) ? TRUE : FALSE;
+    public Bool _eq_(Obj obj) {
+        if (super._eq_(obj) == FALSE) {
+            return FALSE;
+        }
+
+        return value.equals(((Str) obj).value) ? TRUE : FALSE;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Bool _gt_(Str t) {
         return value.compareTo(t.value) > 0 ? TRUE : FALSE;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Bool _gte_(Str t) {
         return value.compareTo(t.value) >= 0 ? TRUE : FALSE;
     }
@@ -86,56 +77,54 @@ public final class Str extends Obj implements Comparable<Str>, Orderable<Str>, A
      * {@inheritDoc}
      */
     @Override
+    public Int _hash_() {
+        return Int.valueOf(value.hashCode());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Int _len_() {
+        return Int.valueOf(value.length());
+    }
+
     public Bool _lt_(Str t) {
         return value.compareTo(t.value) < 0 ? TRUE : FALSE;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Bool _lte_(Str t) {
         return value.compareTo(t.value) <= 0 ? TRUE : FALSE;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Bool _neq_(Str t) {
-        return value.equals(t.value) ? FALSE : TRUE;
+    public synchronized Str _mul_(Int value) {
+        checkArgument(value._gte_(Int.valueOf(0)) == TRUE,
+                "cannot multiply a str by negative value");
+
+        if (value._eq_(Int.valueOf(0)) == TRUE) {
+            return valueOf("");
+        }
+
+        if (value._value_().bitLength() <= 31) {
+            return valueOf(Strings.repeat(this.value, value._value_().intValue()));
+        }
+
+        Str ret = this;
+        while (value._gt_(Int.valueOf(1)) == TRUE) {
+            ret = ret._add_(this);
+
+            value = value._sub_(Int.valueOf(1));
+        }
+
+        return ret;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Str _sub_(Str str) {
         if (value.endsWith(str.value)) {
             return valueOf(value.substring(0, value.length() - str.value.length()));
         }
 
         return this;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == null || getClass() != obj.getClass()) {
-            return false;
-        }
-
-        return Objects.equals(value, ((Str) obj).value);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int hashCode() {
-        return value.hashCode();
     }
 
     /**

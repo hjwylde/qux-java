@@ -63,33 +63,22 @@ import java.util.Map;
 
 import qux.lang.Bool;
 import qux.lang.Int;
-import qux.lang.Iterable;
-import qux.lang.Iterator;
 import qux.lang.List;
 import qux.lang.Null;
 import qux.lang.Obj;
 import qux.lang.Real;
 import qux.lang.Str;
-import qux.lang.operators.Add;
-import qux.lang.operators.And;
-import qux.lang.operators.Contains;
-import qux.lang.operators.Div;
-import qux.lang.operators.Eq;
-import qux.lang.operators.Gt;
-import qux.lang.operators.Gte;
-import qux.lang.operators.Iff;
-import qux.lang.operators.Implies;
-import qux.lang.operators.Len;
-import qux.lang.operators.Lt;
-import qux.lang.operators.Lte;
-import qux.lang.operators.Mul;
-import qux.lang.operators.Neg;
-import qux.lang.operators.Neq;
-import qux.lang.operators.Not;
-import qux.lang.operators.Or;
-import qux.lang.operators.Rem;
-import qux.lang.operators.Sub;
-import qux.lang.operators.Xor;
+import qux.lang.op.And;
+import qux.lang.op.Eq;
+import qux.lang.op.Iff;
+import qux.lang.op.Implies;
+import qux.lang.op.Len;
+import qux.lang.op.Neq;
+import qux.lang.op.Not;
+import qux.lang.op.Or;
+import qux.lang.op.Xor;
+import qux.util.Iterable;
+import qux.util.Iterator;
 
 /**
  * TODO: Documentation
@@ -145,6 +134,14 @@ public final class Qux2ClassTranslater extends QuxAdapter {
         }
 
         return new Function2ClassTranslater(mv, flags, name, type);
+    }
+
+    static Class<?> getClass(Node node) {
+        try {
+            return Class.forName(getType(node).getClassName());
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     static String getMethodDescriptor(Class<?> clazz, String name, Class<?>... parameterClasses) {
@@ -292,20 +289,23 @@ public final class Qux2ClassTranslater extends QuxAdapter {
             visitExpr(expr.getLhs());
             visitExpr(expr.getRhs());
 
+            Class<?> lhsClass = Qux2ClassTranslater.getClass(expr.getLhs());
+            Class<?> rhsClass = Qux2ClassTranslater.getClass(expr.getRhs());
+
             switch (expr.getOp()) {
                 case ADD:
-                    mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Add.class), "_add_",
-                            getMethodDescriptor(Add.class, "_add_", Obj.class), true);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(lhsClass), "_add_",
+                            getMethodDescriptor(lhsClass, "_add_", rhsClass), false);
                     visitCheckcast(expr);
                     break;
                 case AND:
                     mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(And.class), "_and_",
-                            getMethodDescriptor(And.class, "_and_", Obj.class), true);
+                            getMethodDescriptor(And.class, "_and_", Bool.class), true);
                     visitCheckcast(expr);
                     break;
                 case DIV:
-                    mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Div.class), "_div_",
-                            getMethodDescriptor(Div.class, "_div_", Obj.class), true);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(lhsClass), "_div_",
+                            getMethodDescriptor(lhsClass, "_div_", rhsClass), false);
                     visitCheckcast(expr);
                     break;
                 case EQ:
@@ -313,39 +313,38 @@ public final class Qux2ClassTranslater extends QuxAdapter {
                             getMethodDescriptor(Eq.class, "_eq_", Obj.class), true);
                     break;
                 case GT:
-                    mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Gt.class), "_gt_",
-                            getMethodDescriptor(Gt.class, "_gt_", Obj.class), true);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(lhsClass), "_gt_",
+                            getMethodDescriptor(lhsClass, "_gt_", rhsClass), false);
                     break;
                 case GTE:
-                    mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Gte.class), "_gte_",
-                            getMethodDescriptor(Gte.class, "_gte_", Obj.class), true);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(lhsClass), "_gte_",
+                            getMethodDescriptor(lhsClass, "_gte_", rhsClass), false);
                     break;
                 case IFF:
                     mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Iff.class), "_iff_",
-                            getMethodDescriptor(Iff.class, "_iff_", Obj.class), true);
+                            getMethodDescriptor(Iff.class, "_iff_", Bool.class), true);
                     break;
                 case IMPLIES:
                     mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Implies.class),
-                            "_implies_", getMethodDescriptor(Implies.class, "_implies_", Obj.class),
-                            true);
-                    break;
-                case IN:
-                    mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Contains.class),
-                            "_contains_", getMethodDescriptor(Contains.class, "_contains_",
-                                    Obj.class), true
+                            "_implies_", getMethodDescriptor(Implies.class, "_implies_",
+                                    Bool.class), true
                     );
                     break;
+                case IN:
+                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(lhsClass), "_contains_",
+                            getMethodDescriptor(lhsClass, "_contains_", rhsClass), false);
+                    break;
                 case LT:
-                    mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Lt.class), "_lt_",
-                            getMethodDescriptor(Lt.class, "_lt_", Obj.class), true);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(lhsClass), "_lt_",
+                            getMethodDescriptor(lhsClass, "_lt_", rhsClass), false);
                     break;
                 case LTE:
-                    mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Lte.class), "_lte_",
-                            getMethodDescriptor(Lte.class, "_lte_", Obj.class), true);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(lhsClass), "_lte_",
+                            getMethodDescriptor(lhsClass, "_lte_", rhsClass), false);
                     break;
                 case MUL:
-                    mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Mul.class), "_mul_",
-                            getMethodDescriptor(Mul.class, "_mul_", Obj.class), true);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(lhsClass), "_mul_",
+                            getMethodDescriptor(lhsClass, "_mul_", rhsClass), false);
                     visitCheckcast(expr);
                     break;
                 case NEQ:
@@ -354,21 +353,21 @@ public final class Qux2ClassTranslater extends QuxAdapter {
                     break;
                 case OR:
                     mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Or.class), "_or_",
-                            getMethodDescriptor(Or.class, "_or_", Obj.class), true);
+                            getMethodDescriptor(Or.class, "_or_", Bool.class), true);
                     break;
                 case REM:
-                    mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Rem.class), "_rem_",
-                            getMethodDescriptor(Rem.class, "_rem_", Obj.class), true);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(lhsClass), "_rem_",
+                            getMethodDescriptor(lhsClass, "_rem_", rhsClass), false);
                     visitCheckcast(expr);
                     break;
                 case SUB:
-                    mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Sub.class), "_sub_",
-                            getMethodDescriptor(Sub.class, "_sub_", Obj.class), true);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(lhsClass), "_sub_",
+                            getMethodDescriptor(lhsClass, "_sub_", rhsClass), false);
                     visitCheckcast(expr);
                     break;
                 case XOR:
                     mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Xor.class), "_xor_",
-                            getMethodDescriptor(Xor.class, "_xor_", Obj.class), true);
+                            getMethodDescriptor(Xor.class, "_xor_", Bool.class), true);
                     break;
                 default:
                     throw new MethodNotImplementedError(expr.getOp().toString());
@@ -485,14 +484,16 @@ public final class Qux2ClassTranslater extends QuxAdapter {
         public void visitExprUnary(ExprNode.Unary expr) {
             visitExpr(expr.getTarget());
 
+            Class<?> clazz = Qux2ClassTranslater.getClass(expr.getTarget());
+
             switch (expr.getOp()) {
                 case LEN:
                     mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Len.class), "_len_",
                             getMethodDescriptor(Len.class, "_len_"), true);
                     break;
                 case NEG:
-                    mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Neg.class), "_neg_",
-                            getMethodDescriptor(Neg.class, "_neg_"), true);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(clazz), "_neg_",
+                            getMethodDescriptor(clazz, "_neg_"), false);
                     visitCheckcast(expr.getTarget());
                     break;
                 case NOT:
