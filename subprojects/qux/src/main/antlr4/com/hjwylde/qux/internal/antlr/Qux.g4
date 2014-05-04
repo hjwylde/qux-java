@@ -102,13 +102,17 @@ declFunction : typeReturn Identifier '(' (type Identifier (',' type Identifier)*
 
 // Statements
 
-stmt : stmtAssign
+stmt : stmtAccessAssign
+     | stmtAssign
      | stmtFor
      | stmtIf
      | stmtPrint
      | stmtReturn
      | exprFunction NL
      ;
+
+stmtAccessAssign : Identifier ('[' expr ']')+ '=' expr NL
+                 ;
 
 stmtAssign : Identifier '=' expr NL
            ;
@@ -149,7 +153,7 @@ exprUnary : UOP_NEG? exprAccess
 exprAccess : exprTerm ('[' expr ']')*
            ;
 
-exprLength : UOP_LEN exprTerm UOP_LEN
+exprLength : UOP_LEN exprAccess UOP_LEN
            ;
 
 exprTerm : exprBrace

@@ -126,6 +126,14 @@ public final class FunctionNode extends Node implements FunctionVisitor {
      * {@inheritDoc}
      */
     @Override
+    public void visitStmtAccessAssign(StmtNode.AccessAssign stmt) {
+        stmts.add(stmt);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void visitStmtAssign(StmtNode.Assign stmt) {
         stmts.add(stmt);
     }

@@ -83,6 +83,14 @@ public final class Int extends Obj {
      * {@inheritDoc}
      */
     @Override
+    public Int _dup_() {
+        return this;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public Bool _eq_(Obj obj) {
         if (super._eq_(obj) == FALSE) {
             return FALSE;

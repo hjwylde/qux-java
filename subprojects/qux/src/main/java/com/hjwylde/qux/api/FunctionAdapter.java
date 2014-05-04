@@ -59,6 +59,14 @@ public abstract class FunctionAdapter implements FunctionVisitor {
      * {@inheritDoc}
      */
     @Override
+    public void visitStmtAccessAssign(StmtNode.AccessAssign stmt) {
+        next.visitStmtAccessAssign(stmt);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void visitStmtAssign(StmtNode.Assign stmt) {
         next.visitStmtAssign(stmt);
     }

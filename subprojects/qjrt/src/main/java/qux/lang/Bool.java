@@ -63,6 +63,14 @@ public final class Bool extends Obj implements And, Or, Xor, Iff, Implies, Not {
      * {@inheritDoc}
      */
     @Override
+    public Bool _dup_() {
+        return this;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public Bool _eq_(Obj obj) {
         if (super._eq_(obj) == FALSE) {
             return FALSE;

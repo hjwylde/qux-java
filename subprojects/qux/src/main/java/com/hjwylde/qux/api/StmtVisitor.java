@@ -11,6 +11,8 @@ import com.hjwylde.qux.tree.StmtNode;
  */
 public interface StmtVisitor {
 
+    void visitStmtAccessAssign(StmtNode.AccessAssign stmt);
+
     void visitStmtAssign(StmtNode.Assign stmt);
 
     void visitStmtFor(StmtNode.For stmt);

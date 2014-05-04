@@ -43,6 +43,46 @@ public abstract class StmtNode extends Node {
      * @author Henry J. Wylde
      */
     @Beta
+    public static final class AccessAssign extends StmtNode {
+
+        private final ExprNode.Access access;
+        private final ExprNode expr;
+
+        public AccessAssign(ExprNode.Access access, ExprNode expr, Attribute... attributes) {
+            this(access, expr, Arrays.asList(attributes));
+        }
+
+        public AccessAssign(ExprNode.Access access, ExprNode expr,
+                Collection<Attribute> attributes) {
+            super(attributes);
+
+            this.access = checkNotNull(access, "access cannot be null");
+            this.expr = checkNotNull(expr, "expr cannot be null");
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void accept(StmtVisitor sv) {
+            sv.visitStmtAccessAssign(this);
+        }
+
+        public ExprNode.Access getAccess() {
+            return access;
+        }
+
+        public ExprNode getExpr() {
+            return expr;
+        }
+    }
+
+    /**
+     * TODO: Documentation
+     *
+     * @author Henry J. Wylde
+     */
+    @Beta
     public static final class Assign extends StmtNode {
 
         private final String var;

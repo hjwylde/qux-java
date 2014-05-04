@@ -83,6 +83,14 @@ public class Meta extends Obj {
      * {@inheritDoc}
      */
     @Override
+    public Meta _dup_() {
+        return this;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public qux.lang.Bool _eq_(Obj obj) {
         if (super._eq_(obj) == FALSE) {
             return FALSE;
