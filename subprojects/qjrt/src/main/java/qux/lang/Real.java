@@ -46,7 +46,7 @@ public final class Real extends Obj {
      */
     @Override
     public Int _comp_(Obj obj) {
-        if (!(obj instanceof Int)) {
+        if (!(obj instanceof Real)) {
             return meta()._comp_(obj.meta());
         }
 

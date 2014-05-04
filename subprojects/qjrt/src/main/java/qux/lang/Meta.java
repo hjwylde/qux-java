@@ -29,29 +29,28 @@ public class Meta extends Obj {
     static final Meta META_STR = new Str();
 
     private static final LoadingCache<Meta, Meta> listMetas =
-            CacheBuilder.<Meta, Meta>newBuilder().weakKeys().build(new CacheLoader<Meta, Meta>() {
-                                                                       @Override
-                                                                       public Meta load(Meta key) {
-                                                                           return new List(key);
-                                                                       }
-                                                                   }
+            CacheBuilder.<Meta, Meta>newBuilder().build(new CacheLoader<Meta, Meta>() {
+                                                            @Override
+                                                            public Meta load(Meta key) {
+                                                                return new List(key);
+                                                            }
+                                                        }
             );
     private static final LoadingCache<Meta, Meta> setMetas =
-            CacheBuilder.<Meta, Meta>newBuilder().weakKeys().build(new CacheLoader<Meta, Meta>() {
-                                                                       @Override
-                                                                       public Meta load(Meta key) {
-                                                                           return new Set(key);
-                                                                       }
-                                                                   }
+            CacheBuilder.<Meta, Meta>newBuilder().build(new CacheLoader<Meta, Meta>() {
+                                                            @Override
+                                                            public Meta load(Meta key) {
+                                                                return new Set(key);
+                                                            }
+                                                        }
             );
     private static final LoadingCache<qux.lang.Set, Meta> unionMetas =
-            CacheBuilder.<Meta, Meta>newBuilder().weakKeys().build(
-                    new CacheLoader<qux.lang.Set, Meta>() {
-                        @Override
-                        public Meta load(qux.lang.Set key) {
-                            return new Union(key);
-                        }
-                    }
+            CacheBuilder.<Meta, Meta>newBuilder().build(new CacheLoader<qux.lang.Set, Meta>() {
+                                                            @Override
+                                                            public Meta load(qux.lang.Set key) {
+                                                                return new Union(key);
+                                                            }
+                                                        }
             );
 
     /**
@@ -125,8 +124,15 @@ public class Meta extends Obj {
     }
 
     private static Meta normalise(Meta meta) {
-        // TODO: Implement normalise(Meta)
-        throw new InternalError("normalise(Meta) not implemented");
+        if (meta instanceof Meta.List) {
+            return forList(((List) meta).innerType);
+        } else if (meta instanceof Meta.Set) {
+            return forSet(((Set) meta).innerType);
+        } else if (meta instanceof Meta.Union) {
+            return forUnion(((Union) meta).types);
+        }
+
+        return meta;
     }
 
     /**

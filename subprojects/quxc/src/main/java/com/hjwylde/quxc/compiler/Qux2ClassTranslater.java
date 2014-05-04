@@ -30,6 +30,7 @@ import static org.objectweb.asm.Opcodes.INVOKEVIRTUAL;
 import static org.objectweb.asm.Opcodes.LCONST_0;
 import static org.objectweb.asm.Opcodes.LCONST_1;
 import static org.objectweb.asm.Opcodes.NEWARRAY;
+import static org.objectweb.asm.Opcodes.POP;
 import static org.objectweb.asm.Opcodes.RETURN;
 import static org.objectweb.asm.Opcodes.SIPUSH;
 import static org.objectweb.asm.Opcodes.T_BYTE;
@@ -129,8 +130,8 @@ public final class Qux2ClassTranslater extends QuxAdapter {
     @Override
     public FunctionVisitor visitFunction(int flags, String name,
             com.hjwylde.qux.util.Type.Function type) {
-        MethodVisitor mv = cv.visitMethod(flags, name, getTypeFromQuxType(type).getDescriptor(),
-                null, new String[0]);
+        MethodVisitor mv = cv.visitMethod(flags, name, getType(type).getDescriptor(), null,
+                new String[0]);
 
         if (mv == null) {
             return FunctionVisitor.NULL_INSTANCE;
@@ -164,14 +165,14 @@ public final class Qux2ClassTranslater extends QuxAdapter {
     }
 
     static Type getType(Node node) {
-        return getTypeFromQuxType(getQuxType(node));
+        return getType(getQuxType(node));
     }
 
-    static Type getTypeFromQuxType(String desc) {
-        return getTypeFromQuxType(com.hjwylde.qux.util.Type.forDescriptor(desc));
+    static Type getType(String desc) {
+        return getType(com.hjwylde.qux.util.Type.forDescriptor(desc));
     }
 
-    static Type getTypeFromQuxType(com.hjwylde.qux.util.Type type) {
+    static Type getType(com.hjwylde.qux.util.Type type) {
         if (type instanceof com.hjwylde.qux.util.Type.Any) {
             return Type.getType(Obj.class);
         } else if (type instanceof com.hjwylde.qux.util.Type.Bool) {
@@ -182,10 +183,10 @@ public final class Qux2ClassTranslater extends QuxAdapter {
 
             Type[] parameterTypes = new Type[function.getParameterTypes().size()];
             for (int i = 0; i < parameterTypes.length; i++) {
-                parameterTypes[i] = getTypeFromQuxType(function.getParameterTypes().get(i));
+                parameterTypes[i] = getType(function.getParameterTypes().get(i));
             }
 
-            return Type.getMethodType(getTypeFromQuxType(function.getReturnType()), parameterTypes);
+            return Type.getMethodType(getType(function.getReturnType()), parameterTypes);
         } else if (type instanceof com.hjwylde.qux.util.Type.Int) {
             return Type.getType(Int.class);
         } else if (type instanceof com.hjwylde.qux.util.Type.List) {
@@ -568,7 +569,7 @@ public final class Qux2ClassTranslater extends QuxAdapter {
             checkNotNull(var, "var cannot be null");
             checkNotNull(type, "type cannot be null");
 
-            parameters.put(var, getTypeFromQuxType(type).getDescriptor());
+            parameters.put(var, getType(type).getDescriptor());
             if (!locals.contains(var)) {
                 locals.add(var);
             }
@@ -581,7 +582,7 @@ public final class Qux2ClassTranslater extends QuxAdapter {
         public void visitReturnType(com.hjwylde.qux.util.Type type) {
             checkNotNull(type, "type cannot be null");
 
-            returnType = getTypeFromQuxType(type).getDescriptor();
+            returnType = getType(type).getDescriptor();
         }
 
         /**
@@ -618,11 +619,19 @@ public final class Qux2ClassTranslater extends QuxAdapter {
         public void visitStmtFor(StmtNode.For stmt) {
             visitExpr(stmt.getExpr());
 
+            com.hjwylde.qux.util.Type type = getQuxType(stmt.getExpr());
+            com.hjwylde.qux.util.Type innerType;
+            if (type instanceof com.hjwylde.qux.util.Type.List) {
+                innerType = ((com.hjwylde.qux.util.Type.List) type).getInnerType();
+            } else if (type instanceof com.hjwylde.qux.util.Type.Set) {
+                innerType = ((com.hjwylde.qux.util.Type.Set) type).getInnerType();
+            } else {
+                throw new MethodNotImplementedError(type.toString());
+            }
+
             // The local variable holding each element of the iterable
             locals.add(stmt.getVar());
             int var = locals.indexOf(stmt.getVar());
-            Type varType = getTypeFromQuxType(((com.hjwylde.qux.util.Type.List) getQuxType(
-                    stmt.getExpr())).getInnerType());
             // The local variable index holding the iterator object
             int iter = locals.indexOf(generateVariable());
             Label startLabel = new Label();
@@ -643,7 +652,7 @@ public final class Qux2ClassTranslater extends QuxAdapter {
             mv.visitVarInsn(ALOAD, iter);
             mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Iterator.class), "next",
                     getMethodDescriptor(Iterator.class, "next"), true);
-            mv.visitTypeInsn(CHECKCAST, varType.getInternalName());
+            mv.visitTypeInsn(CHECKCAST, getType(innerType).getInternalName());
             mv.visitVarInsn(ASTORE, var);
 
             visitBlock(stmt.getBody());
@@ -670,6 +679,18 @@ public final class Qux2ClassTranslater extends QuxAdapter {
 
             mv.visitMethodInsn(INVOKESTATIC, Qux2ClassTranslater.this.name, stmt.getName(),
                     type.getDescriptor(), false);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void visitStmtFunctionCall(StmtNode.FunctionCall stmt) {
+            visitExpr(stmt.getCall());
+
+            if (getType(stmt.getCall()) != Type.VOID_TYPE) {
+                mv.visitInsn(POP);
+            }
         }
 
         /**

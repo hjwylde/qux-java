@@ -2,7 +2,7 @@ package com.hjwylde.quxc.compiler;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.hjwylde.quxc.compiler.Qux2ClassTranslater.getMethodDescriptor;
-import static com.hjwylde.quxc.compiler.Qux2ClassTranslater.getTypeFromQuxType;
+import static com.hjwylde.quxc.compiler.Qux2ClassTranslater.getType;
 import static org.objectweb.asm.Opcodes.AALOAD;
 import static org.objectweb.asm.Opcodes.AASTORE;
 import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
@@ -73,7 +73,7 @@ public class MainFunctionInjector extends ClassVisitor {
             String[] exceptions) {
         // If there is a main function using the Qux types, then add an adapter function to call it
         if (access == FUNCTION_MAIN_FLAGS && name.equals(FUNCTION_MAIN_NAME) && desc.equals(
-                getTypeFromQuxType(FUNCTION_MAIN_TYPE).getDescriptor())) {
+                getType(FUNCTION_MAIN_TYPE).getDescriptor())) {
             logger.debug("main function detected, injecting proxy function for {}.{}:{}", this.name,
                     name, desc);
 
@@ -147,8 +147,7 @@ public class MainFunctionInjector extends ClassVisitor {
         mv.visitVarInsn(ALOAD, strs);
         mv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(List.class), "valueOf",
                 getMethodDescriptor(List.class, "valueOf", Obj[].class), false);
-        mv.visitMethodInsn(INVOKESTATIC, this.name, FUNCTION_MAIN_NAME, getTypeFromQuxType(
-                FUNCTION_MAIN_TYPE).getDescriptor(), false);
+        mv.visitMethodInsn(INVOKESTATIC, this.name, FUNCTION_MAIN_NAME, getType(FUNCTION_MAIN_TYPE).getDescriptor(), false);
         mv.visitInsn(RETURN);
 
         // These values are ignored so long as ClassWriter.COMPUTE_MAXS is set

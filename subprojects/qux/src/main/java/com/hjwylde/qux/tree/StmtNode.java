@@ -3,7 +3,6 @@ package com.hjwylde.qux.tree;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.hjwylde.common.lang.annotation.Alpha;
-import com.hjwylde.common.lang.annotation.Beta;
 import com.hjwylde.qux.api.StmtVisitor;
 import com.hjwylde.qux.util.Attribute;
 
@@ -15,7 +14,7 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * TODO: Documentation
+ * TODO: Documentation.
  *
  * @author Henry J. Wylde
  */
@@ -38,11 +37,10 @@ public abstract class StmtNode extends Node {
     public abstract void accept(StmtVisitor sv);
 
     /**
-     * TODO: Documentation
+     * TODO: Documentation.
      *
      * @author Henry J. Wylde
      */
-    @Beta
     public static final class AccessAssign extends StmtNode {
 
         private final ExprNode.Access access;
@@ -53,7 +51,7 @@ public abstract class StmtNode extends Node {
         }
 
         public AccessAssign(ExprNode.Access access, ExprNode expr,
-                Collection<Attribute> attributes) {
+                Collection<? extends Attribute> attributes) {
             super(attributes);
 
             this.access = checkNotNull(access, "access cannot be null");
@@ -78,11 +76,10 @@ public abstract class StmtNode extends Node {
     }
 
     /**
-     * TODO: Documentation
+     * TODO: Documentation.
      *
      * @author Henry J. Wylde
      */
-    @Beta
     public static final class Assign extends StmtNode {
 
         private final String var;
@@ -92,7 +89,7 @@ public abstract class StmtNode extends Node {
             this(var, expr, Arrays.asList(attributes));
         }
 
-        public Assign(String var, ExprNode expr, Collection<Attribute> attributes) {
+        public Assign(String var, ExprNode expr, Collection<? extends Attribute> attributes) {
             super(attributes);
 
             this.var = checkNotNull(var, "var cannot be null");
@@ -117,7 +114,7 @@ public abstract class StmtNode extends Node {
     }
 
     /**
-     * TODO: Documentation
+     * TODO: Documentation.
      *
      * @author Henry J. Wylde
      * @since 0.1.2
@@ -133,7 +130,7 @@ public abstract class StmtNode extends Node {
         }
 
         public For(String var, ExprNode expr, List<StmtNode> body,
-                Collection<Attribute> attributes) {
+                Collection<? extends Attribute> attributes) {
             super(attributes);
 
             this.var = checkNotNull(var, "var cannot be null");
@@ -163,7 +160,7 @@ public abstract class StmtNode extends Node {
     }
 
     /**
-     * TODO: Documentation
+     * TODO: Documentation.
      *
      * @author Henry J. Wylde
      */
@@ -176,7 +173,8 @@ public abstract class StmtNode extends Node {
             this(name, arguments, Arrays.asList(attributes));
         }
 
-        public Function(String name, List<ExprNode> arguments, Collection<Attribute> attributes) {
+        public Function(String name, List<ExprNode> arguments,
+                Collection<? extends Attribute> attributes) {
             super(attributes);
 
             this.name = checkNotNull(name, "name cannot be null");
@@ -201,7 +199,40 @@ public abstract class StmtNode extends Node {
     }
 
     /**
-     * TODO: Documentation
+     * TODO: Documentation.
+     *
+     * @author Henry J. Wylde
+     * @since TODO: SINCE
+     */
+    public static final class FunctionCall extends StmtNode {
+
+        private final ExprNode.Function call;
+
+        public FunctionCall(ExprNode.Function call, Attribute... attributes) {
+            this(call, Arrays.asList(attributes));
+        }
+
+        public FunctionCall(ExprNode.Function call, Collection<? extends Attribute> attributes) {
+            super(attributes);
+
+            this.call = checkNotNull(call, "call cannot be null");
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void accept(StmtVisitor sv) {
+            sv.visitStmtFunctionCall(this);
+        }
+
+        public ExprNode.Function getCall() {
+            return call;
+        }
+    }
+
+    /**
+     * TODO: Documentation.
      *
      * @author Henry J. Wylde
      */
@@ -217,7 +248,7 @@ public abstract class StmtNode extends Node {
         }
 
         public If(ExprNode condition, List<StmtNode> trueBlock, List<StmtNode> falseBlock,
-                Collection<Attribute> attributes) {
+                Collection<? extends Attribute> attributes) {
             super(attributes);
 
             this.condition = checkNotNull(condition, "condition cannot be null");
@@ -247,7 +278,7 @@ public abstract class StmtNode extends Node {
     }
 
     /**
-     * TODO: Documentation
+     * TODO: Documentation.
      *
      * @author Henry J. Wylde
      */
@@ -260,7 +291,7 @@ public abstract class StmtNode extends Node {
             this(expr, Arrays.asList(attributes));
         }
 
-        public Print(ExprNode expr, Collection<Attribute> attributes) {
+        public Print(ExprNode expr, Collection<? extends Attribute> attributes) {
             super(attributes);
 
             this.expr = checkNotNull(expr, "expr cannot be null");
@@ -280,7 +311,7 @@ public abstract class StmtNode extends Node {
     }
 
     /**
-     * TODO: Documentation
+     * TODO: Documentation.
      *
      * @author Henry J. Wylde
      */
@@ -300,17 +331,17 @@ public abstract class StmtNode extends Node {
             this(expr, Arrays.asList(attributes));
         }
 
-        public Return(Collection<Attribute> attributes) {
+        public Return(Collection<? extends Attribute> attributes) {
             this(Optional.<ExprNode>absent(), attributes);
         }
 
-        public Return(Optional<ExprNode> expr, Collection<Attribute> attributes) {
+        public Return(Optional<ExprNode> expr, Collection<? extends Attribute> attributes) {
             super(attributes);
 
             this.expr = checkNotNull(expr, "expr cannot be null");
         }
 
-        public Return(ExprNode expr, Collection<Attribute> attributes) {
+        public Return(ExprNode expr, Collection<? extends Attribute> attributes) {
             this(Optional.fromNullable(expr), attributes);
         }
 
