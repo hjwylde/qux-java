@@ -50,7 +50,7 @@ public abstract class ExprNode extends Node {
             this(target, index, Arrays.asList(attributes));
         }
 
-        public Access(ExprNode target, ExprNode index, Collection<Attribute> attributes) {
+        public Access(ExprNode target, ExprNode index, Collection<? extends Attribute> attributes) {
             super(attributes);
 
             this.target = checkNotNull(target, "target cannot be null");
@@ -88,7 +88,8 @@ public abstract class ExprNode extends Node {
             this(op, lhs, rhs, Arrays.asList(attributes));
         }
 
-        public Binary(Op.Binary op, ExprNode lhs, ExprNode rhs, Collection<Attribute> attributes) {
+        public Binary(Op.Binary op, ExprNode lhs, ExprNode rhs,
+                Collection<? extends Attribute> attributes) {
             super(attributes);
 
             this.op = checkNotNull(op, "op cannot be null");
@@ -131,7 +132,7 @@ public abstract class ExprNode extends Node {
             this(type, value, Arrays.asList(attributes));
         }
 
-        public Constant(Type type, Object value, Collection<Attribute> attribtues) {
+        public Constant(Type type, Object value, Collection<? extends Attribute> attribtues) {
             super(attribtues);
 
             checkArgument(value != null || type == Type.NULL,
@@ -182,7 +183,7 @@ public abstract class ExprNode extends Node {
         }
 
         public Function(String name, java.util.List<ExprNode> arguments,
-                Collection<Attribute> attributes) {
+                Collection<? extends Attribute> attributes) {
             super(attributes);
 
             this.name = checkNotNull(name, "name cannot be null");
@@ -219,7 +220,7 @@ public abstract class ExprNode extends Node {
             this(values, Arrays.asList(attributes));
         }
 
-        public List(java.util.List<ExprNode> values, Collection<Attribute> attributes) {
+        public List(java.util.List<ExprNode> values, Collection<? extends Attribute> attributes) {
             super(attributes);
 
             this.values = ImmutableList.copyOf(values);
@@ -252,7 +253,7 @@ public abstract class ExprNode extends Node {
             this(values, Arrays.asList(attributes));
         }
 
-        public Set(java.util.List<ExprNode> values, Collection<Attribute> attributes) {
+        public Set(java.util.List<ExprNode> values, Collection<? extends Attribute> attributes) {
             super(attributes);
 
             this.values = ImmutableList.copyOf(values);
@@ -285,7 +286,7 @@ public abstract class ExprNode extends Node {
             this(op, target, Arrays.asList(attributes));
         }
 
-        public Unary(Op.Unary op, ExprNode target, Collection<Attribute> attributes) {
+        public Unary(Op.Unary op, ExprNode target, Collection<? extends Attribute> attributes) {
             super(attributes);
 
             this.op = checkNotNull(op, "op cannot be null");
@@ -322,7 +323,7 @@ public abstract class ExprNode extends Node {
             this(name, Arrays.asList(attributes));
         }
 
-        public Variable(String name, Collection<Attribute> attributes) {
+        public Variable(String name, Collection<? extends Attribute> attributes) {
             super(attributes);
 
             this.name = checkNotNull(name, "name cannot be null");

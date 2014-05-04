@@ -314,7 +314,12 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
      */
     @Override
     public StmtNode visitStmt(@NotNull QuxParser.StmtContext ctx) {
-        return (StmtNode) super.visitStmt(ctx);
+        if (ctx.NL() == null) {
+            return (StmtNode) super.visitStmt(ctx);
+        }
+
+        return new StmtNode.FunctionCall(visitExprFunction(ctx.exprFunction()),
+                generateAttributeSource(ctx));
     }
 
     /**

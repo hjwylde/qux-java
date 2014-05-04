@@ -37,6 +37,11 @@ public final class ValidSetTests extends Harness {
     }
 
     @Test
+    public void SetLoop() {
+        run("SetLoop");
+    }
+
+    @Test
     public void SetNeq() {
         run("SetNeq");
     }

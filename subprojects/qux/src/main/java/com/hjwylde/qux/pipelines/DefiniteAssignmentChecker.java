@@ -242,6 +242,16 @@ public final class DefiniteAssignmentChecker extends Pipeline {
          * {@inheritDoc}
          */
         @Override
+        public void visitStmtFunctionCall(StmtNode.FunctionCall stmt) {
+            visitExpr(stmt.getCall());
+
+            super.visitStmtFunctionCall(stmt);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
         public void visitStmtIf(StmtNode.If stmt) {
             visitExpr(stmt.getCondition());
 

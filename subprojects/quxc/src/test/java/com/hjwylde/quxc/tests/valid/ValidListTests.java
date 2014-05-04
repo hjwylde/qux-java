@@ -42,6 +42,11 @@ public final class ValidListTests extends Harness {
     }
 
     @Test
+    public void ListLoop() {
+        run("ListLoop");
+    }
+
+    @Test
     public void ListMul() {
         run("ListMul");
     }

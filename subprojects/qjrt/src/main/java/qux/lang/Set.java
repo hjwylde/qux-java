@@ -77,7 +77,7 @@ public final class Set extends Obj implements Len, Access, Iterable {
      */
     @Override
     public Int _comp_(Obj obj) {
-        if (!(obj instanceof List)) {
+        if (!(obj instanceof Set)) {
             return meta()._comp_(obj.meta());
         }
 
@@ -259,7 +259,7 @@ public final class Set extends Obj implements Len, Access, Iterable {
         return get(index._value_());
     }
 
-    public Obj get(int index) {
+    public synchronized Obj get(int index) {
         checkElementIndex(index, count,
                 "index out of bounds (index='" + index + "', size='" + count + "')");
 
@@ -351,16 +351,18 @@ public final class Set extends Obj implements Len, Access, Iterable {
         }
     }
 
-    private int indexOf(Obj obj) {
+    private synchronized int indexOf(Obj obj) {
         return indexOf(obj, 0, count);
     }
 
-    private int indexOf(Obj obj, int low, int high) {
+    private synchronized int indexOf(Obj obj, int low, int high) {
         if (low == high) {
             return -low - 1;
         }
 
-        int mid = low + high / 2;
+        // Javas integer division rounds up, so let's force the truncation of the division
+        // (emulates floor)
+        int mid = (int) ((double) (low + high) / 2);
 
         if (obj.equals(data[mid])) {
             return mid;

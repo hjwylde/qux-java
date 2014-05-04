@@ -407,6 +407,7 @@ public final class TypeChecker extends Pipeline {
         @Override
         public void visitStmtFor(StmtNode.For stmt) {
             visitExpr(stmt.getExpr());
+            checkSubtype(stmt.getExpr(), Type.forUnion(TYPE_LIST_ANY, TYPE_SET_ANY));
 
             Type type = getType(stmt.getExpr());
 
@@ -414,6 +415,8 @@ public final class TypeChecker extends Pipeline {
             Type inner;
             if (type instanceof Type.List) {
                 inner = ((Type.List) type).getInnerType();
+            } else if (type instanceof Type.Set) {
+                inner = ((Type.Set) type).getInnerType();
             } else {
                 throw new MethodNotImplementedError(type.toString());
             }
@@ -438,6 +441,16 @@ public final class TypeChecker extends Pipeline {
             }
 
             super.visitStmtFunction(stmt);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void visitStmtFunctionCall(StmtNode.FunctionCall stmt) {
+            visitExpr(stmt.getCall());
+
+            super.visitStmtFunctionCall(stmt);
         }
 
         /**

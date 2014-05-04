@@ -135,6 +135,20 @@ public class CheckFunctionAdapter extends FunctionAdapter {
      * {@inheritDoc}
      */
     @Override
+    public void visitStmtFunctionCall(StmtNode.FunctionCall stmt) {
+        checkState(visitedCode,
+                "must call visitCode() before visitStmtFunctionCall(StmtNode.FunctionCall)");
+        checkState(!visitedEnd,
+                "must call visitStmtFunctionCall(StmtNode.FunctionCall) before visitEnd()");
+        checkNotNull(stmt, "stmt cannot be null");
+
+        super.visitStmtFunctionCall(stmt);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void visitStmtIf(StmtNode.If stmt) {
         checkState(visitedCode, "must call visitCode() before visitStmtIf(StmtNode.If)");
         checkState(!visitedEnd, "must call visitStmtIf(StmtNode.If) before visitEnd()");

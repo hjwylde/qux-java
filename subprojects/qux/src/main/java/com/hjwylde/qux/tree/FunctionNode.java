@@ -39,7 +39,7 @@ public final class FunctionNode extends Node implements FunctionVisitor {
     }
 
     public FunctionNode(int flags, String name, Type.Function type,
-            Collection<Attribute> attributes) {
+            Collection<? extends Attribute> attributes) {
         super(attributes);
 
         this.flags = flags;
@@ -151,6 +151,14 @@ public final class FunctionNode extends Node implements FunctionVisitor {
      */
     @Override
     public void visitStmtFunction(StmtNode.Function stmt) {
+        stmts.add(stmt);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void visitStmtFunctionCall(StmtNode.FunctionCall stmt) {
         stmts.add(stmt);
     }
 
