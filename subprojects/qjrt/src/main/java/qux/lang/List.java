@@ -10,6 +10,7 @@ import java.math.BigInteger;
 import java.util.Arrays;
 
 import qux.lang.op.Access;
+import qux.lang.op.Assign;
 import qux.lang.op.Len;
 import qux.util.Iterable;
 import qux.util.Iterator;
@@ -19,7 +20,7 @@ import qux.util.Iterator;
  *
  * @author Henry J. Wylde
  */
-public final class List extends Obj implements Len, Access, Iterable {
+public final class List extends Obj implements Len, Access, Assign, Iterable {
 
     private Obj[] data;
     private int count;
@@ -34,6 +35,11 @@ public final class List extends Obj implements Len, Access, Iterable {
     private List(List list) {
         this.data = list.data;
         this.count = list.count;
+
+        // Lazily clone the data only when the first write is performed
+        refs = 1;
+        // Can't forget the fact that this list also references the prior list!
+        list.refs++;
     }
 
     private List(Obj[] data) {
@@ -65,6 +71,14 @@ public final class List extends Obj implements Len, Access, Iterable {
         }
 
         return union;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void _assign_(Int index, Obj value) {
+        set(index, value);
     }
 
     /**
@@ -118,6 +132,14 @@ public final class List extends Obj implements Len, Access, Iterable {
         sb.append("]");
 
         return Str.valueOf(sb.toString());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List _dup_() {
+        return new List(this);
     }
 
     /**
@@ -251,7 +273,7 @@ public final class List extends Obj implements Len, Access, Iterable {
         return get(index._value_());
     }
 
-    public Obj get(int index) {
+    public synchronized Obj get(int index) {
         checkElementIndex(index, count,
                 "index out of bounds (index='" + index + "', size='" + count + "')");
 
@@ -315,6 +337,25 @@ public final class List extends Obj implements Len, Access, Iterable {
         System.arraycopy(data, index + 1, data, index, count - (index + 1));
 
         count--;
+    }
+
+    public void set(Int index, Obj value) {
+        set(index._value_(), value);
+    }
+
+    public synchronized void set(int index, Obj value) {
+        checkElementIndex(index, count,
+                "index out of bounds (index='" + index + "', size='" + count + "')");
+
+        checkRefs();
+
+        data[index] = checkNotNull(value, "value cannot be null");
+    }
+
+    public void set(BigInteger index, Obj value) {
+        checkArgument(index.bitLength() < 32, "lists of size larger than 32 bits is unsupported");
+
+        set(index.intValue(), value);
     }
 
     public static List valueOf(Obj... data) {

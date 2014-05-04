@@ -8,13 +8,11 @@ import static qux.lang.Bool.TRUE;
 import static qux.lang.Meta.META_STR;
 
 import com.google.common.base.Strings;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 
 import java.math.BigInteger;
 
 import qux.lang.op.Access;
+import qux.lang.op.Assign;
 import qux.lang.op.Len;
 
 /**
@@ -22,19 +20,9 @@ import qux.lang.op.Len;
  *
  * @author Henry J. Wylde
  */
-public final class Str extends Obj implements Len, Access {
+public final class Str extends Obj implements Len, Access, Assign {
 
-    private static final LoadingCache<String, Str> cache =
-            CacheBuilder.<String, Str>newBuilder().weakKeys().build(new CacheLoader<String, Str>() {
-                                                                        @Override
-                                                                        public Str load(String key)
-                                                                                throws Exception {
-                                                                            return new Str(key);
-                                                                        }
-                                                                    }
-            );
-
-    private final String value;
+    private String value;
 
     /**
      * Creates a new {@code Str} with the given value.
@@ -61,6 +49,14 @@ public final class Str extends Obj implements Len, Access {
      * {@inheritDoc}
      */
     @Override
+    public void _assign_(Int index, Obj value) {
+        set(index, value);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public Int _comp_(Obj obj) {
         if (!(obj instanceof Str)) {
             return meta()._comp_(obj.meta());
@@ -75,6 +71,14 @@ public final class Str extends Obj implements Len, Access {
     @Override
     public Str _desc_() {
         return this;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Str _dup_() {
+        return valueOf(value);
     }
 
     /**
@@ -175,6 +179,25 @@ public final class Str extends Obj implements Len, Access {
         return META_STR;
     }
 
+    public void set(Int index, Obj value) {
+        set(index._value_(), value);
+    }
+
+    public synchronized void set(int index, Obj value) {
+        checkElementIndex(index, this.value.length(),
+                "index out of bounds (index='" + index + "', length='" + this.value.length() + "')"
+        );
+
+        this.value = this.value.substring(0, index) + value.toString() + this.value.substring(
+                index + 1);
+    }
+
+    public void set(BigInteger index, Obj value) {
+        checkArgument(index.bitLength() < 32, "lists of size larger than 32 bits is unsupported");
+
+        set(index.intValue(), value);
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -184,7 +207,7 @@ public final class Str extends Obj implements Len, Access {
     }
 
     public static Str valueOf(String value) {
-        return cache.getUnchecked(value);
+        return new Str(value);
     }
 
     public static Str valueOf(char value) {

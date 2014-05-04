@@ -35,6 +35,11 @@ public final class Set extends Obj implements Len, Access, Iterable {
     private Set(Set set) {
         this.data = set.data;
         this.count = set.count;
+
+        // Lazily clone the data only when the first write is performed
+        refs = 1;
+        // Can't forget the fact that this list also references the prior list!
+        set.refs++;
     }
 
     private Set(Obj[] data) {
@@ -118,6 +123,14 @@ public final class Set extends Obj implements Len, Access, Iterable {
         sb.append("}");
 
         return Str.valueOf(sb.toString());
+    }
+
+    /**
+     * {@inheritDocn}
+     */
+    @Override
+    public Set _dup_() {
+        return new Set(this);
     }
 
     /**

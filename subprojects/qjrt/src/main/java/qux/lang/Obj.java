@@ -5,6 +5,7 @@ import static qux.lang.Bool.TRUE;
 
 import qux.lang.op.Comp;
 import qux.lang.op.Desc;
+import qux.lang.op.Dup;
 import qux.lang.op.Eq;
 import qux.lang.op.Hash;
 import qux.lang.op.Neq;
@@ -14,7 +15,7 @@ import qux.lang.op.Neq;
  *
  * @author Henry J. Wylde
  */
-public abstract class Obj implements Desc, Eq, Neq, Hash, Comp {
+public abstract class Obj implements Desc, Dup, Eq, Neq, Hash, Comp {
 
     /**
      * {@inheritDoc}

@@ -110,6 +110,8 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
      */
     @Override
     public ExprNode visitExprAccess(@NotNull QuxParser.ExprAccessContext ctx) {
+        Token start = ctx.exprTerm().getStart();
+
         ExprNode target = visitExprTerm(ctx.exprTerm());
 
         if (ctx.expr().isEmpty()) {
@@ -118,7 +120,9 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
 
         // Create a series of nested accesses
         for (QuxParser.ExprContext ectx : ctx.expr()) {
-            target = new ExprNode.Access(target, visitExpr(ectx), generateAttributeSource(ctx));
+            // TODO: VERIFY: The "ectx.getStop()" may not include the suffix "]'
+            target = new ExprNode.Access(target, visitExpr(ectx), generateAttributeSource(start,
+                    ectx.getStop()));
         }
 
         return target;
@@ -228,7 +232,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
      */
     @Override
     public ExprNode visitExprLength(@NotNull QuxParser.ExprLengthContext ctx) {
-        return new ExprNode.Unary(Op.Unary.LEN, visitExprTerm(ctx.exprTerm()),
+        return new ExprNode.Unary(Op.Unary.LEN, visitExprAccess(ctx.exprAccess()),
                 generateAttributeSource(ctx));
     }
 
@@ -311,6 +315,29 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
     @Override
     public StmtNode visitStmt(@NotNull QuxParser.StmtContext ctx) {
         return (StmtNode) super.visitStmt(ctx);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public StmtNode visitStmtAccessAssign(@NotNull QuxParser.StmtAccessAssignContext ctx) {
+        Token start = ctx.getStart();
+
+        ExprNode access = new ExprNode.Variable(ctx.Identifier().getText(), generateAttributeSource(
+                start));
+
+        // Create a series of nested accesses
+        for (int i = 0; i < ctx.expr().size() - 1; i++) {
+            // TODO: VERIFY: The "ctx.expr(i).getStop()" may not include the suffix "]'
+            access = new ExprNode.Access(access, visitExpr(ctx.expr(i)), generateAttributeSource(
+                    start, ctx.expr(i).getStop()));
+        }
+
+        ExprNode expr = visitExpr(ctx.expr(ctx.expr().size() - 1));
+
+        return new StmtNode.AccessAssign((ExprNode.Access) access, expr, generateAttributeSource(
+                ctx));
     }
 
     /**

@@ -27,6 +27,11 @@ public final class ValidListTests extends Harness {
     }
 
     @Test
+    public void ListAssign() {
+        run("ListAssign");
+    }
+
+    @Test
     public void ListEq() {
         run("ListEq");
     }

@@ -190,6 +190,17 @@ public final class DefiniteAssignmentChecker extends Pipeline {
          * {@inheritDoc}
          */
         @Override
+        public void visitStmtAccessAssign(StmtNode.AccessAssign stmt) {
+            visitExpr(stmt.getAccess());
+            visitExpr(stmt.getExpr());
+
+            super.visitStmtAccessAssign(stmt);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
         public void visitStmtAssign(StmtNode.Assign stmt) {
             visitExpr(stmt.getExpr());
 

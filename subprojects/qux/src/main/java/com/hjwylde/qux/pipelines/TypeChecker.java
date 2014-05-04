@@ -199,7 +199,6 @@ public final class TypeChecker extends Pipeline {
             visitExpr(expr.getRhs());
 
             Type lhsType = getType(expr.getLhs());
-            Type rhsType = getType(expr.getRhs());
 
             // TODO: Properly type check using references to methods that exist
             switch (expr.getOp()) {
@@ -377,6 +376,17 @@ public final class TypeChecker extends Pipeline {
             env.put(RETURN, type);
 
             super.visitReturnType(type);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void visitStmtAccessAssign(StmtNode.AccessAssign stmt) {
+            visitExpr(stmt.getAccess());
+            visitExpr(stmt.getExpr());
+
+            super.visitStmtAccessAssign(stmt);
         }
 
         /**

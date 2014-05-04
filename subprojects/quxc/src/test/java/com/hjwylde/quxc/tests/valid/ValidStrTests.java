@@ -27,6 +27,11 @@ public final class ValidStrTests extends Harness {
     }
 
     @Test
+    public void StrAssign() {
+        run("StrAssign");
+    }
+
+    @Test
     public void StrEq() {
         run("StrEq");
     }

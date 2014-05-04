@@ -73,6 +73,14 @@ public final class Real extends Obj {
      * {@inheritDoc}
      */
     @Override
+    public Real _dup_() {
+        return this;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public Bool _eq_(Obj obj) {
         if (super._eq_(obj) == FALSE) {
             return FALSE;

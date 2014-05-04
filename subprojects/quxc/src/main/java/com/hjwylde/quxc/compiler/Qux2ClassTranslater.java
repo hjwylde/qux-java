@@ -71,6 +71,7 @@ import qux.lang.Set;
 import qux.lang.Str;
 import qux.lang.op.Access;
 import qux.lang.op.And;
+import qux.lang.op.Assign;
 import qux.lang.op.Eq;
 import qux.lang.op.Iff;
 import qux.lang.op.Implies;
@@ -139,8 +140,12 @@ public final class Qux2ClassTranslater extends QuxAdapter {
     }
 
     static Class<?> getClass(Node node) {
+        return getClass(getType(node));
+    }
+
+    static Class<?> getClass(Type type) {
         try {
-            return Class.forName(getType(node).getClassName());
+            return Class.forName(type.getClassName());
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
@@ -465,7 +470,14 @@ public final class Qux2ClassTranslater extends QuxAdapter {
             for (int i = expr.getArguments().size() - 1; i >= 0; i--) {
                 visitExpr(expr.getArguments().get(i));
 
-                argumentTypes.add(0, getType(expr.getArguments().get(i)));
+                Type argumentType = getType(expr.getArguments().get(i));
+
+                // Ensures pass-by-value semantics by cloning the values
+                mv.visitMethodInsn(INVOKEVIRTUAL, argumentType.getInternalName(), "_dup_",
+                        getMethodDescriptor(Qux2ClassTranslater.getClass(argumentType), "_dup_"),
+                        false);
+
+                argumentTypes.add(0, argumentType);
             }
 
             Type type = Type.getMethodType(returnType, argumentTypes.toArray(new Type[0]));
@@ -570,6 +582,19 @@ public final class Qux2ClassTranslater extends QuxAdapter {
             checkNotNull(type, "type cannot be null");
 
             returnType = getTypeFromQuxType(type).getDescriptor();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void visitStmtAccessAssign(StmtNode.AccessAssign stmt) {
+            visitExpr(stmt.getAccess().getTarget());
+            visitExpr(stmt.getAccess().getIndex());
+            visitExpr(stmt.getExpr());
+
+            mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Assign.class), "_assign_",
+                    getMethodDescriptor(Assign.class, "_assign_", Int.class, Obj.class));
         }
 
         /**

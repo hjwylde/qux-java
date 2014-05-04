@@ -1,0 +1,16 @@
+str f(str foo):
+    foo[0] = 'qux'
+
+    return foo
+
+void main([str] args):
+    foo = 'bar'
+    print foo[0]
+    print foo[1]
+    print foo[2]
+    print f(foo)
+    print f(foo)[0]
+    print foo[0]
+    foo[1] = {1, 2}
+    print foo
+
