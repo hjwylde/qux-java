@@ -1,6 +1,7 @@
 package qux.lang;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkElementIndex;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static qux.lang.Bool.FALSE;
 import static qux.lang.Bool.TRUE;
@@ -11,6 +12,9 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
+import java.math.BigInteger;
+
+import qux.lang.op.Access;
 import qux.lang.op.Len;
 
 /**
@@ -18,7 +22,7 @@ import qux.lang.op.Len;
  *
  * @author Henry J. Wylde
  */
-public final class Str extends Obj implements Len {
+public final class Str extends Obj implements Len, Access {
 
     private static final LoadingCache<String, Str> cache =
             CacheBuilder.<String, Str>newBuilder().weakKeys().build(new CacheLoader<String, Str>() {
@@ -39,6 +43,14 @@ public final class Str extends Obj implements Len {
      */
     private Str(String value) {
         this.value = checkNotNull(value, "value cannot be null");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Str _access_(Int index) {
+        return get(index);
     }
 
     public Str _add_(Str str) {
@@ -138,6 +150,23 @@ public final class Str extends Obj implements Len {
         return this;
     }
 
+    public Str get(Int index) {
+        return get(index._value_());
+    }
+
+    public Str get(int index) {
+        checkElementIndex(index, value.length(),
+                "index out of bounds (index='" + index + "', length='" + value.length() + "')");
+
+        return valueOf(value.charAt(index));
+    }
+
+    public Str get(BigInteger index) {
+        checkArgument(index.bitLength() < 32, "strings of size larger than 32 bits is unsupported");
+
+        return get(index.intValue());
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -156,6 +185,10 @@ public final class Str extends Obj implements Len {
 
     public static Str valueOf(String value) {
         return cache.getUnchecked(value);
+    }
+
+    public static Str valueOf(char value) {
+        return valueOf(String.valueOf(value));
     }
 }
 

@@ -39,6 +39,45 @@ public abstract class ExprNode extends Node {
      * TODO: Documentation
      *
      * @author Henry J. Wylde
+     * @since TODO: SINCE
+     */
+    public static final class Access extends ExprNode {
+
+        private final ExprNode target;
+        private final ExprNode index;
+
+        public Access(ExprNode target, ExprNode index, Attribute... attributes) {
+            this(target, index, Arrays.asList(attributes));
+        }
+
+        public Access(ExprNode target, ExprNode index, Collection<Attribute> attributes) {
+            super(attributes);
+
+            this.target = checkNotNull(target, "target cannot be null");
+            this.index = checkNotNull(index, "index cannot be null");
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void accept(ExprVisitor ev) {
+            ev.visitExprAccess(this);
+        }
+
+        public ExprNode getIndex() {
+            return index;
+        }
+
+        public ExprNode getTarget() {
+            return target;
+        }
+    }
+
+    /**
+     * TODO: Documentation
+     *
+     * @author Henry J. Wylde
      */
     public static final class Binary extends ExprNode {
 

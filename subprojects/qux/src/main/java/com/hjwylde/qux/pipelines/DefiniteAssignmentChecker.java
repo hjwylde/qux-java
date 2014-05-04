@@ -82,6 +82,15 @@ public final class DefiniteAssignmentChecker extends Pipeline {
          * {@inheritDoc}
          */
         @Override
+        public void visitExprAccess(ExprNode.Access expr) {
+            visitExpr(expr.getTarget());
+            visitExpr(expr.getIndex());
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
         public void visitExprBinary(ExprNode.Binary expr) {
             visitExpr(expr.getLhs());
             visitExpr(expr.getRhs());

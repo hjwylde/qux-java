@@ -69,6 +69,7 @@ import qux.lang.Obj;
 import qux.lang.Real;
 import qux.lang.Set;
 import qux.lang.Str;
+import qux.lang.op.Access;
 import qux.lang.op.And;
 import qux.lang.op.Eq;
 import qux.lang.op.Iff;
@@ -282,6 +283,18 @@ public final class Qux2ClassTranslater extends QuxAdapter {
 
         public void visitExpr(ExprNode expr) {
             expr.accept(this);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void visitExprAccess(ExprNode.Access expr) {
+            visitExpr(expr.getTarget());
+            visitExpr(expr.getIndex());
+
+            mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Access.class), "_access_",
+                    getMethodDescriptor(Access.class, "_access_", Int.class), true);
         }
 
         /**
@@ -679,9 +692,8 @@ public final class Qux2ClassTranslater extends QuxAdapter {
             Attribute.Type attribute = Attributes.getAttributeUnchecked(stmt.getExpr(),
                     Attribute.Type.class);
 
-            mv.visitMethodInsn(INVOKEVIRTUAL, getTypeFromQuxType(attribute.getType())
-                    .getInternalName(), "toString", Type.getMethodDescriptor(Type.getType(
-                    String.class)), false);
+            mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(Object.class), "toString",
+                    getMethodDescriptor(Object.class, "toString"), false);
             mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(PrintStream.class), "println",
                     getMethodDescriptor(PrintStream.class, "println", String.class), false);
         }
