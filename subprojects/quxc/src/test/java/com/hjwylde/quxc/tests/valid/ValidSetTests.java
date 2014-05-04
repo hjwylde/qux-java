@@ -17,6 +17,11 @@ public final class ValidSetTests extends Harness {
     }
 
     @Test
+    public void SetAccess() {
+        run("SetAccess");
+    }
+
+    @Test
     public void SetAdd() {
         run("SetAdd");
     }

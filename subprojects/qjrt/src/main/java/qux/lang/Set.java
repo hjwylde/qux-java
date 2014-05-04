@@ -1,6 +1,7 @@
 package qux.lang;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkElementIndex;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static qux.lang.Bool.FALSE;
 import static qux.lang.Bool.TRUE;
@@ -8,6 +9,7 @@ import static qux.lang.Bool.TRUE;
 import java.math.BigInteger;
 import java.util.Arrays;
 
+import qux.lang.op.Access;
 import qux.lang.op.Len;
 import qux.util.Iterable;
 import qux.util.Iterator;
@@ -18,7 +20,7 @@ import qux.util.Iterator;
  * @author Henry J. Wylde
  * @since TODO: SINCE
  */
-public final class Set extends Obj implements Len, Iterable {
+public final class Set extends Obj implements Len, Access, Iterable {
 
     private Obj[] data;
     private int count;
@@ -43,6 +45,14 @@ public final class Set extends Obj implements Len, Iterable {
         for (Obj datum : data) {
             add(datum);
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Obj _access_(Int index) {
+        return get(index);
     }
 
     public Set _add_(Set set) {
@@ -230,6 +240,23 @@ public final class Set extends Obj implements Len, Iterable {
         ensureCapacity();
 
         count = 0;
+    }
+
+    public Obj get(Int index) {
+        return get(index._value_());
+    }
+
+    public Obj get(int index) {
+        checkElementIndex(index, count,
+                "index out of bounds (index='" + index + "', size='" + count + "')");
+
+        return data[index];
+    }
+
+    public Obj get(BigInteger index) {
+        checkArgument(index.bitLength() < 32, "sets of size larger than 32 bits is unsupported");
+
+        return get(index.intValue());
     }
 
     public Bool isEmpty() {

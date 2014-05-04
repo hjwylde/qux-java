@@ -141,10 +141,16 @@ exprBinary : exprUnary ((BOP_MUL | BOP_DIV | BOP_REM) expr)*
            | exprUnary ((BOP_IMPLIES) expr)*
            ;
 
-exprUnary : UOP_NEG? exprTerm
-          | UOP_NOT? exprTerm
+exprUnary : UOP_NEG? exprAccess
+          | UOP_NOT? exprAccess
           | exprLength
           ;
+
+exprAccess : exprTerm ('[' expr ']')*
+           ;
+
+exprLength : UOP_LEN exprTerm UOP_LEN
+           ;
 
 exprTerm : exprBrace
          | exprBracket
@@ -153,9 +159,6 @@ exprTerm : exprBrace
          | exprVariable
          | value
          ;
-
-exprLength : UOP_LEN exprTerm UOP_LEN
-           ;
 
 exprBrace : '{' (expr (',' expr)*)? '}'
           ;
@@ -182,14 +185,18 @@ value : ValueKeyword
 
 // Types
 
-type : typeTerm
-     | typeList
+type : typeList
+     | typeSet
+     | typeTerm
      ;
 
-typeTerm : typeKeyword
+typeList : '[' type ']'
          ;
 
-typeList : '[' type ']'
+typeSet : '{' type '}'
+         ;
+
+typeTerm : typeKeyword
          ;
 
 typeKeyword : ANY

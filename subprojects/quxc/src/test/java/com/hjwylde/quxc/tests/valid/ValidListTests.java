@@ -17,6 +17,11 @@ public final class ValidListTests extends Harness {
     }
 
     @Test
+    public void ListAccess() {
+        run("ListAccess");
+    }
+
+    @Test
     public void ListAdd() {
         run("ListAdd");
     }

@@ -39,6 +39,8 @@ public abstract class Type {
     public static final String INT = "Z";
     public static final Type.Int TYPE_INT = new Type.Int();
 
+    public static final Type.List TYPE_LIST_ANY = Type.forList(TYPE_ANY);
+
     /**
      * String representation of the {@code int} type.
      */
@@ -50,6 +52,8 @@ public abstract class Type {
      */
     public static final String REAL = "R";
     public static final Type.Real TYPE_REAL = new Type.Real();
+
+    public static final Type.Set TYPE_SET_ANY = Type.forSet(TYPE_ANY);
 
     /**
      * String representation of the <code>str</code> type.

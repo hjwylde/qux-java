@@ -1,11 +1,12 @@
 package com.hjwylde.qux.pipelines;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.hjwylde.qux.util.Type.TYPE_ANY;
 import static com.hjwylde.qux.util.Type.TYPE_BOOL;
 import static com.hjwylde.qux.util.Type.TYPE_INT;
+import static com.hjwylde.qux.util.Type.TYPE_LIST_ANY;
 import static com.hjwylde.qux.util.Type.TYPE_NULL;
 import static com.hjwylde.qux.util.Type.TYPE_REAL;
+import static com.hjwylde.qux.util.Type.TYPE_SET_ANY;
 import static com.hjwylde.qux.util.Type.TYPE_STR;
 
 import com.hjwylde.common.error.CompilerErrors;
@@ -169,6 +170,30 @@ public final class TypeChecker extends Pipeline {
          * {@inheritDoc}
          */
         @Override
+        public void visitExprAccess(ExprNode.Access expr) {
+            visitExpr(expr.getTarget());
+            checkSubtype(expr.getTarget(), Type.forUnion(TYPE_LIST_ANY, TYPE_SET_ANY, TYPE_STR));
+
+            visitExpr(expr.getIndex());
+            checkSubtype(expr.getIndex(), TYPE_INT);
+
+            // TODO: Not quite right, when we introduce union types this is going to break
+            Type targetType = getType(expr.getTarget());
+            if (targetType instanceof Type.List) {
+                setType(expr, ((Type.List) targetType).getInnerType());
+            } else if (targetType instanceof Type.Set) {
+                setType(expr, ((Type.Set) targetType).getInnerType());
+            } else if (targetType instanceof Type.Str) {
+                setType(expr, TYPE_STR);
+            } else {
+                throw new MethodNotImplementedError(targetType.toString());
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
         public void visitExprBinary(ExprNode.Binary expr) {
             visitExpr(expr.getLhs());
             visitExpr(expr.getRhs());
@@ -263,7 +288,7 @@ public final class TypeChecker extends Pipeline {
             }
 
             if (types.isEmpty()) {
-                setType(expr, Type.forList(TYPE_ANY));
+                setType(expr, TYPE_LIST_ANY);
             } else {
                 setType(expr, Type.forList(Type.forUnion(types)));
             }
@@ -282,7 +307,7 @@ public final class TypeChecker extends Pipeline {
             }
 
             if (types.isEmpty()) {
-                setType(expr, Type.forSet(TYPE_ANY));
+                setType(expr, TYPE_SET_ANY);
             } else {
                 setType(expr, Type.forSet(Type.forUnion(types)));
             }
@@ -299,16 +324,18 @@ public final class TypeChecker extends Pipeline {
 
             switch (expr.getOp()) {
                 case LEN:
+                    checkSubtype(expr.getTarget(), Type.forUnion(TYPE_LIST_ANY, TYPE_SET_ANY,
+                            TYPE_STR));
+
                     // TODO: Not quite right, when we introduce union types this is going to break
                     if (targetType instanceof Type.List) {
-                        checkSubtype(expr.getTarget(), Type.forList(TYPE_ANY));
                         setType(expr, ((Type.List) targetType).getInnerType());
                     } else if (targetType instanceof Type.Set) {
-                        checkSubtype(expr.getTarget(), Type.forSet(TYPE_ANY));
                         setType(expr, ((Type.Set) targetType).getInnerType());
                     } else if (targetType instanceof Type.Str) {
-                        checkSubtype(expr.getTarget(), Type.forList(TYPE_ANY));
                         setType(expr, TYPE_STR);
+                    } else {
+                        throw new MethodNotImplementedError(targetType.toString());
                     }
 
                     break;

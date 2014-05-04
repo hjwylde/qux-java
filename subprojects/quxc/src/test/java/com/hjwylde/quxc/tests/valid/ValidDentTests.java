@@ -52,6 +52,16 @@ public final class ValidDentTests extends Harness {
     }
 
     @Test
+    public void DentComment8() {
+        run("DentComment8");
+    }
+
+    @Test
+    public void DentComment9() {
+        run("DentComment9");
+    }
+
+    @Test
     public void DentEof1() {
         run("DentEof1");
     }
