@@ -5,7 +5,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.hjwylde.common.error.BuildErrors;
 import com.hjwylde.qbs.builder.BuildResult;
 import com.hjwylde.qbs.builder.Builder;
-import com.hjwylde.qbs.builder.Context;
 
 import com.google.common.base.Stopwatch;
 
@@ -37,14 +36,14 @@ public final class Qux2ClassBuilder implements Builder {
 
     private static final Logger logger = LoggerFactory.getLogger(Qux2ClassBuilder.class);
 
-    private final Context context;
+    private final QuxContext context;
 
     /**
      * Creates a new {@code Qux2ClassBuilder} with the given context.
      *
      * @param context the context.
      */
-    public Qux2ClassBuilder(Context context) {
+    public Qux2ClassBuilder(QuxContext context) {
         this.context = checkNotNull(context, "context cannot be null");
     }
 
@@ -102,12 +101,10 @@ public final class Qux2ClassBuilder implements Builder {
     }
 
     private Long getTimeout() {
-        // TODO: Make a QuxContext to avoid the need for this constant casting
-        return ((QuxProject) context.getProject()).getOptions().getTimeout();
+        return context.getProject().getOptions().getTimeout();
     }
 
     private TimeUnit getTimeoutUnit() {
-        // TODO: Make a QuxContext to avoid the need for this constant casting
-        return ((QuxProject) context.getProject()).getOptions().getTimeoutUnit();
+        return context.getProject().getOptions().getTimeoutUnit();
     }
 }

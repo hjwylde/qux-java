@@ -22,7 +22,7 @@ import javax.annotation.Nullable;
  *
  * @author Henry J. Wylde
  */
-public final class Context {
+public class Context {
 
     private final Project project;
 
