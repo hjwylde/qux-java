@@ -1,5 +1,6 @@
 package qux.lang;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static qux.lang.Bool.FALSE;
 import static qux.lang.Bool.TRUE;
@@ -129,6 +130,21 @@ public final class Int extends Obj {
 
     public Int _neg_() {
         return valueOf(value.negate());
+    }
+
+    public List _range_(Int to) {
+        checkArgument(_lte_(to) == TRUE,
+                "this must be less than or equal to high (this=%s, high=%s)", this, to);
+
+        Int from = this;
+
+        List range = List.valueOf();
+        while (from._lt_(to) == TRUE) {
+            range.add(from);
+            from = from._add_(Int.ONE);
+        }
+
+        return range;
     }
 
     public Int _rem_(Int t) {

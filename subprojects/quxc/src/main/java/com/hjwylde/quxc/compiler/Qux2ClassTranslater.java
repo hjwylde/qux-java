@@ -377,6 +377,10 @@ public final class Qux2ClassTranslater extends QuxAdapter {
                     mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Or.class), "_or_",
                             getMethodDescriptor(Or.class, "_or_", Bool.class), true);
                     break;
+                case RANGE:
+                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(Int.class), "_range_",
+                            getMethodDescriptor(Int.class, "_range_", Int.class), false);
+                    break;
                 case REM:
                     mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(lhsClass), "_rem_",
                             getMethodDescriptor(lhsClass, "_rem_", rhsClass), false);

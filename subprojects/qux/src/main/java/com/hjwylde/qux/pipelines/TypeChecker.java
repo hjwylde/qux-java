@@ -214,6 +214,11 @@ public final class TypeChecker extends Pipeline {
                 case NEQ:
                     setType(expr, TYPE_BOOL);
                     break;
+                case RANGE:
+                    checkEquivalent(expr.getLhs(), TYPE_INT);
+                    checkEquivalent(expr.getRhs(), TYPE_INT);
+                    setType(expr, Type.forList(TYPE_INT));
+                    break;
                 case GT:
                 case GTE:
                 case LT:

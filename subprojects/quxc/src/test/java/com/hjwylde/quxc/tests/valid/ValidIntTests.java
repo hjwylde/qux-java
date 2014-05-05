@@ -67,6 +67,11 @@ public final class ValidIntTests extends Harness {
     }
 
     @Test
+    public void IntRange() {
+        run("IntRange");
+    }
+
+    @Test
     public void IntRem() {
         run("IntRem");
     }

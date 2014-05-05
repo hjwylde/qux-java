@@ -110,9 +110,9 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
      */
     @Override
     public ExprNode visitExprAccess(@NotNull QuxParser.ExprAccessContext ctx) {
-        Token start = ctx.exprTerm().getStart();
+        Token start = ctx.exprRange().getStart();
 
-        ExprNode target = visitExprTerm(ctx.exprTerm());
+        ExprNode target = visitExprRange(ctx.exprRange());
 
         if (ctx.expr().isEmpty()) {
             return target;
@@ -232,8 +232,8 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
      */
     @Override
     public ExprNode visitExprLength(@NotNull QuxParser.ExprLengthContext ctx) {
-        return new ExprNode.Unary(Op.Unary.LEN, visitExprAccess(ctx.exprAccess()),
-                generateAttributeSource(ctx));
+        return new ExprNode.Unary(Op.Unary.LEN, visitExpr(ctx.expr()), generateAttributeSource(
+                ctx));
     }
 
     /**
@@ -242,6 +242,22 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
     @Override
     public ExprNode visitExprParen(@NotNull QuxParser.ExprParenContext ctx) {
         return visitExpr(ctx.expr());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ExprNode visitExprRange(@NotNull QuxParser.ExprRangeContext ctx) {
+        ExprNode lhs = visitExprTerm(ctx.exprTerm(0));
+
+        if (ctx.exprTerm().size() == 1) {
+            return lhs;
+        }
+
+        ExprNode rhs = visitExprTerm(ctx.exprTerm(1));
+
+        return new ExprNode.Binary(Op.Binary.RANGE, lhs, rhs, generateAttributeSource(ctx));
     }
 
     /**
