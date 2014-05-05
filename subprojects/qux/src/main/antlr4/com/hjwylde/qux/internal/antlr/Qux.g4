@@ -150,11 +150,14 @@ exprUnary : UOP_NEG? exprAccess
           | exprLength
           ;
 
-exprAccess : exprTerm ('[' expr ']')*
+exprAccess : exprRange ('[' expr ']')*
            ;
 
-exprLength : UOP_LEN exprAccess UOP_LEN
+exprLength : UOP_LEN expr UOP_LEN
            ;
+
+exprRange : exprTerm ('..' exprTerm)?
+          ;
 
 exprTerm : exprBrace
          | exprBracket
@@ -319,6 +322,8 @@ BOP_IMPLIES : 'implies' ;
 
 BOP_IN : 'in' ;
 
+BOP_RANGE : '..' ;
+
 BOP_ADD : '+' ;
 BOP_SUB : '-' ;
 BOP_MUL : '*' ;
@@ -327,9 +332,9 @@ BOP_REM : '%' ;
 
 UOP_NOT : 'not' ;
 
-UOP_NEG: '-' ;
-
 UOP_LEN: '|' ;
+
+UOP_NEG: '-' ;
 
 // Identifier
 

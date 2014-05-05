@@ -2,6 +2,8 @@ package com.hjwylde.quxc.util;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.hjwylde.quxc.Quxc;
+
 import com.google.common.collect.ImmutableList;
 
 import org.slf4j.Logger;
@@ -30,12 +32,12 @@ public final class QuxcProperties {
 
     private static final Logger logger = LoggerFactory.getLogger(QuxcProperties.class);
 
-    private static final String PROP_CHARSET = "charset";
-    private static final String PROP_CLASSPATH = "classpath";
-    private static final String PROP_OUTDIR = "outdir";
-    private static final String PROP_TIMEOUT = "timeout";
-    private static final String PROP_TIMEOUT_UNIT = "timeoutUnit";
-    private static final String PROP_VERBOSE = "verbose";
+    private static final String PROP_CHARSET = Quxc.OPT_CHARSET;
+    private static final String PROP_CLASSPATH = Quxc.OPT_CLASSPATH;
+    private static final String PROP_OUTDIR = Quxc.OPT_OUTDIR;
+    private static final String PROP_TIMEOUT = Quxc.OPT_TIMEOUT;
+    private static final String PROP_TIMEOUT_UNIT = Quxc.OPT_TIMEOUT_UNIT;
+    private static final String PROP_VERBOSE = Quxc.OPT_VERBOSE;
 
     private static final ImmutableList<String> PROP_KEYS = ImmutableList.of(PROP_CHARSET,
             PROP_CLASSPATH, PROP_OUTDIR, PROP_TIMEOUT, PROP_TIMEOUT_UNIT, PROP_VERBOSE);

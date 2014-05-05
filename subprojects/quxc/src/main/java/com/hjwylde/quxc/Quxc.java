@@ -15,6 +15,7 @@ import com.hjwylde.quxc.compiler.QuxCompileSpec;
 import com.hjwylde.quxc.compiler.QuxCompilerFactory;
 import com.hjwylde.quxc.util.QuxcProperties;
 
+import com.google.common.base.CaseFormat;
 import com.google.common.base.Joiner;
 
 import org.apache.commons.cli.CommandLine;
@@ -34,6 +35,7 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Locale;
 
 /**
  * Class for the command line call of "quxc". Used for compiling qux source files into Java class
@@ -43,21 +45,18 @@ import java.nio.file.Paths;
  */
 public final class Quxc {
 
-    // TODO: Test the timeout, especially case sensitivity for the unit
-    // TODO: Test what happens when you input invalid data for the timeout and unit
+    public static final String OPT_CHARSET = "charset";
+    public static final String OPT_CLASSPATH = "classpath";
+    public static final String OPT_HELP = "help";
+    public static final String OPT_OUTDIR = "outdir";
+    public static final String OPT_PROPERTIES = "properties";
+    public static final String OPT_TIMEOUT = "timeout";
+    public static final String OPT_TIMEOUT_UNIT = "timeout-unit";
+    public static final String OPT_VERBOSE = "verbose";
+    public static final String OPT_VERSION = "version";
+    public static final String OPT_VERSION_CODE = "version-code";
 
     private static final Logger logger = LoggerFactory.getLogger(Quxc.class);
-
-    private static final String OPT_CHARSET = "charset";
-    private static final String OPT_CLASSPATH = "classpath";
-    private static final String OPT_HELP = "help";
-    private static final String OPT_OUTDIR = "outdir";
-    private static final String OPT_PROPERTIES = "properties";
-    private static final String OPT_TIMEOUT = "timeout";
-    private static final String OPT_TIMEOUT_UNIT = "timeoutUnit";
-    private static final String OPT_VERBOSE = "verbose";
-    private static final String OPT_VERSION = "version";
-    private static final String OPT_VERSION_CODE = "versionCode";
 
     private static final String OPT_PROPERTIES_DEFAULT = "quxc.properties";
 
@@ -251,8 +250,15 @@ public final class Quxc {
 
             System.exit(new Quxc(generateCompileSpec(cl)).run());
         } catch (ParseException e) {
-            // TODO: Change the first letter to lowercase
-            logger.error(e.getMessage() + "\n");
+            String message = e.getMessage();
+            if (message != null && !message.isEmpty()) {
+                message = message.substring(0, 1).toLowerCase(Locale.ENGLISH) + message.substring(
+                        1);
+            } else {
+                message = message == null ? null : message.toLowerCase(Locale.ENGLISH);
+            }
+
+            logger.error(message + "\n");
             printHelp();
 
             System.exit(ExitCode.FAIL);
@@ -277,7 +283,12 @@ public final class Quxc {
 
             System.exit(ExitCode.FAIL);
         } catch (IOException e) {
-            logger.error("{}: {}", e.getClass(), e.getMessage());
+            // TODO: Verify what this outputs
+            String thrown = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_HYPHEN,
+                    e.getClass().getSimpleName());
+            thrown = thrown.replace("-", " ");
+
+            logger.error("{}: {}", thrown, e.getMessage());
 
             System.exit(ExitCode.FAIL);
         }
