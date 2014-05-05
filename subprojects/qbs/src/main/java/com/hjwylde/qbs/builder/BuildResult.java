@@ -30,11 +30,22 @@ public final class BuildResult {
     }
 
     /**
+     * Creates a new fail build result with the given cause.
+     *
+     * @param cause the cause.
+     * @return a new fail build result.
+     */
+    public static BuildResult fail(Throwable cause) {
+        return new BuildResult(Code.FAIL, checkNotNull(cause, "cause cannot be null"));
+    }
+
+    /**
      * Gets the cause of this build result.
      *
      * @return the cause.
      */
-    public @Nullable Throwable getCause() {
+    @Nullable
+    public Throwable getCause() {
         return cause;
     }
 
@@ -49,12 +60,24 @@ public final class BuildResult {
 
     /**
      * Gets the error message of this build result. This method is equivalent to
-     * <code>getCause().getMessage()</code>.
+     * <code>getCause().getMessage()</code>, provided this build result is not a success. If this
+     * build result is a success, then the empty string is returned.
      *
      * @return the error message.
      */
-    public @Nullable String getMessage() {
+    @Nullable
+    public String getMessage() {
         return code == Code.SUCCESS ? "" : cause.getMessage();
+    }
+
+    /**
+     * Creates a new internal error build result with the given cause.
+     *
+     * @param cause the cause.
+     * @return a new internal error build result.
+     */
+    public static BuildResult internalError(Throwable cause) {
+        return new BuildResult(Code.INTERNAL_ERROR, checkNotNull(cause, "cause cannot be null"));
     }
 
     /**
@@ -88,6 +111,15 @@ public final class BuildResult {
     }
 
     /**
+     * Creates a new success build result.
+     *
+     * @return a new success build result.
+     */
+    public static BuildResult success() {
+        return new BuildResult(Code.SUCCESS, null);
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -98,35 +130,6 @@ public final class BuildResult {
         }
 
         return sb.toString();
-    }
-
-    /**
-     * Creates a new fail build result with the given cause.
-     *
-     * @param cause the cause.
-     * @return a new fail build result.
-     */
-    public static BuildResult fail(Throwable cause) {
-        return new BuildResult(Code.FAIL, checkNotNull(cause, "cause cannot be null"));
-    }
-
-    /**
-     * Creates a new internal error build result with the given cause.
-     *
-     * @param cause the cause.
-     * @return a new internal error build result.
-     */
-    public static BuildResult internalError(Throwable cause) {
-        return new BuildResult(Code.INTERNAL_ERROR, checkNotNull(cause, "cause cannot be null"));
-    }
-
-    /**
-     * Creates a new success build result.
-     *
-     * @return a new success build result.
-     */
-    public static BuildResult success() {
-        return new BuildResult(Code.SUCCESS, null);
     }
 
     /**

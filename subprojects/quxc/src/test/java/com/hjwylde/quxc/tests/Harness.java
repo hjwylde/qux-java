@@ -1,6 +1,5 @@
 package com.hjwylde.quxc.tests;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -12,7 +11,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
@@ -28,7 +26,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -99,33 +96,28 @@ public abstract class Harness {
         this.root = Paths.get("src/test/resources/").resolve(root).toAbsolutePath().normalize();
     }
 
-    protected void compile(final String id) throws IOException, ExecutionException {
+    protected final void compile(final String id) throws IOException, ExecutionException {
         String[] args =
                 new String[] {QUXC_EXECUTABLE, "-cp", QUXC_CLASSPATH, "-od", root.toString(),
                         getTestPath(id, QUX_EXT).toString()};
 
         ProcessBuilder pb = new ProcessBuilder(args);
-        FutureProcess quxc = new FutureProcess(pb.start());
+        final Process quxc = pb.start();
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.submit(quxc);
 
         try {
-            quxc.get(QUXC_TIMEOUT, TIMEOUT_UNIT);
+            executor.submit(new Callable<Integer>() {
+                @Override
+                public Integer call() throws InterruptedException {
+                    return quxc.waitFor();
+                }
+            }).get(QUXC_TIMEOUT, TIMEOUT_UNIT);
         } catch (InterruptedException e) {
             fail("qux compilation interrupted");
         } catch (TimeoutException e) {
             fail("qux compilation timed out after " + QUXC_TIMEOUT + " " + TIMEOUT_UNIT.toString()
                     .toLowerCase(Locale.ENGLISH));
-        } finally {
-            if (!quxc.isDone()) {
-                quxc.cancel(true);
-                quxc.destroy();
-            }
-        }
-
-        if (quxc.isCancelled()) {
-            fail("qux compilation cancelled");
         }
 
         List<String> output = new ArrayList<>();
@@ -139,32 +131,28 @@ public abstract class Harness {
         }
     }
 
-    protected List<String> execute(final String id) throws IOException, ExecutionException {
+    protected final List<String> execute(final String id) throws IOException, ExecutionException {
         String[] args = new String[] {JAVA_EXECUTABLE, "-cp", JAVA_CLASSPATH, getTestRelativePath(
                 id).toString()};
 
         ProcessBuilder pb = new ProcessBuilder(args);
         pb.directory(root.toFile());
-        FutureProcess java = new FutureProcess(pb.start());
+        final Process java = pb.start();
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.submit(java);
 
         try {
-            java.get(JAVA_TIMEOUT, TIMEOUT_UNIT);
+            executor.submit(new Callable<Integer>() {
+                @Override
+                public Integer call() throws InterruptedException {
+                    return java.waitFor();
+                }
+            }).get(JAVA_TIMEOUT, TIMEOUT_UNIT);
         } catch (InterruptedException e) {
             fail("java execution interrupted");
         } catch (TimeoutException e) {
             fail("java execution timed out after " + JAVA_TIMEOUT + " " + TIMEOUT_UNIT.toString()
                     .toLowerCase(Locale.ENGLISH));
-        } finally {
-            if (!java.isDone()) {
-                java.cancel(true);
-            }
-        }
-
-        if (java.isCancelled()) {
-            fail("java execution cancelled");
         }
 
         List<String> err = CharStreams.readLines(new InputStreamReader(java.getErrorStream(),
@@ -178,7 +166,7 @@ public abstract class Harness {
                 StandardCharsets.UTF_8));
     }
 
-    protected String getTestDirectory(String id) {
+    protected final String getTestDirectory(String id) {
         if (id.contains(".")) {
             return id.substring(0, id.lastIndexOf(".")).replace(".", File.separator);
         }
@@ -186,7 +174,7 @@ public abstract class Harness {
         return ".";
     }
 
-    protected String getTestName(String id) {
+    protected final String getTestName(String id) {
         if (id.contains(".")) {
             return id.substring(id.lastIndexOf(".") + 1);
         }
@@ -194,24 +182,24 @@ public abstract class Harness {
         return id;
     }
 
-    protected Path getTestPath(String id, String ext) {
+    protected final Path getTestPath(String id, String ext) {
         return root.resolve(getTestRelativePath(id, ext));
     }
 
-    protected Path getTestPath(String id) {
+    protected final Path getTestPath(String id) {
         return root.resolve(getTestRelativePath(id));
     }
 
-    protected Path getTestRelativePath(String id) {
+    protected final Path getTestRelativePath(String id) {
         return Paths.get(getTestDirectory(id) + File.separatorChar + getTestName(id)).normalize();
     }
 
-    protected Path getTestRelativePath(String id, String ext) {
+    protected final Path getTestRelativePath(String id, String ext) {
         return Paths.get(getTestDirectory(id) + File.separatorChar + getTestName(id) + "." + ext)
                 .normalize();
     }
 
-    protected void run(String id) {
+    protected final void run(String id) {
         try {
             compile(id);
             List<String> received = execute(id);
@@ -221,40 +209,6 @@ public abstract class Harness {
             assertEquals("mismatch in test output, ", expected, received);
         } catch (ExecutionException | IOException e) {
             throw new RuntimeException(e);
-        }
-    }
-
-    /**
-     * TODO: Documentation
-     *
-     * @author Henry J. Wylde
-     * @since 0.1.2
-     */
-    private static final class FutureProcess extends FutureTask<Integer> {
-
-        private final Process process;
-
-        public FutureProcess(final Process process) {
-            super(new Callable<Integer>() {
-                @Override
-                public Integer call() throws InterruptedException {
-                    return process.waitFor();
-                }
-            });
-
-            this.process = checkNotNull(process, "process cannot be null");
-        }
-
-        public void destroy() {
-            process.destroy();
-        }
-
-        public InputStream getErrorStream() {
-            return process.getErrorStream();
-        }
-
-        public InputStream getInputStream() {
-            return process.getInputStream();
         }
     }
 }

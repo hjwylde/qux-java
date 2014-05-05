@@ -88,23 +88,13 @@ public final class Types {
         return new Type.Function(normalise(type.getReturnType()), parameterTypes);
     }
 
-    public static Type.Set normalise(Type.Set type) {
-        // Create a new set using the constructor to avoid an infinite recursive call to normalise
-        return new Type.Set(normalise(type.getInnerType()));
-    }
-
-    public static Type.List normalise(Type.List type) {
-        // Create a new list using the constructor to avoid an infinite recursive call to normalise
-        return new Type.List(normalise(type.getInnerType()));
-    }
-
     public static Type normalise(Type type) {
         if (type instanceof Type.Function) {
             return normalise((Type.Function) type);
         } else if (type instanceof Type.List) {
-            return normalise((Type.List) type);
+            return Type.forList(((Type.List) type).getInnerType());
         } else if (type instanceof Type.Set) {
-            return normalise((Type.Set) type);
+            return Type.forSet(((Type.Set) type).getInnerType());
         } else if (type instanceof Type.Union) {
             return normalise((Type.Union) type);
         }

@@ -97,7 +97,7 @@ public final class Qux2ClassBuildJob extends BuildJob {
 
             logger.debug("{}: building finished in {}", source, stopwatch);
         } catch (IOException | InvocationTargetException | NoSuchMethodException | InstantiationException | IllegalAccessException e) {
-            throw new BuildError(e);
+            throw new BuildError(e.getMessage(), e);
         }
 
         return BuildResult.success();
@@ -147,6 +147,7 @@ public final class Qux2ClassBuildJob extends BuildJob {
 
         Stopwatch stopwatch = Stopwatch.createStarted();
 
+        // TODO: Make a QuxContext to avoid the need for this constant casting
         Charset charset = ((QuxProject) context.getProject()).getOptions().getCharset();
         new QuxReader(source, charset).accept(qv);
 
