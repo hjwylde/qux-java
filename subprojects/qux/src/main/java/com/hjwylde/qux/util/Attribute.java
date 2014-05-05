@@ -26,7 +26,7 @@ public interface Attribute {
         public Source(String source, int line, int col, int length) {
             checkArgument(line >= 1, "line cannot be less than 1");
             checkArgument(col >= 0, "col cannot be less than 0");
-            checkArgument(length >= 1, "length cannot be less than 1");
+            checkArgument(length >= 0, "length cannot be less than 0");
 
             this.source = checkNotNull(source, "source cannot be null");
 
@@ -45,7 +45,7 @@ public interface Attribute {
         }
 
         /**
-         * Gets the length of text this source attribute spans. Starts from {@code 1}.
+         * Gets the length of text this source attribute spans. Greater or equal to {@code 0}.
          *
          * @return the source length.
          */

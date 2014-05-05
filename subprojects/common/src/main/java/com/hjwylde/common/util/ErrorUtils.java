@@ -43,7 +43,7 @@ public final class ErrorUtils {
         if (t instanceof CompilerError) {
             return toString((CompilerError) t, source);
         } else if (t instanceof BuildError) {
-            return toString((BuildError) t, source);
+            return t.getMessage();
         }
 
         return t.toString();

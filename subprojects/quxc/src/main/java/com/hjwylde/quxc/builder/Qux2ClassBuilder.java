@@ -2,9 +2,9 @@ package com.hjwylde.quxc.builder;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.hjwylde.common.error.BuildErrors;
 import com.hjwylde.qbs.builder.BuildResult;
 import com.hjwylde.qbs.builder.Builder;
-import com.hjwylde.qbs.builder.Context;
 
 import com.google.common.base.Stopwatch;
 
@@ -22,6 +22,8 @@ import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * TODO: Documentation
@@ -34,13 +36,14 @@ public final class Qux2ClassBuilder implements Builder {
 
     private static final Logger logger = LoggerFactory.getLogger(Qux2ClassBuilder.class);
 
-    private final Context context;
+    private final QuxContext context;
 
     /**
      * Creates a new {@code Qux2ClassBuilder} with the given context.
+     *
      * @param context the context.
      */
-    public Qux2ClassBuilder(Context context) {
+    public Qux2ClassBuilder(QuxContext context) {
         this.context = checkNotNull(context, "context cannot be null");
     }
 
@@ -75,9 +78,15 @@ public final class Qux2ClassBuilder implements Builder {
         for (Map.Entry<Path, Future<BuildResult>> job : jobs.entrySet()) {
             BuildResult result = null;
             try {
-                result = job.getValue().get();
+                if (getTimeout() > 0) {
+                    result = job.getValue().get(getTimeout(), getTimeoutUnit());
+                } else {
+                    result = job.getValue().get();
+                }
             } catch (InterruptedException | ExecutionException | CancellationException e) {
                 result = BuildResult.internalError(e);
+            } catch (TimeoutException e) {
+                result = BuildResult.fail(BuildErrors.buildTimeout(getTimeout(), getTimeoutUnit()));
             }
             results.put(job.getKey(), result);
 
@@ -89,5 +98,13 @@ public final class Qux2ClassBuilder implements Builder {
         logger.info("build finished in {}", stopwatch);
 
         return results;
+    }
+
+    private Long getTimeout() {
+        return context.getProject().getOptions().getTimeout();
+    }
+
+    private TimeUnit getTimeoutUnit() {
+        return context.getProject().getOptions().getTimeoutUnit();
     }
 }

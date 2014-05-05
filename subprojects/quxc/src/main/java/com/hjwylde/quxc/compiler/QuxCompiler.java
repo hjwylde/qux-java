@@ -2,9 +2,9 @@ package com.hjwylde.quxc.compiler;
 
 import com.hjwylde.common.util.LoggerUtils;
 import com.hjwylde.qbs.builder.BuildResult;
-import com.hjwylde.qbs.builder.Context;
 import com.hjwylde.qbs.compiler.Compiler;
 import com.hjwylde.quxc.builder.Qux2ClassBuilder;
+import com.hjwylde.quxc.builder.QuxContext;
 import com.hjwylde.quxc.builder.QuxProject;
 
 import org.slf4j.Logger;
@@ -33,8 +33,7 @@ public final class QuxCompiler implements Compiler<QuxCompileSpec> {
         setLogLevel(spec.getOptions().isVerbose());
 
         QuxProject project = QuxProject.builder(spec).build();
-        // TODO: Make a QuxContext so we don't need to always cast for the QuxProject
-        Context context = new Context(project);
+        QuxContext context = new QuxContext(project);
         Qux2ClassBuilder builder = new Qux2ClassBuilder(context);
 
         Map<Path, BuildResult> results = builder.build(spec.getSource());
@@ -63,6 +62,7 @@ public final class QuxCompiler implements Compiler<QuxCompileSpec> {
     private static void setLogLevel(boolean verbose) {
         // TODO: Implement a solution for verbose mode
         // One idea is to have different loggers and to change which one is being used based on the verbose mode
+        // Another idea is to use markers, have a marker that turns verbose mode on
         if (verbose) {
             logger.warn("verbose mode is not currently supported");
         }

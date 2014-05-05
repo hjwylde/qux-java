@@ -1,6 +1,5 @@
 package com.hjwylde.quxc.util;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.collect.ImmutableList;
@@ -34,10 +33,12 @@ public final class QuxcProperties {
     private static final String PROP_CHARSET = "charset";
     private static final String PROP_CLASSPATH = "classpath";
     private static final String PROP_OUTDIR = "outdir";
+    private static final String PROP_TIMEOUT = "timeout";
+    private static final String PROP_TIMEOUT_UNIT = "timeoutUnit";
     private static final String PROP_VERBOSE = "verbose";
 
     private static final ImmutableList<String> PROP_KEYS = ImmutableList.of(PROP_CHARSET,
-            PROP_CLASSPATH, PROP_OUTDIR, PROP_VERBOSE);
+            PROP_CLASSPATH, PROP_OUTDIR, PROP_TIMEOUT, PROP_TIMEOUT_UNIT, PROP_VERBOSE);
 
     private final Properties properties;
 
@@ -51,14 +52,6 @@ public final class QuxcProperties {
      */
     private QuxcProperties(Properties properties) {
         this.properties = (Properties) properties.clone();
-
-        // Check that all the properties are contained and non-null
-        for (String property : PROP_KEYS) {
-            checkArgument(properties.containsKey(property), "properties must contain '%s'",
-                    property);
-            checkNotNull(properties.getProperty(property),
-                    "properties cannot contain null for key '%s'", property);
-        }
 
         // Check for any extraneous properties and warn the user
         for (Object property : properties.keySet()) {
@@ -78,31 +71,12 @@ public final class QuxcProperties {
     }
 
     /**
-     * Sets the character set name property. The value should be a valid character set name.
-     *
-     * @param charset the character set.
-     */
-    public void setCharset(String charset) {
-        properties.setProperty(PROP_CHARSET, checkNotNull(charset, "charset cannot be null"));
-    }
-
-    /**
      * Gets the classpath property.
      *
      * @return the classpath.
      */
     public String getClasspath() {
         return properties.getProperty(PROP_CLASSPATH);
-    }
-
-    /**
-     * Sets the classpath property. The value should be a list of valid paths, separated by the
-     * system path separator character.
-     *
-     * @param classpath the classpath.
-     */
-    public void setClasspath(String classpath) {
-        properties.setProperty(PROP_CLASSPATH, checkNotNull(classpath, "classpath cannot be null"));
     }
 
     /**
@@ -115,12 +89,21 @@ public final class QuxcProperties {
     }
 
     /**
-     * Sets the output directory property. The value should be a valid single path.
+     * Gets the timeout property.
      *
-     * @param outdir the output directory.
+     * @return the timeout.
      */
-    public void setOutdir(String outdir) {
-        properties.setProperty(PROP_OUTDIR, checkNotNull(outdir, "outdir cannot be null"));
+    public String getTimeout() {
+        return properties.getProperty(PROP_TIMEOUT);
+    }
+
+    /**
+     * Gets the timeout unit property.
+     *
+     * @return the timeout unit.
+     */
+    public String getTimeoutUnit() {
+        return properties.getProperty(PROP_TIMEOUT_UNIT);
     }
 
     /**
@@ -130,15 +113,6 @@ public final class QuxcProperties {
      */
     public String getVerbose() {
         return properties.getProperty(PROP_VERBOSE);
-    }
-
-    /**
-     * Sets the verbose property. The value should a {@code boolean}.
-     *
-     * @param verbose the verbose property.
-     */
-    public void setVerbose(String verbose) {
-        properties.setProperty(PROP_VERBOSE, checkNotNull(verbose, "verbose cannot be null"));
     }
 
     /**
@@ -179,6 +153,63 @@ public final class QuxcProperties {
     }
 
     /**
+     * Sets the character set name property. The value should be a valid character set name.
+     *
+     * @param charset the character set.
+     */
+    public void setCharset(String charset) {
+        properties.setProperty(PROP_CHARSET, checkNotNull(charset, "charset cannot be null"));
+    }
+
+    /**
+     * Sets the classpath property. The value should be a list of valid paths, separated by the
+     * system path separator character.
+     *
+     * @param classpath the classpath.
+     */
+    public void setClasspath(String classpath) {
+        properties.setProperty(PROP_CLASSPATH, checkNotNull(classpath, "classpath cannot be null"));
+    }
+
+    /**
+     * Sets the output directory property. The value should be a valid single path.
+     *
+     * @param outdir the output directory.
+     */
+    public void setOutdir(String outdir) {
+        properties.setProperty(PROP_OUTDIR, checkNotNull(outdir, "outdir cannot be null"));
+    }
+
+    /**
+     * Sets the timeout property. The value should be a valid long value.
+     *
+     * @param timeout the timeout.
+     */
+    public void setTimeout(String timeout) {
+        properties.setProperty(PROP_TIMEOUT, checkNotNull(timeout, "timeout cannot be null"));
+    }
+
+    /**
+     * Sets the timeout unit property. The value should be a valid {@link
+     * java.util.concurrent.TimeUnit}.
+     *
+     * @param timeoutUnit the timeout unit.
+     */
+    public void setTimeoutUnit(String timeoutUnit) {
+        properties.setProperty(PROP_TIMEOUT_UNIT, checkNotNull(timeoutUnit,
+                "timeoutUnit cannot be null"));
+    }
+
+    /**
+     * Sets the verbose property. The value should a {@code boolean}.
+     *
+     * @param verbose the verbose property.
+     */
+    public void setVerbose(String verbose) {
+        properties.setProperty(PROP_VERBOSE, checkNotNull(verbose, "verbose cannot be null"));
+    }
+
+    /**
      * Generates the default properties.
      *
      * @return the default properties.
@@ -189,6 +220,8 @@ public final class QuxcProperties {
         properties.put(PROP_CLASSPATH, "");
         properties.put(PROP_CHARSET, StandardCharsets.UTF_8.name());
         properties.put(PROP_OUTDIR, ".");
+        properties.put(PROP_TIMEOUT, "10");
+        properties.put(PROP_TIMEOUT_UNIT, "seconds");
         properties.put(PROP_VERBOSE, "false");
 
         return properties;

@@ -22,7 +22,7 @@ import javax.annotation.Nullable;
  *
  * @author Henry J. Wylde
  */
-public final class Context {
+public class Context {
 
     private final Project project;
 
@@ -60,6 +60,9 @@ public final class Context {
      */
     @Override
     public boolean equals(@Nullable Object obj) {
+        if (this == obj) {
+            return true;
+        }
         if (!(obj instanceof Context)) {
             return false;
         }
