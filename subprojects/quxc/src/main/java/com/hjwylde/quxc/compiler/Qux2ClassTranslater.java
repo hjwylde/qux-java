@@ -338,12 +338,12 @@ public final class Qux2ClassTranslater extends QuxAdapter {
                             getMethodDescriptor(Eq.class, "_eq_", Obj.class), true);
                     break;
                 case GT:
-                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(lhsClass), "_gt_",
-                            getMethodDescriptor(lhsClass, "_gt_", rhsClass), false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(Obj.class), "_gt_",
+                            getMethodDescriptor(Obj.class, "_gt_", Obj.class), false);
                     break;
                 case GTE:
-                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(lhsClass), "_gte_",
-                            getMethodDescriptor(lhsClass, "_gte_", rhsClass), false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(Obj.class), "_gte_",
+                            getMethodDescriptor(Obj.class, "_gte_", Obj.class), false);
                     break;
                 case IFF:
                     mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Iff.class), "_iff_",
@@ -360,12 +360,12 @@ public final class Qux2ClassTranslater extends QuxAdapter {
                             getMethodDescriptor(lhsClass, "_contains_", rhsClass), false);
                     break;
                 case LT:
-                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(lhsClass), "_lt_",
-                            getMethodDescriptor(lhsClass, "_lt_", rhsClass), false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(Obj.class), "_lt_",
+                            getMethodDescriptor(Obj.class, "_lt_", Obj.class), false);
                     break;
                 case LTE:
-                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(lhsClass), "_lte_",
-                            getMethodDescriptor(lhsClass, "_lte_", rhsClass), false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(Obj.class), "_lte_",
+                            getMethodDescriptor(Obj.class, "_lte_", Obj.class), false);
                     break;
                 case MUL:
                     mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(lhsClass), "_mul_",

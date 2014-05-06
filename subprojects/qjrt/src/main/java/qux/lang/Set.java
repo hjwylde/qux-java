@@ -86,7 +86,7 @@ public final class Set extends Obj implements Access, Iterable, Len, Slice {
         Set that = (Set) obj;
 
         Int comp = _len_()._comp_(that._len_());
-        if (comp._eq_(Int.ZERO) == FALSE) {
+        if (!comp.equals(Int.ZERO)) {
             return comp;
         }
 
@@ -146,7 +146,7 @@ public final class Set extends Obj implements Access, Iterable, Len, Slice {
 
         Set that = (Set) obj;
 
-        if (_len_()._eq_(that._len_()) == FALSE) {
+        if (!_len_().equals(that._len_())) {
             return FALSE;
         }
 
@@ -254,7 +254,7 @@ public final class Set extends Obj implements Access, Iterable, Len, Slice {
             return Meta.forSet(Meta.META_ANY);
         }
 
-        if (types._len_()._eq_(Int.ONE) == TRUE) {
+        if (types._len_().equals(Int.ONE)) {
             return Meta.forSet((Meta) types.data[0]);
         }
 

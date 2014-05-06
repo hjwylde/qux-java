@@ -95,14 +95,6 @@ public final class Str extends Obj implements Access, Assign, Len, Slice {
         return value.equals(((Str) obj).value) ? TRUE : FALSE;
     }
 
-    public Bool _gt_(Str t) {
-        return value.compareTo(t.value) > 0 ? TRUE : FALSE;
-    }
-
-    public Bool _gte_(Str t) {
-        return value.compareTo(t.value) >= 0 ? TRUE : FALSE;
-    }
-
     /**
      * {@inheritDoc}
      */
@@ -119,18 +111,10 @@ public final class Str extends Obj implements Access, Assign, Len, Slice {
         return Int.valueOf(value.length());
     }
 
-    public Bool _lt_(Str t) {
-        return value.compareTo(t.value) < 0 ? TRUE : FALSE;
-    }
-
-    public Bool _lte_(Str t) {
-        return value.compareTo(t.value) <= 0 ? TRUE : FALSE;
-    }
-
     public synchronized Str _mul_(Int value) {
         checkArgument(value._gte_(Int.ZERO) == TRUE, "cannot multiply a str by negative value");
 
-        if (value._eq_(Int.ZERO) == TRUE) {
+        if (value.equals(Int.ZERO)) {
             return valueOf("");
         }
 

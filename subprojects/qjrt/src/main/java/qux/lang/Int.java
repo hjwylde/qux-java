@@ -73,7 +73,7 @@ public final class Int extends Obj {
     }
 
     public Int _div_(Int t) {
-        if (t.value.equals(BigInteger.ZERO)) {
+        if (t.equals(Int.ZERO)) {
             throw new InternalError("attempted division by zero");
         }
 
@@ -100,12 +100,28 @@ public final class Int extends Obj {
         return value.equals(((Int) obj).value) ? TRUE : FALSE;
     }
 
-    public Bool _gt_(Int t) {
-        return value.compareTo(t.value) > 0 ? TRUE : FALSE;
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Bool _gt_(Obj t) {
+        if (!(t instanceof Int)) {
+            return super._gt_(t);
+        }
+
+        return value.compareTo(((Int) t).value) > 0 ? TRUE : FALSE;
     }
 
-    public Bool _gte_(Int t) {
-        return value.compareTo(t.value) >= 0 ? TRUE : FALSE;
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Bool _gte_(Obj t) {
+        if (!(t instanceof Int)) {
+            return super._gt_(t);
+        }
+
+        return value.compareTo(((Int) t).value) >= 0 ? TRUE : FALSE;
     }
 
     /**
@@ -116,12 +132,28 @@ public final class Int extends Obj {
         return valueOf(value.hashCode());
     }
 
-    public Bool _lt_(Int t) {
-        return value.compareTo(t.value) < 0 ? TRUE : FALSE;
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Bool _lt_(Obj t) {
+        if (!(t instanceof Int)) {
+            return super._gt_(t);
+        }
+
+        return value.compareTo(((Int) t).value) < 0 ? TRUE : FALSE;
     }
 
-    public Bool _lte_(Int t) {
-        return value.compareTo(t.value) <= 0 ? TRUE : FALSE;
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Bool _lte_(Obj t) {
+        if (!(t instanceof Int)) {
+            return super._gt_(t);
+        }
+
+        return value.compareTo(((Int) t).value) <= 0 ? TRUE : FALSE;
     }
 
     public Int _mul_(Int t) {
@@ -157,6 +189,15 @@ public final class Int extends Obj {
 
     public BigInteger _value_() {
         return value;
+    }
+
+    public Int gcd(Int t) {
+        // TODO: Add in tests for this
+        if (t.equals(ZERO)) {
+            return this;
+        }
+
+        return t.gcd(this._rem_(t));
     }
 
     /**
