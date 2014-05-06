@@ -321,6 +321,27 @@ public final class TypeChecker extends Pipeline {
          * {@inheritDoc}
          */
         @Override
+        public void visitExprSlice(ExprNode.Slice expr) {
+            visitExpr(expr.getTarget());
+            checkSubtype(expr.getTarget(), Type.forUnion(TYPE_LIST_ANY, TYPE_SET_ANY, TYPE_STR));
+
+            if (expr.getFrom().isPresent()) {
+                visitExpr(expr.getFrom().get());
+                checkSubtype(expr.getFrom().get(), TYPE_INT);
+            }
+
+            if (expr.getTo().isPresent()) {
+                visitExpr(expr.getTo().get());
+                checkSubtype(expr.getTo().get(), TYPE_INT);
+            }
+
+            setType(expr, getType(expr.getTarget()));
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
         public void visitExprUnary(ExprNode.Unary expr) {
             visitExpr(expr.getTarget());
 

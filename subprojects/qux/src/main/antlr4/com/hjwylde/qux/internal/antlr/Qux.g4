@@ -129,35 +129,55 @@ stmtPrint : 'print' expr NL
 stmtReturn : 'return' expr? NL
            ;
 
-block : ':' NL INDENT stmt* DEDENT ;
+block : ':' NL INDENT stmt* DEDENT
+      ;
 
 // Expressions
 
 // TODO: Could push a mode that skips NL, INDENT and DEDENT tokens, then pop it at the end
 expr : exprBinary ;
 
-exprBinary : exprUnary ((BOP_MUL | BOP_DIV | BOP_REM) expr)*
-           | exprUnary ((BOP_ADD | BOP_SUB) expr)*
-           | exprUnary ((BOP_LT | BOP_LTE | BOP_GT | BOP_GTE) expr)*
-           | exprUnary ((BOP_EQ | BOP_NEQ) expr)*
-           | exprUnary ((BOP_AND | BOP_OR) expr)*
-           | exprUnary ((BOP_XOR | BOP_IFF) expr)*
-           | exprUnary ((BOP_IMPLIES) expr)*
+exprBinary : exprRange ((BOP_MUL | BOP_DIV | BOP_REM) expr)*
+           | exprRange ((BOP_ADD | BOP_SUB) expr)*
+           | exprRange ((BOP_LT | BOP_LTE | BOP_GT | BOP_GTE) expr)*
+           | exprRange ((BOP_EQ | BOP_NEQ) expr)*
+           | exprRange ((BOP_AND | BOP_OR) expr)*
+           | exprRange ((BOP_XOR | BOP_IFF) expr)*
+           | exprRange ((BOP_IMPLIES) expr)*
            ;
+
+exprRange : exprUnary (BOP_RANGE exprUnary)?
+          ;
 
 exprUnary : UOP_NEG? exprAccess
           | UOP_NOT? exprAccess
-          | exprLength
+          | UOP_LEN exprAccess UOP_LEN
           ;
 
-exprAccess : exprRange ('[' expr ']')*
+exprAccess : exprTerm exprAccess_1*
            ;
 
-exprLength : UOP_LEN expr UOP_LEN
-           ;
+exprAccess_1 : exprAccess_1_1
+             | exprAccess_1_2
+             | exprAccess_1_3
+             | exprAccess_1_4
+             | exprAccess_1_5
+             ;
 
-exprRange : exprTerm ('..' exprTerm)?
-          ;
+exprAccess_1_1 : '[' expr ']'
+               ;
+
+exprAccess_1_2 : '[' expr ':' expr ']'
+               ;
+
+exprAccess_1_3 : '[' expr ':' ']'
+               ;
+
+exprAccess_1_4 : '[' ':' expr ']'
+               ;
+
+exprAccess_1_5 : '[' ':' ']'
+               ;
 
 exprTerm : exprBrace
          | exprBracket

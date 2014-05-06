@@ -47,6 +47,11 @@ public final class ValidSetTests extends Harness {
     }
 
     @Test
+    public void SetSlice() {
+        run("SetSlice");
+    }
+
+    @Test
     public void SetSub() {
         run("SetSub");
     }

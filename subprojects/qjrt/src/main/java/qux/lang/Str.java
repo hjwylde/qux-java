@@ -3,6 +3,7 @@ package qux.lang;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkElementIndex;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkPositionIndex;
 import static qux.lang.Bool.FALSE;
 import static qux.lang.Bool.TRUE;
 import static qux.lang.Meta.META_STR;
@@ -14,13 +15,14 @@ import java.math.BigInteger;
 import qux.lang.op.Access;
 import qux.lang.op.Assign;
 import qux.lang.op.Len;
+import qux.lang.op.Slice;
 
 /**
  * TODO: Documentation
  *
  * @author Henry J. Wylde
  */
-public final class Str extends Obj implements Len, Access, Assign {
+public final class Str extends Obj implements Access, Assign, Len, Slice {
 
     private String value;
 
@@ -146,6 +148,14 @@ public final class Str extends Obj implements Len, Access, Assign {
         return ret;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Str _slice_(Int from, Int to) {
+        return substring(from, to);
+    }
+
     public Str _sub_(Str str) {
         if (value.endsWith(str.value)) {
             return valueOf(value.substring(0, value.length() - str.value.length()));
@@ -159,8 +169,7 @@ public final class Str extends Obj implements Len, Access, Assign {
     }
 
     public Str get(int index) {
-        checkElementIndex(index, value.length(),
-                "index out of bounds (index='" + index + "', length='" + value.length() + "')");
+        checkElementIndex(index, value.length());
 
         return valueOf(value.charAt(index));
     }
@@ -184,9 +193,7 @@ public final class Str extends Obj implements Len, Access, Assign {
     }
 
     public synchronized void set(int index, Obj value) {
-        checkElementIndex(index, this.value.length(),
-                "index out of bounds (index='" + index + "', length='" + this.value.length() + "')"
-        );
+        checkElementIndex(index, this.value.length());
 
         this.value = this.value.substring(0, index) + value.toString() + this.value.substring(
                 index + 1);
@@ -196,6 +203,26 @@ public final class Str extends Obj implements Len, Access, Assign {
         checkArgument(index.bitLength() < 32, "lists of size larger than 32 bits is unsupported");
 
         set(index.intValue(), value);
+    }
+
+    public Str substring(Int from, Int to) {
+        return substring(from._value_(), to._value_());
+    }
+
+    public Str substring(int from, int to) {
+        checkElementIndex(from, value.length(), "from index out of bounds");
+        checkPositionIndex(to, value.length(), "to index out of bounds");
+        checkArgument(from <= to, "from must be less than or equal to to (from=%s, to=%s)", from,
+                to);
+
+        return valueOf(value.substring(from, to));
+    }
+
+    public Str substring(BigInteger from, BigInteger to) {
+        checkArgument(from.bitLength() < 32, "strings of size larger than 32 bits is unsupported");
+        checkArgument(to.bitLength() < 32, "strings of size larger than 32 bits is unsupported");
+
+        return substring(from.intValue(), to.intValue());
     }
 
     /**

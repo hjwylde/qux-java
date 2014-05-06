@@ -67,6 +67,11 @@ public final class ValidStrTests extends Harness {
     }
 
     @Test
+    public void StrSlice() {
+        run("StrSlice");
+    }
+
+    @Test
     public void StrSub() {
         run("StrSub");
     }

@@ -22,6 +22,8 @@ public interface ExprVisitor {
 
     void visitExprSet(ExprNode.Set expr);
 
+    void visitExprSlice(ExprNode.Slice expr);
+
     void visitExprUnary(ExprNode.Unary expr);
 
     void visitExprVariable(ExprNode.Variable expr);

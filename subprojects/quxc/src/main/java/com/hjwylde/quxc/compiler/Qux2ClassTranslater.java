@@ -47,6 +47,7 @@ import com.hjwylde.qux.tree.Node;
 import com.hjwylde.qux.tree.StmtNode;
 import com.hjwylde.qux.util.Attribute;
 import com.hjwylde.qux.util.Attributes;
+import com.hjwylde.qux.util.Op;
 
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Label;
@@ -80,6 +81,7 @@ import qux.lang.op.Len;
 import qux.lang.op.Neq;
 import qux.lang.op.Not;
 import qux.lang.op.Or;
+import qux.lang.op.Slice;
 import qux.lang.op.Xor;
 import qux.util.Iterable;
 import qux.util.Iterator;
@@ -301,6 +303,7 @@ public final class Qux2ClassTranslater extends QuxAdapter {
 
             mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Access.class), "_access_",
                     getMethodDescriptor(Access.class, "_access_", Int.class), true);
+            visitCheckcast(expr);
         }
 
         /**
@@ -527,6 +530,29 @@ public final class Qux2ClassTranslater extends QuxAdapter {
 
             mv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(Set.class), "valueOf",
                     getMethodDescriptor(Set.class, "valueOf", Obj[].class), false);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void visitExprSlice(ExprNode.Slice expr) {
+            visitExpr(expr.getTarget());
+            if (expr.getFrom().isPresent()) {
+                visitExpr(expr.getFrom().get());
+            } else {
+                visitExprConstant(new ExprNode.Constant(ExprNode.Constant.Type.INT,
+                        BigInteger.ZERO));
+            }
+            if (expr.getTo().isPresent()) {
+                visitExpr(expr.getTo().get());
+            } else {
+                visitExprUnary(new ExprNode.Unary(Op.Unary.LEN, expr.getTarget()));
+            }
+
+            mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Slice.class), "_slice_",
+                    getMethodDescriptor(Slice.class, "_slice_", Int.class, Int.class), true);
+            visitCheckcast(expr);
         }
 
         /**

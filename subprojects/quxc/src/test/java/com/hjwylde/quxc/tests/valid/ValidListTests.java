@@ -57,6 +57,11 @@ public final class ValidListTests extends Harness {
     }
 
     @Test
+    public void ListSlice() {
+        run("ListSlice");
+    }
+
+    @Test
     public void ListSub() {
         run("ListSub");
     }
