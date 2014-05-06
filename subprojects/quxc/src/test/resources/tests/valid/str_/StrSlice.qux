@@ -1,0 +1,19 @@
+str f(str foo):
+    return foo[1:]
+
+void main([str] args):
+    foo = 'bar'
+    bar = f(foo)
+
+    print foo[1:]
+    print bar
+    print bar[1:2]
+    foo[0] = 'z'
+    print foo
+    print bar
+    foo = foo[:]
+    foo[0] = 'q'
+    print foo
+    print bar
+    print 'bazzle'[:3]
+

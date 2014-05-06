@@ -1,0 +1,21 @@
+void main([str] args):
+    foo = {0..3, 3..6, 6..9}
+    bar = foo[1:]
+
+    print foo
+    print bar
+    print bar[1:2]
+
+    foo[1][0] = -1
+
+    print foo
+    print bar
+
+    foo[2] = foo[2][:]
+    foo[2][0] = -2
+
+    print foo
+    print bar
+
+    print foo[:1]
+

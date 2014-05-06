@@ -7,10 +7,13 @@ import com.hjwylde.qux.api.ExprVisitor;
 import com.hjwylde.qux.util.Attribute;
 import com.hjwylde.qux.util.Op;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 import java.util.Arrays;
 import java.util.Collection;
+
+import javax.annotation.Nullable;
 
 /**
  * TODO: Documentation
@@ -269,6 +272,53 @@ public abstract class ExprNode extends Node {
 
         public ImmutableList<ExprNode> getValues() {
             return values;
+        }
+    }
+
+    /**
+     * TODO: Documentation
+     *
+     * @author Henry J. Wylde
+     * @since TODO: SINCE
+     */
+    public static final class Slice extends ExprNode {
+
+        private final ExprNode target;
+        private final Optional<ExprNode> from;
+        private final Optional<ExprNode> to;
+
+        public Slice(ExprNode target, @Nullable ExprNode from, @Nullable ExprNode to,
+                Attribute... attributes) {
+            this(target, from, to, Arrays.asList(attributes));
+        }
+
+        public Slice(ExprNode target, @Nullable ExprNode from, @Nullable ExprNode to,
+                Collection<? extends Attribute> attributes) {
+            super(attributes);
+
+            this.target = checkNotNull(target, "target cannot be null");
+            this.from = Optional.fromNullable(from);
+            this.to = Optional.fromNullable(to);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void accept(ExprVisitor ev) {
+            ev.visitExprSlice(this);
+        }
+
+        public Optional<ExprNode> getFrom() {
+            return from;
+        }
+
+        public ExprNode getTarget() {
+            return target;
+        }
+
+        public Optional<ExprNode> getTo() {
+            return to;
         }
     }
 

@@ -3,6 +3,7 @@ package qux.lang;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkElementIndex;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkPositionIndex;
 import static qux.lang.Bool.FALSE;
 import static qux.lang.Bool.TRUE;
 
@@ -12,6 +13,7 @@ import java.util.Arrays;
 import qux.lang.op.Access;
 import qux.lang.op.Assign;
 import qux.lang.op.Len;
+import qux.lang.op.Slice;
 import qux.util.Iterable;
 import qux.util.Iterator;
 
@@ -20,7 +22,7 @@ import qux.util.Iterator;
  *
  * @author Henry J. Wylde
  */
-public final class List extends Obj implements Len, Access, Assign, Iterable {
+public final class List extends Obj implements Access, Assign, Iterable, Len, Slice {
 
     private Obj[] data;
     private int count;
@@ -243,6 +245,14 @@ public final class List extends Obj implements Len, Access, Assign, Iterable {
         return mul;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List _slice_(Int from, Int to) {
+        return sublist(from, to);
+    }
+
     public List _sub_(List list) {
         List difference = new List(this);
 
@@ -251,56 +261,6 @@ public final class List extends Obj implements Len, Access, Assign, Iterable {
         }
 
         return difference;
-    }
-
-    public synchronized void add(Obj obj) {
-        checkRefs();
-
-        ensureCapacity();
-
-        data[count++] = checkNotNull(obj, "obj cannot be null");
-    }
-
-    public synchronized void clear() {
-        checkRefs();
-
-        ensureCapacity();
-
-        count = 0;
-    }
-
-    public Obj get(Int index) {
-        return get(index._value_());
-    }
-
-    public synchronized Obj get(int index) {
-        checkElementIndex(index, count,
-                "index out of bounds (index='" + index + "', size='" + count + "')");
-
-        return data[index];
-    }
-
-    public Obj get(BigInteger index) {
-        checkArgument(index.bitLength() < 32, "lists of size larger than 32 bits is unsupported");
-
-        return get(index.intValue());
-    }
-
-    public int indexOf(Obj obj) {
-        int index = 0;
-        for (Iterator it = _iter_(); it.hasNext() == TRUE; ) {
-            if (it.next().equals(obj)) {
-                return index;
-            }
-
-            index++;
-        }
-
-        return -index;
-    }
-
-    public Bool isEmpty() {
-        return count == 0 ? TRUE : FALSE;
     }
 
     /**
@@ -325,7 +285,52 @@ public final class List extends Obj implements Len, Access, Assign, Iterable {
         return Meta.forSet(Meta.forUnion(types));
     }
 
-    public synchronized void remove(Obj obj) {
+    public static List valueOf(Obj... data) {
+        return new List(data);
+    }
+
+    synchronized void add(Obj obj) {
+        checkRefs();
+
+        ensureCapacity();
+
+        data[count++] = checkNotNull(obj, "obj cannot be null");
+    }
+
+    Obj get(Int index) {
+        return get(index._value_());
+    }
+
+    synchronized Obj get(int index) {
+        checkElementIndex(index, count);
+
+        return data[index];
+    }
+
+    Obj get(BigInteger index) {
+        checkArgument(index.bitLength() < 32, "lists of size larger than 32 bits is unsupported");
+
+        return get(index.intValue());
+    }
+
+    int indexOf(Obj obj) {
+        int index = 0;
+        for (Iterator it = _iter_(); it.hasNext() == TRUE; ) {
+            if (it.next().equals(obj)) {
+                return index;
+            }
+
+            index++;
+        }
+
+        return -index;
+    }
+
+    Bool isEmpty() {
+        return count == 0 ? TRUE : FALSE;
+    }
+
+    synchronized void remove(Obj obj) {
         checkRefs();
 
         int index = indexOf(obj);
@@ -339,27 +344,42 @@ public final class List extends Obj implements Len, Access, Assign, Iterable {
         count--;
     }
 
-    public void set(Int index, Obj value) {
+    void set(Int index, Obj value) {
         set(index._value_(), value);
     }
 
-    public synchronized void set(int index, Obj value) {
-        checkElementIndex(index, count,
-                "index out of bounds (index='" + index + "', size='" + count + "')");
+    synchronized void set(int index, Obj value) {
+        checkElementIndex(index, count);
 
         checkRefs();
 
         data[index] = checkNotNull(value, "value cannot be null");
     }
 
-    public void set(BigInteger index, Obj value) {
+    void set(BigInteger index, Obj value) {
         checkArgument(index.bitLength() < 32, "lists of size larger than 32 bits is unsupported");
 
         set(index.intValue(), value);
     }
 
-    public static List valueOf(Obj... data) {
-        return new List(data);
+    List sublist(Int from, Int to) {
+        return sublist(from._value_(), to._value_());
+    }
+
+    synchronized List sublist(int from, int to) {
+        checkElementIndex(from, count, "from index out of bounds");
+        checkPositionIndex(to, count, "to index out of bounds");
+        checkArgument(from <= to, "from must be less than or equal to to (from=%s, to=%s)", from,
+                to);
+
+        return valueOf(Arrays.copyOfRange(data, from, to));
+    }
+
+    List sublist(BigInteger from, BigInteger to) {
+        checkArgument(from.bitLength() < 32, "lists of size larger than 32 bits is unsupported");
+        checkArgument(to.bitLength() < 32, "lists of size larger than 32 bits is unsupported");
+
+        return sublist(from.intValue(), to.intValue());
     }
 
     private synchronized void checkRefs() {

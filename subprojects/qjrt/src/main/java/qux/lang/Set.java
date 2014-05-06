@@ -3,6 +3,7 @@ package qux.lang;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkElementIndex;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkPositionIndex;
 import static qux.lang.Bool.FALSE;
 import static qux.lang.Bool.TRUE;
 
@@ -11,6 +12,7 @@ import java.util.Arrays;
 
 import qux.lang.op.Access;
 import qux.lang.op.Len;
+import qux.lang.op.Slice;
 import qux.util.Iterable;
 import qux.util.Iterator;
 
@@ -20,7 +22,7 @@ import qux.util.Iterator;
  * @author Henry J. Wylde
  * @since TODO: SINCE
  */
-public final class Set extends Obj implements Len, Access, Iterable {
+public final class Set extends Obj implements Access, Iterable, Len, Slice {
 
     private Obj[] data;
     private int count;
@@ -216,6 +218,14 @@ public final class Set extends Obj implements Len, Access, Iterable {
         return Int.valueOf(count);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Set _slice_(Int from, Int to) {
+        return subset(from, to);
+    }
+
     public Set _sub_(Set set) {
         Set difference = new Set(this);
 
@@ -224,56 +234,6 @@ public final class Set extends Obj implements Len, Access, Iterable {
         }
 
         return difference;
-    }
-
-    public synchronized void add(Obj obj) {
-        checkNotNull(obj, "obj cannot be null");
-
-        checkRefs();
-
-        ensureCapacity();
-
-        int index = indexOf(obj);
-
-        if (index >= 0) {
-            return;
-        }
-
-        index = -index - 1;
-
-        System.arraycopy(data, index, data, index + 1, count - index);
-
-        data[index] = obj;
-        count++;
-    }
-
-    public synchronized void clear() {
-        checkRefs();
-
-        ensureCapacity();
-
-        count = 0;
-    }
-
-    public Obj get(Int index) {
-        return get(index._value_());
-    }
-
-    public synchronized Obj get(int index) {
-        checkElementIndex(index, count,
-                "index out of bounds (index='" + index + "', size='" + count + "')");
-
-        return data[index];
-    }
-
-    public Obj get(BigInteger index) {
-        checkArgument(index.bitLength() < 32, "sets of size larger than 32 bits is unsupported");
-
-        return get(index.intValue());
-    }
-
-    public Bool isEmpty() {
-        return count == 0 ? TRUE : FALSE;
     }
 
     /**
@@ -301,7 +261,52 @@ public final class Set extends Obj implements Len, Access, Iterable {
         return Meta.forSet(Meta.forUnion(types));
     }
 
-    public synchronized void remove(Obj obj) {
+    public static Set valueOf(Obj... data) {
+        return new Set(data);
+    }
+
+    synchronized void add(Obj obj) {
+        checkNotNull(obj, "obj cannot be null");
+
+        checkRefs();
+
+        ensureCapacity();
+
+        int index = indexOf(obj);
+
+        if (index >= 0) {
+            return;
+        }
+
+        index = -index - 1;
+
+        System.arraycopy(data, index, data, index + 1, count - index);
+
+        data[index] = obj;
+        count++;
+    }
+
+    Obj get(Int index) {
+        return get(index._value_());
+    }
+
+    synchronized Obj get(int index) {
+        checkElementIndex(index, count);
+
+        return data[index];
+    }
+
+    Obj get(BigInteger index) {
+        checkArgument(index.bitLength() < 32, "sets of size larger than 32 bits is unsupported");
+
+        return get(index.intValue());
+    }
+
+    Bool isEmpty() {
+        return count == 0 ? TRUE : FALSE;
+    }
+
+    synchronized void remove(Obj obj) {
         checkNotNull(obj, "obj cannot be null");
 
         checkRefs();
@@ -317,8 +322,24 @@ public final class Set extends Obj implements Len, Access, Iterable {
         count--;
     }
 
-    public static Set valueOf(Obj... data) {
-        return new Set(data);
+    Set subset(Int from, Int to) {
+        return subset(from._value_(), to._value_());
+    }
+
+    synchronized Set subset(int from, int to) {
+        checkElementIndex(from, count, "from index out of bounds");
+        checkPositionIndex(to, count, "to index out of bounds");
+        checkArgument(from <= to, "from must be less than or equal to to (from=%s, to=%s)", from,
+                to);
+
+        return valueOf(Arrays.copyOfRange(data, from, to));
+    }
+
+    Set subset(BigInteger from, BigInteger to) {
+        checkArgument(from.bitLength() < 32, "lists of size larger than 32 bits is unsupported");
+        checkArgument(to.bitLength() < 32, "lists of size larger than 32 bits is unsupported");
+
+        return subset(from.intValue(), to.intValue());
     }
 
     private synchronized void checkRefs() {
