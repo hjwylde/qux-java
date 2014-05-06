@@ -1,13 +1,9 @@
 package qux.lang;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkArgument;
 import static qux.lang.Bool.FALSE;
 import static qux.lang.Bool.TRUE;
 import static qux.lang.Meta.META_REAL;
-
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -21,24 +17,46 @@ import qux.errors.InternalError;
  */
 public final class Real extends Obj {
 
-    private static final LoadingCache<BigDecimal, Real> cache =
-            CacheBuilder.<BigInteger, Real>newBuilder().weakKeys().build(
-                    new CacheLoader<BigDecimal, Real>() {
+    // TODO: Add this back in once tuples are implemented
+    /*private static final LoadingCache<Tuple, Real> cache =
+            CacheBuilder.<Tuple, Real>newBuilder().weakKeys().build(
+                    new CacheLoader<Tuple, Real>() {
                         @Override
-                        public Real load(BigDecimal key) throws Exception {
+                        public Real load(Tuple key) throws Exception {
                             return new Real(key);
                         }
                     }
-            );
+            );*/
 
-    private final BigDecimal value;
+    private final Int num;
+    private final Int den;
 
-    private Real(BigDecimal value) {
-        this.value = checkNotNull(value, "value cannot be null");
+    private Real(Int num, Int den) {
+        if (num.equals(Int.ZERO)) {
+            den = Int.ONE;
+        }
+        checkArgument(!den.equals(Int.ZERO), "den cannot be 0");
+
+        // Normalise the values
+        Int gcd = num.gcd(den);
+        num = num._div_(gcd);
+        den = den._div_(gcd);
+
+        // Normalise the signs
+        if (den._lt_(Int.ZERO) == TRUE) {
+            num = num._neg_();
+            den = den._neg_();
+        }
+
+        this.num = num;
+        this.den = den;
     }
 
     public Real _add_(Real t) {
-        return valueOf(value.add(t.value));
+        Int a = num._mul_(t.den)._add_(den._mul_(t.num));
+        Int b = den._mul_(t.den);
+
+        return valueOf(a, b);
     }
 
     /**
@@ -50,7 +68,12 @@ public final class Real extends Obj {
             return meta()._comp_(obj.meta());
         }
 
-        return Int.valueOf(value.compareTo(((Real) obj).value));
+        Real that = (Real) obj;
+
+        Int a = num._mul_(that.den);
+        Int b = den._mul_(that.num);
+
+        return a._comp_(b);
     }
 
     /**
@@ -58,15 +81,18 @@ public final class Real extends Obj {
      */
     @Override
     public Str _desc_() {
-        return Str.valueOf(value.toString());
+        return Str.valueOf(num + "/" + den);
     }
 
     public Real _div_(Real t) {
-        if (t.value.equals(BigDecimal.ZERO)) {
+        if (t.den.equals(Int.ZERO)) {
             throw new InternalError("attempted division by zero");
         }
 
-        return valueOf(value.divide(t.value));
+        Int a = num._mul_(t.den);
+        Int b = den._mul_(t.num);
+
+        return valueOf(a, b);
     }
 
     /**
@@ -86,15 +112,9 @@ public final class Real extends Obj {
             return FALSE;
         }
 
-        return value.equals(((Real) obj).value) ? TRUE : FALSE;
-    }
+        Real that = (Real) obj;
 
-    public Bool _gt_(Real t) {
-        return value.compareTo(t.value) > 0 ? TRUE : FALSE;
-    }
-
-    public Bool _gte_(Real t) {
-        return value.compareTo(t.value) >= 0 ? TRUE : FALSE;
+        return num.equals(that.num) && den.equals(that.den) ? TRUE : FALSE;
     }
 
     /**
@@ -102,27 +122,29 @@ public final class Real extends Obj {
      */
     @Override
     public Int _hash_() {
-        return Int.valueOf(value.hashCode());
-    }
-
-    public Bool _lt_(Real t) {
-        return value.compareTo(t.value) < 0 ? TRUE : FALSE;
-    }
-
-    public Bool _lte_(Real t) {
-        return value.compareTo(t.value) <= 0 ? TRUE : FALSE;
+        return num._hash_()._mul_(den._hash_());
     }
 
     public Real _mul_(Real t) {
-        return valueOf(value.multiply(t.value));
+        Int a = num._mul_(t.num);
+        Int b = den._mul_(t.den);
+
+        return valueOf(a, b);
     }
 
     public Real _neg_() {
-        return valueOf(value.negate());
+        return valueOf(num._neg_(), den);
     }
 
     public Real _sub_(Real t) {
-        return valueOf(value.subtract(t.value));
+        Int a = num._mul_(t.den)._sub_(den._mul_(t.num));
+        Int b = den._mul_(t.den);
+
+        return valueOf(a, b);
+    }
+
+    public Int den() {
+        return den;
     }
 
     /**
@@ -133,11 +155,47 @@ public final class Real extends Obj {
         return META_REAL;
     }
 
+    public Int num() {
+        return num;
+    }
+
+    public static Real valueOf(Int num, Int den) {
+        return new Real(num, den);
+    }
+
+    public static Real valueOf(BigInteger num, BigInteger den) {
+        return valueOf(Int.valueOf(num), Int.valueOf(den));
+    }
+
+    public static Real valueOf(short value) {
+        return valueOf(Int.valueOf(value), Int.ONE);
+    }
+
+    public static Real valueOf(byte value) {
+        return valueOf(Int.valueOf(value), Int.ONE);
+    }
+
+    public static Real valueOf(int value) {
+        return valueOf(Int.valueOf(value), Int.ONE);
+    }
+
+    public static Real valueOf(long value) {
+        return valueOf(Int.valueOf(value), Int.ONE);
+    }
+
+    public static Real valueOf(byte[] bytes) {
+        return valueOf(Int.valueOf(bytes), Int.ONE);
+    }
+
+    public static Real valueOf(BigInteger value) {
+        return valueOf(Int.valueOf(value), Int.ONE);
+    }
+
     public static Real valueOf(String value) {
         return valueOf(new BigDecimal(value));
     }
 
     public static Real valueOf(BigDecimal value) {
-        return cache.getUnchecked(value);
+        return valueOf(value.unscaledValue(), BigInteger.TEN.pow(value.scale()));
     }
 }

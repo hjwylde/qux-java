@@ -95,7 +95,7 @@ public final class List extends Obj implements Access, Assign, Iterable, Len, Sl
         List that = (List) obj;
 
         Int comp = _len_()._comp_(that._len_());
-        if (comp._eq_(Int.ZERO) == FALSE) {
+        if (!comp.equals(Int.ZERO)) {
             return comp;
         }
 
@@ -104,7 +104,7 @@ public final class List extends Obj implements Access, Assign, Iterable, Len, Sl
 
         while (thisIt.hasNext() == TRUE) {
             comp = thisIt.next()._comp_(thatIt.next());
-            if (comp._eq_(Int.ZERO) == FALSE) {
+            if (!comp.equals(Int.ZERO)) {
                 return comp;
             }
         }
@@ -155,7 +155,7 @@ public final class List extends Obj implements Access, Assign, Iterable, Len, Sl
 
         List that = (List) obj;
 
-        if (_len_()._eq_(that._len_()) == FALSE) {
+        if (!_len_().equals(that._len_())) {
             return FALSE;
         }
 
@@ -163,7 +163,7 @@ public final class List extends Obj implements Access, Assign, Iterable, Len, Sl
         Iterator thatIt = that._iter_();
 
         while (thisIt.hasNext() == TRUE) {
-            if (thisIt.next()._eq_(thatIt.next()) == FALSE) {
+            if (!thisIt.next().equals(thatIt.next())) {
                 return FALSE;
             }
         }
@@ -232,7 +232,7 @@ public final class List extends Obj implements Access, Assign, Iterable, Len, Sl
 
         List mul = new List();
 
-        if (value._eq_(Int.ZERO) == TRUE) {
+        if (value.equals(Int.ZERO)) {
             return mul;
         }
 
@@ -278,7 +278,7 @@ public final class List extends Obj implements Access, Assign, Iterable, Len, Sl
             return Meta.forSet(Meta.META_ANY);
         }
 
-        if (types._len_()._eq_(Int.ONE) == TRUE) {
+        if (types._len_().equals(Int.ONE)) {
             return Meta.forSet((Meta) types._iter_().next());
         }
 

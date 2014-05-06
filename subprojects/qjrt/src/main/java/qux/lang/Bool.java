@@ -48,7 +48,7 @@ public final class Bool extends Obj implements And, Or, Xor, Iff, Implies, Not {
             return Int.ZERO;
         }
 
-        return this == TRUE ? Int.M_ONE : Int.ONE;
+        return this == TRUE ? Int.ONE : Int.M_ONE;
     }
 
     /**
@@ -79,14 +79,6 @@ public final class Bool extends Obj implements And, Or, Xor, Iff, Implies, Not {
         return this == obj ? TRUE : FALSE;
     }
 
-    public Bool _gt_(Bool t) {
-        return (this == TRUE && t == FALSE) ? TRUE : FALSE;
-    }
-
-    public Bool _gte_(Bool t) {
-        return (this == TRUE || t == FALSE) ? TRUE : FALSE;
-    }
-
     /**
      * {@inheritDoc}
      */
@@ -100,14 +92,6 @@ public final class Bool extends Obj implements And, Or, Xor, Iff, Implies, Not {
      */
     @Override
     public Bool _implies_(Bool t) {
-        return (this == FALSE || t == TRUE) ? TRUE : FALSE;
-    }
-
-    public Bool _lt_(Bool t) {
-        return (this == FALSE && t == TRUE) ? TRUE : FALSE;
-    }
-
-    public Bool _lte_(Bool t) {
         return (this == FALSE || t == TRUE) ? TRUE : FALSE;
     }
 

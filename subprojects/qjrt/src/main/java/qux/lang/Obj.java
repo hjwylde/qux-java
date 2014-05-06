@@ -37,12 +37,28 @@ public abstract class Obj implements Desc, Dup, Eq, Neq, Hash, Comp {
         return (obj != null && getClass() == obj.getClass()) ? TRUE : FALSE;
     }
 
+    public Bool _gt_(Obj t) {
+        return _comp_(t)._gt_(Int.ZERO);
+    }
+
+    public Bool _gte_(Obj t) {
+        return _comp_(t)._gte_(Int.ZERO);
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
     public Int _hash_() {
         return Int.valueOf(hashCode());
+    }
+
+    public Bool _lt_(Obj t) {
+        return _comp_(t)._lt_(Int.ZERO);
+    }
+
+    public Bool _lte_(Obj t) {
+        return _comp_(t)._lte_(Int.ZERO);
     }
 
     /**
