@@ -82,4 +82,10 @@ final class NullFunctionVisitor implements FunctionVisitor {
      */
     @Override
     public void visitStmtReturn(StmtNode.Return stmt) {}
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void visitStmtWhile(StmtNode.While stmt) {}
 }

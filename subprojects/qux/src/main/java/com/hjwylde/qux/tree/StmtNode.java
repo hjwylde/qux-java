@@ -357,4 +357,44 @@ public abstract class StmtNode extends Node {
             return expr;
         }
     }
+
+    /**
+     * TODO: Documentation.
+     *
+     * @author Henry J. Wylde
+     * @since TODO: SINCE
+     */
+    public static final class While extends StmtNode {
+
+        private final ExprNode expr;
+        private final ImmutableList<StmtNode> body;
+
+        public While(ExprNode expr, List<StmtNode> body, Attribute... attributes) {
+            this(expr, body, Arrays.asList(attributes));
+        }
+
+        public While(ExprNode expr, List<StmtNode> body,
+                Collection<? extends Attribute> attributes) {
+            super(attributes);
+
+            this.expr = checkNotNull(expr, "expr cannot be null");
+            this.body = ImmutableList.copyOf(body);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void accept(StmtVisitor sv) {
+            sv.visitStmtWhile(this);
+        }
+
+        public ImmutableList<StmtNode> getBody() {
+            return body;
+        }
+
+        public ExprNode getExpr() {
+            return expr;
+        }
+    }
 }

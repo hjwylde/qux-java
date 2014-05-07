@@ -41,7 +41,7 @@ import java.util.Set;
  *
  * @author Henry J. Wylde
  */
-public final class TypeChecker extends Pipeline {
+public final class TypeChecker extends Pipeline implements QuxVisitor {
 
     private final ImmutableMap<String, Type> functions;
 
@@ -51,19 +51,24 @@ public final class TypeChecker extends Pipeline {
         functions = initialiseFunctions(node);
     }
 
-    public TypeChecker(QuxVisitor next, QuxNode node) {
-        super(next, node);
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void visit(int version, String name) {}
 
-        functions = initialiseFunctions(node);
-    }
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void visitEnd() {}
 
     /**
      * {@inheritDoc}
      */
     @Override
     public FunctionVisitor visitFunction(int flags, String name, Type.Function type) {
-        FunctionVisitor fv = super.visitFunction(flags, name, type);
-
+        FunctionVisitor fv = FunctionVisitor.NULL_INSTANCE;
         FunctionTypeChecker fvc = new FunctionTypeChecker(fv);
 
         return fvc;
@@ -351,18 +356,7 @@ public final class TypeChecker extends Pipeline {
                 case LEN:
                     checkSubtype(expr.getTarget(), Type.forUnion(TYPE_LIST_ANY, TYPE_SET_ANY,
                             TYPE_STR));
-
-                    // TODO: Not quite right, when we introduce union types this is going to break
-                    if (targetType instanceof Type.List) {
-                        setType(expr, ((Type.List) targetType).getInnerType());
-                    } else if (targetType instanceof Type.Set) {
-                        setType(expr, ((Type.Set) targetType).getInnerType());
-                    } else if (targetType instanceof Type.Str) {
-                        setType(expr, TYPE_STR);
-                    } else {
-                        throw new MethodNotImplementedError(targetType.toString());
-                    }
-
+                    setType(expr, TYPE_INT);
                     break;
                 case NEG:
                     setType(expr, targetType);
@@ -526,6 +520,25 @@ public final class TypeChecker extends Pipeline {
             }
 
             super.visitStmtReturn(stmt);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void visitStmtWhile(StmtNode.While stmt) {
+            visitExpr(stmt.getExpr());
+            checkSubtype(stmt.getExpr(), TYPE_BOOL);
+
+            env = env.push();
+
+            visitBlock(stmt.getBody());
+
+            Environment<String, Type> whileEnv = env.pop();
+
+            env.putAll(mergeEnvironments(env, whileEnv));
+
+            super.visitStmtWhile(stmt);
         }
 
         private void checkEquivalent(ExprNode expr, Type expected) {

@@ -118,4 +118,12 @@ public abstract class FunctionAdapter implements FunctionVisitor {
     public void visitStmtReturn(StmtNode.Return stmt) {
         next.visitStmtReturn(stmt);
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void visitStmtWhile(StmtNode.While stmt) {
+        next.visitStmtWhile(stmt);
+    }
 }

@@ -27,4 +27,6 @@ public interface StmtVisitor {
     void visitStmtPrint(StmtNode.Print stmt);
 
     void visitStmtReturn(StmtNode.Return stmt);
+
+    void visitStmtWhile(StmtNode.While stmt);
 }

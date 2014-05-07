@@ -194,8 +194,8 @@ public final class Str extends Obj implements Access, Assign, Len, Slice {
     }
 
     public Str substring(int from, int to) {
-        checkElementIndex(from, value.length(), "from index out of bounds");
-        checkPositionIndex(to, value.length(), "to index out of bounds");
+        checkPositionIndex(from, value.length(), "from");
+        checkPositionIndex(to, value.length(), "to");
         checkArgument(from <= to, "from must be less than or equal to to (from=%s, to=%s)", from,
                 to);
 

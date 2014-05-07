@@ -83,9 +83,7 @@ public final class Qux2ClassBuildJob extends BuildJob {
 
             // Apply the pipelines
             for (Class<? extends Pipeline> clazz : pipelines) {
-                Pipeline pipeline = clazz.getConstructor(QuxNode.class).newInstance(node);
-
-                apply(pipeline, node);
+                apply(clazz, node);
             }
 
             // Translate the file to the java bytecode format
@@ -102,12 +100,16 @@ public final class Qux2ClassBuildJob extends BuildJob {
         return BuildResult.success();
     }
 
-    private void apply(QuxVisitor pipeline, QuxNode node) {
-        logger.debug("{}: applying pipeline '{}'", source, pipeline.getClass().getName());
+    private void apply(Class<? extends Pipeline> clazz, QuxNode node)
+            throws NoSuchMethodException, IllegalAccessException, InvocationTargetException,
+            InstantiationException {
+        logger.debug("{}: applying pipeline '{}'", source, clazz.getName());
 
         Stopwatch stopwatch = Stopwatch.createStarted();
 
-        node.accept(pipeline);
+        Pipeline pipeline = clazz.getConstructor(QuxNode.class).newInstance(node);
+
+        pipeline.apply();
 
         stopwatch.stop();
 

@@ -49,6 +49,8 @@ import com.hjwylde.qux.util.Attribute;
 import com.hjwylde.qux.util.Attributes;
 import com.hjwylde.qux.util.Op;
 
+import com.google.common.base.Optional;
+
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
@@ -475,7 +477,7 @@ public final class Qux2ClassTranslater extends QuxAdapter {
             Type returnType = getType(expr);
             java.util.List<Type> argumentTypes = new ArrayList<>();
 
-            for (int i = expr.getArguments().size() - 1; i >= 0; i--) {
+            for (int i = 0; i < expr.getArguments().size(); i++) {
                 visitExpr(expr.getArguments().get(i));
 
                 Type argumentType = getType(expr.getArguments().get(i));
@@ -485,7 +487,7 @@ public final class Qux2ClassTranslater extends QuxAdapter {
                         getMethodDescriptor(Qux2ClassTranslater.getClass(argumentType), "_dup_"),
                         false);
 
-                argumentTypes.add(0, argumentType);
+                argumentTypes.add(argumentType);
             }
 
             Type type = Type.getMethodType(returnType, argumentTypes.toArray(new Type[0]));
@@ -541,13 +543,12 @@ public final class Qux2ClassTranslater extends QuxAdapter {
             if (expr.getFrom().isPresent()) {
                 visitExpr(expr.getFrom().get());
             } else {
-                visitExprConstant(new ExprNode.Constant(ExprNode.Constant.Type.INT,
-                        BigInteger.ZERO));
+                visitExpr(new ExprNode.Constant(ExprNode.Constant.Type.INT, BigInteger.ZERO));
             }
             if (expr.getTo().isPresent()) {
                 visitExpr(expr.getTo().get());
             } else {
-                visitExprUnary(new ExprNode.Unary(Op.Unary.LEN, expr.getTarget()));
+                visitExpr(new ExprNode.Unary(Op.Unary.LEN, expr.getTarget()));
             }
 
             mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Slice.class), "_slice_",
@@ -625,7 +626,7 @@ public final class Qux2ClassTranslater extends QuxAdapter {
             visitExpr(stmt.getExpr());
 
             mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Assign.class), "_assign_",
-                    getMethodDescriptor(Assign.class, "_assign_", Int.class, Obj.class));
+                    getMethodDescriptor(Assign.class, "_assign_", Int.class, Obj.class), true);
         }
 
         /**
@@ -786,6 +787,28 @@ public final class Qux2ClassTranslater extends QuxAdapter {
             } else {
                 mv.visitInsn(RETURN);
             }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void visitStmtWhile(StmtNode.While stmt) {
+            Label startLabel = new Label();
+            Label endLabel = new Label();
+
+            mv.visitLabel(startLabel);
+
+            visitExpr(stmt.getExpr());
+
+            mv.visitFieldInsn(GETSTATIC, Type.getInternalName(Bool.class), "TRUE",
+                    Type.getDescriptor(Bool.class));
+            mv.visitJumpInsn(IF_ACMPNE, endLabel);
+
+            visitBlock(stmt.getBody());
+
+            mv.visitJumpInsn(GOTO, startLabel);
+            mv.visitLabel(endLabel);
         }
 
         private String generateVariable() {

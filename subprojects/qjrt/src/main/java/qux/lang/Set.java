@@ -327,8 +327,8 @@ public final class Set extends Obj implements Access, Iterable, Len, Slice {
     }
 
     synchronized Set subset(int from, int to) {
-        checkElementIndex(from, count, "from index out of bounds");
-        checkPositionIndex(to, count, "to index out of bounds");
+        checkPositionIndex(from, count, "from");
+        checkPositionIndex(to, count, "to");
         checkArgument(from <= to, "from must be less than or equal to to (from=%s, to=%s)", from,
                 to);
 

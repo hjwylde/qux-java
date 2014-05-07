@@ -180,4 +180,16 @@ public class CheckFunctionAdapter extends FunctionAdapter {
 
         super.visitStmtReturn(stmt);
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void visitStmtWhile(StmtNode.While stmt) {
+        checkState(visitedCode, "must call visitCode() before visitStmtWhile(StmtNode.While)");
+        checkState(!visitedEnd, "must call visitStmtWhile(StmtNode.While) before visitEnd()");
+        checkNotNull(stmt, "stmt cannot be null");
+
+        super.visitStmtWhile(stmt);
+    }
 }

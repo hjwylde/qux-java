@@ -30,4 +30,14 @@ public final class ValidFunctionTests extends Harness {
     public void Gcd() {
         run("Gcd");
     }
+
+    @Test
+    public void MergeSort() {
+        run("MergeSort");
+    }
+
+    @Test
+    public void QuickSort() {
+        run("QuickSort");
+    }
 }

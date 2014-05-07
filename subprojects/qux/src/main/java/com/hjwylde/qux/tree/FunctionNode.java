@@ -14,7 +14,7 @@ import com.google.common.collect.ImmutableMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -29,7 +29,7 @@ public final class FunctionNode extends Node implements FunctionVisitor {
     private final String name;
     private final Type.Function type;
 
-    private Map<String, Type> parameters = new HashMap<>();
+    private Map<String, Type> parameters = new LinkedHashMap<>();
     private Type returnType;
 
     private List<StmtNode> stmts = new ArrayList<>();
@@ -183,6 +183,14 @@ public final class FunctionNode extends Node implements FunctionVisitor {
      */
     @Override
     public void visitStmtReturn(StmtNode.Return stmt) {
+        stmts.add(stmt);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void visitStmtWhile(StmtNode.While stmt) {
         stmts.add(stmt);
     }
 }
