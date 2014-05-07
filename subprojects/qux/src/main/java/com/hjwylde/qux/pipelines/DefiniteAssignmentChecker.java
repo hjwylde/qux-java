@@ -23,15 +23,23 @@ import java.util.List;
  *
  * @author Henry J. Wylde
  */
-public final class DefiniteAssignmentChecker extends Pipeline {
+public final class DefiniteAssignmentChecker extends Pipeline implements QuxVisitor {
 
     public DefiniteAssignmentChecker(QuxNode node) {
         super(node);
     }
 
-    public DefiniteAssignmentChecker(QuxVisitor next, QuxNode node) {
-        super(next, node);
-    }
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void visit(int version, String name) {}
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void visitEnd() {}
 
     /**
      * {@inheritDoc}
@@ -39,8 +47,7 @@ public final class DefiniteAssignmentChecker extends Pipeline {
     @Override
     public FunctionVisitor visitFunction(int flags, String name, Type.Function type) {
         // TODO: Check if a function is declared twice
-        FunctionVisitor fv = super.visitFunction(flags, name, type);
-
+        FunctionVisitor fv = FunctionVisitor.NULL_INSTANCE;
         FunctionDefiniteAssignmentChecker fvc = new FunctionDefiniteAssignmentChecker(fv);
 
         return fvc;
@@ -271,7 +278,7 @@ public final class DefiniteAssignmentChecker extends Pipeline {
 
             super.visitStmtIf(stmt);
 
-            // TODO: Implement visitStmtIf(ExprNode, ImmutableList<StmtNode>, ImmutableList<StmtNode>)
+            // TODO: Implement visitStmtIf(StmtNode.If)
             throw new MethodNotImplementedError();
         }
 
@@ -295,6 +302,20 @@ public final class DefiniteAssignmentChecker extends Pipeline {
             }
 
             super.visitStmtReturn(stmt);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void visitStmtWhile(StmtNode.While stmt) {
+            visitExpr(stmt.getExpr());
+            visitBlock(stmt.getBody());
+
+            super.visitStmtWhile(stmt);
+
+            // TODO: Implement visitStmtWhile(StmtNode.While)
+            throw new MethodNotImplementedError();
         }
     }
 }

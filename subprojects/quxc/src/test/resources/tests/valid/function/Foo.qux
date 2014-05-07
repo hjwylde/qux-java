@@ -1,0 +1,5 @@
+int f(str a, real b):
+    return |a|
+
+void main([str] args):
+    print f('foo', 5.5)
