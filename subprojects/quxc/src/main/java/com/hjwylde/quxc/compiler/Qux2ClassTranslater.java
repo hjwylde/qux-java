@@ -118,6 +118,9 @@ public final class Qux2ClassTranslater extends QuxAdapter {
     public void visit(int version, String name) {
         cv.visit(V1_7, ACC_PUBLIC | ACC_FINAL, name, null, Type.getInternalName(Obj.class),
                 new String[0]);
+
+        // TODO: This only prints out the file name, not the extension
+        cv.visitSource(name, null);
     }
 
     /**
@@ -249,6 +252,11 @@ public final class Qux2ClassTranslater extends QuxAdapter {
          */
         private java.util.List<String> locals = new ArrayList<>();
 
+        /**
+         * The current source line number, used for generating the line number table attribute.
+         */
+        private int line = Integer.MIN_VALUE;
+
         public Function2ClassTranslater(MethodVisitor mv, int flags, String name,
                 com.hjwylde.qux.util.Type.Function type) {
             this.mv = checkNotNull(mv, "mv cannot be null");
@@ -292,6 +300,8 @@ public final class Qux2ClassTranslater extends QuxAdapter {
         }
 
         public void visitExpr(ExprNode expr) {
+            visitLineNumber(expr);
+
             expr.accept(this);
         }
 
@@ -621,6 +631,8 @@ public final class Qux2ClassTranslater extends QuxAdapter {
          */
         @Override
         public void visitStmtAccessAssign(StmtNode.AccessAssign stmt) {
+            visitLineNumber(stmt);
+
             visitExpr(stmt.getAccess().getTarget());
             visitExpr(stmt.getAccess().getIndex());
             visitExpr(stmt.getExpr());
@@ -634,6 +646,8 @@ public final class Qux2ClassTranslater extends QuxAdapter {
          */
         @Override
         public void visitStmtAssign(StmtNode.Assign stmt) {
+            visitLineNumber(stmt);
+
             visitExpr(stmt.getExpr());
 
             if (!locals.contains(stmt.getVar())) {
@@ -648,6 +662,8 @@ public final class Qux2ClassTranslater extends QuxAdapter {
          */
         @Override
         public void visitStmtFor(StmtNode.For stmt) {
+            visitLineNumber(stmt);
+
             visitExpr(stmt.getExpr());
 
             com.hjwylde.qux.util.Type type = getQuxType(stmt.getExpr());
@@ -697,6 +713,8 @@ public final class Qux2ClassTranslater extends QuxAdapter {
          */
         @Override
         public void visitStmtFunction(StmtNode.Function stmt) {
+            visitLineNumber(stmt);
+
             Type returnType = Type.VOID_TYPE;
             java.util.List<Type> argumentTypes = new ArrayList<>();
 
@@ -717,6 +735,8 @@ public final class Qux2ClassTranslater extends QuxAdapter {
          */
         @Override
         public void visitStmtFunctionCall(StmtNode.FunctionCall stmt) {
+            visitLineNumber(stmt);
+
             visitExpr(stmt.getCall());
 
             if (getType(stmt.getCall()) != Type.VOID_TYPE) {
@@ -729,6 +749,8 @@ public final class Qux2ClassTranslater extends QuxAdapter {
          */
         @Override
         public void visitStmtIf(StmtNode.If stmt) {
+            visitLineNumber(stmt);
+
             visitExpr(stmt.getCondition());
 
             mv.visitFieldInsn(GETSTATIC, Type.getInternalName(Bool.class), "FALSE",
@@ -761,6 +783,8 @@ public final class Qux2ClassTranslater extends QuxAdapter {
          */
         @Override
         public void visitStmtPrint(StmtNode.Print stmt) {
+            visitLineNumber(stmt);
+
             mv.visitFieldInsn(GETSTATIC, Type.getInternalName(System.class), "out",
                     Type.getDescriptor(PrintStream.class));
 
@@ -780,6 +804,8 @@ public final class Qux2ClassTranslater extends QuxAdapter {
          */
         @Override
         public void visitStmtReturn(StmtNode.Return stmt) {
+            visitLineNumber(stmt);
+
             if (stmt.getExpr().isPresent()) {
                 visitExpr(stmt.getExpr().get());
 
@@ -794,6 +820,8 @@ public final class Qux2ClassTranslater extends QuxAdapter {
          */
         @Override
         public void visitStmtWhile(StmtNode.While stmt) {
+            visitLineNumber(stmt);
+
             Label startLabel = new Label();
             Label endLabel = new Label();
 
@@ -821,6 +849,25 @@ public final class Qux2ClassTranslater extends QuxAdapter {
 
         private void visitCheckcast(Node node) {
             mv.visitTypeInsn(CHECKCAST, getType(node).getInternalName());
+        }
+
+        private void visitLineNumber(Node node) {
+            Optional<Attribute.Source> opt = Attributes.getAttribute(node, Attribute.Source.class);
+            if (!opt.isPresent()) {
+                return;
+            }
+
+            Attribute.Source source = opt.get();
+
+            if (line >= source.getLine()) {
+                return;
+            }
+
+            line = source.getLine();
+
+            Label start = new Label();
+            mv.visitLabel(start);
+            mv.visitLineNumber(line, start);
         }
 
         private void visitValue(BigInteger value) {
