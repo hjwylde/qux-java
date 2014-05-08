@@ -223,11 +223,16 @@ exprVariable : Identifier
 
 // Values
 
-value : ValueKeyword
+value : valueKeyword
       | ValueInt
       | ValueReal
       | ValueString
       ;
+
+valueKeyword : FALSE
+             | NULL
+             | TRUE
+             ;
 
 // Types
 
@@ -260,11 +265,6 @@ typeReturn : type
 // Lexer section
 
 // Values
-
-ValueKeyword : FALSE
-             | NULL
-             | TRUE
-             ;
 
 ValueString : '\'' StringCharacter* '\'' ;
 

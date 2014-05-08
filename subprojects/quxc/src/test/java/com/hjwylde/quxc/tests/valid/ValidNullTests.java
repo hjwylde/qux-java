@@ -22,6 +22,11 @@ public final class ValidNullTests extends Harness {
     }
 
     @Test
+    public void NullFunction() {
+        run("NullFunction");
+    }
+
+    @Test
     public void NullNeq() {
         run("NullNeq");
     }
