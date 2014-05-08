@@ -110,6 +110,18 @@ public class CheckFunctionAdapter extends FunctionAdapter {
      * {@inheritDoc}
      */
     @Override
+    public void visitStmtExpr(StmtNode.Expr stmt) {
+        checkState(visitedCode, "must call visitCode() before visitStmtExpr(StmtNode.Expr)");
+        checkState(!visitedEnd, "must call visitStmtExpr(StmtNode.Expr) before visitEnd()");
+        checkNotNull(stmt, "stmt cannot be null");
+
+        super.visitStmtExpr(stmt);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void visitStmtFor(StmtNode.For stmt) {
         checkState(visitedCode, "must call visitCode() before visitStmtFor(StmtNode.For)");
         checkState(!visitedEnd, "must call visitStmtFor(StmtNode.For) before visitEnd()");
@@ -129,20 +141,6 @@ public class CheckFunctionAdapter extends FunctionAdapter {
         checkNotNull(stmt, "stmt cannot be null");
 
         super.visitStmtFunction(stmt);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void visitStmtFunctionCall(StmtNode.FunctionCall stmt) {
-        checkState(visitedCode,
-                "must call visitCode() before visitStmtFunctionCall(StmtNode.FunctionCall)");
-        checkState(!visitedEnd,
-                "must call visitStmtFunctionCall(StmtNode.FunctionCall) before visitEnd()");
-        checkNotNull(stmt, "stmt cannot be null");
-
-        super.visitStmtFunctionCall(stmt);
     }
 
     /**

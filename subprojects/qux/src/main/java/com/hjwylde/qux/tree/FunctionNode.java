@@ -142,6 +142,14 @@ public final class FunctionNode extends Node implements FunctionVisitor {
      * {@inheritDoc}
      */
     @Override
+    public void visitStmtExpr(StmtNode.Expr stmt) {
+        stmts.add(stmt);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void visitStmtFor(StmtNode.For stmt) {
         stmts.add(stmt);
     }
@@ -151,14 +159,6 @@ public final class FunctionNode extends Node implements FunctionVisitor {
      */
     @Override
     public void visitStmtFunction(StmtNode.Function stmt) {
-        stmts.add(stmt);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void visitStmtFunctionCall(StmtNode.FunctionCall stmt) {
         stmts.add(stmt);
     }
 

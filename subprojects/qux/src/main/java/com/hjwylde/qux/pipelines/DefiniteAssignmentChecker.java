@@ -234,6 +234,16 @@ public final class DefiniteAssignmentChecker extends Pipeline implements QuxVisi
          * {@inheritDoc}
          */
         @Override
+        public void visitStmtExpr(StmtNode.Expr stmt) {
+            visitExpr(stmt.getExpr());
+
+            super.visitStmtExpr(stmt);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
         public void visitStmtFor(StmtNode.For stmt) {
             visitExpr(stmt.getExpr());
 
@@ -257,16 +267,6 @@ public final class DefiniteAssignmentChecker extends Pipeline implements QuxVisi
             }
 
             super.visitStmtFunction(stmt);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void visitStmtFunctionCall(StmtNode.FunctionCall stmt) {
-            visitExpr(stmt.getCall());
-
-            super.visitStmtFunctionCall(stmt);
         }
 
         /**

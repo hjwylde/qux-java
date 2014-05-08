@@ -423,6 +423,17 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
      * {@inheritDoc}
      */
     @Override
+    public ExprNode visitExprIncrement(@NotNull QuxParser.ExprIncrementContext ctx) {
+        ExprNode.Variable target = new ExprNode.Variable(ctx.Identifier().getText(),
+                generateAttributeSource(ctx.Identifier().getSymbol()));
+
+        return new ExprNode.Unary(Op.Unary.INC, target, generateAttributeSource(ctx));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public ExprNode visitExprParen(@NotNull QuxParser.ExprParenContext ctx) {
         return visitExpr(ctx.expr());
     }
@@ -456,6 +467,8 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
             return visitExprBracket(ctx.exprBracket());
         } else if (ctx.exprFunction() != null) {
             return visitExprFunction(ctx.exprFunction());
+        } else if (ctx.exprIncrement() != null) {
+            return visitExprIncrement(ctx.exprIncrement());
         } else if (ctx.exprParen() != null) {
             return visitExprParen(ctx.exprParen());
         } else if (ctx.exprVariable() != null) {
@@ -513,12 +526,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
      */
     @Override
     public StmtNode visitStmt(@NotNull QuxParser.StmtContext ctx) {
-        if (ctx.NEWLINE() == null) {
-            return (StmtNode) super.visitStmt(ctx);
-        }
-
-        return new StmtNode.FunctionCall(visitExprFunction(ctx.exprFunction()),
-                generateAttributeSource(ctx));
+        return (StmtNode) super.visitStmt(ctx);
     }
 
     /**
@@ -554,6 +562,22 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         ExprNode expr = visitExpr(ctx.expr());
 
         return new StmtNode.Assign(var, expr, generateAttributeSource(ctx));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public StmtNode.Expr visitStmtExpr(@NotNull QuxParser.StmtExprContext ctx) {
+        if (ctx.exprFunction() != null) {
+            return new StmtNode.Expr(StmtNode.Expr.Type.FUNCTION, visitExprFunction(
+                    ctx.exprFunction()), generateAttributeSource(ctx));
+        } else if (ctx.exprIncrement() != null) {
+            return new StmtNode.Expr(StmtNode.Expr.Type.INCREMENT, visitExprIncrement(
+                    ctx.exprIncrement()), generateAttributeSource(ctx));
+        } else {
+            throw new MethodNotImplementedError(ctx.getText());
+        }
     }
 
     /**

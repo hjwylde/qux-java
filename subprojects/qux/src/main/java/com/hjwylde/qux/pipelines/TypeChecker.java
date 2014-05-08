@@ -353,6 +353,10 @@ public final class TypeChecker extends Pipeline implements QuxVisitor {
             Type targetType = getType(expr.getTarget());
 
             switch (expr.getOp()) {
+                case INC:
+                    checkSubtype(expr.getTarget(), TYPE_INT);
+                    setType(expr, TYPE_INT);
+                    break;
                 case LEN:
                     checkSubtype(expr.getTarget(), Type.forUnion(TYPE_LIST_ANY, TYPE_SET_ANY,
                             TYPE_STR));
@@ -425,6 +429,16 @@ public final class TypeChecker extends Pipeline implements QuxVisitor {
          * {@inheritDoc}
          */
         @Override
+        public void visitStmtExpr(StmtNode.Expr stmt) {
+            visitExpr(stmt.getExpr());
+
+            super.visitStmtExpr(stmt);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
         public void visitStmtFor(StmtNode.For stmt) {
             visitExpr(stmt.getExpr());
             checkSubtype(stmt.getExpr(), Type.forUnion(TYPE_LIST_ANY, TYPE_SET_ANY));
@@ -461,16 +475,6 @@ public final class TypeChecker extends Pipeline implements QuxVisitor {
             }
 
             super.visitStmtFunction(stmt);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void visitStmtFunctionCall(StmtNode.FunctionCall stmt) {
-            visitExpr(stmt.getCall());
-
-            super.visitStmtFunctionCall(stmt);
         }
 
         /**
