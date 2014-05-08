@@ -2,6 +2,7 @@ package com.hjwylde.qux.tree;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.hjwylde.common.lang.Pair;
 import com.hjwylde.common.lang.annotation.Alpha;
 import com.hjwylde.qux.api.StmtVisitor;
 import com.hjwylde.qux.util.Attribute;
