@@ -1,0 +1,9 @@
+null f(null n):
+    if null == n:
+        return n
+
+    return null
+
+void main([str] args):
+    print f(null)
+

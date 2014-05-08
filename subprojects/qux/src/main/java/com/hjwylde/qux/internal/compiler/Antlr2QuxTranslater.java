@@ -679,7 +679,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
      * {@inheritDoc}
      */
     @Override
-    public ExprNode.Constant visitValue(@NotNull QuxParser.ValueContext ctx) {
+    public ExprNode visitValue(@NotNull QuxParser.ValueContext ctx) {
         ExprNode.Constant.Type type = null;
         Object value = null;
 
@@ -694,20 +694,34 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
             String text = ctx.ValueString().getText();
 
             value = text.substring(1, text.length() - 1);
-        } else if (ctx.ValueKeyword() != null) {
-            switch (ctx.ValueKeyword().getText()) {
-                case "false":
-                    type = ExprNode.Constant.Type.BOOL;
-                    value = false;
-                    break;
-                case "true":
-                    type = ExprNode.Constant.Type.BOOL;
-                    value = true;
-                    break;
-                case "null":
-                    type = ExprNode.Constant.Type.NULL;
-                    value = null;
-            }
+        } else if (ctx.valueKeyword() != null) {
+            return visitValueKeyword(ctx.valueKeyword());
+        }
+
+        if (type != null) {
+            return new ExprNode.Constant(type, value, generateAttributeSource(ctx));
+        }
+
+        throw new MethodNotImplementedError(ctx.getText());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ExprNode visitValueKeyword(@NotNull QuxParser.ValueKeywordContext ctx) {
+        ExprNode.Constant.Type type = null;
+        Object value = null;
+
+        if (ctx.FALSE() != null) {
+            type = ExprNode.Constant.Type.BOOL;
+            value = false;
+        } else if (ctx.NULL() != null) {
+            type = ExprNode.Constant.Type.NULL;
+            value = null;
+        } else if (ctx.TRUE() != null) {
+            type = ExprNode.Constant.Type.BOOL;
+            value = true;
         }
 
         if (type != null) {
