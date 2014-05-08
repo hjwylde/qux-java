@@ -1,6 +1,7 @@
 package com.hjwylde.qux.internal.compiler;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Verify.verify;
 import static com.hjwylde.qux.util.Constants.QUX0_1_1;
 import static com.hjwylde.qux.util.Op.ACC_PUBLIC;
 import static com.hjwylde.qux.util.Op.ACC_STATIC;
@@ -574,15 +575,31 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
      */
     @Override
     public StmtNode.If visitStmtIf(@NotNull QuxParser.StmtIfContext ctx) {
-        ExprNode condition = visitExpr(ctx.expr());
+        StmtNode.If stmt = null;
 
-        List<StmtNode> trueBlock = visitBlock(ctx.block(0));
+        int index = ctx.block().size() - 1;
+
         List<StmtNode> falseBlock = new ArrayList<>();
-        if (ctx.block(1) != null) {
-            falseBlock.addAll(visitBlock(ctx.block(1)));
+        if (ctx.block().size() > ctx.expr().size()) {
+            falseBlock = visitBlock(ctx.block(index--));
         }
 
-        return new StmtNode.If(condition, trueBlock, falseBlock, generateAttributeSource(ctx));
+        for (; index >= 0; index--) {
+            Token start = ctx.expr(index).getStart();
+
+            ExprNode condition = visitExpr(ctx.expr(index));
+            List<StmtNode> trueBlock = visitBlock(ctx.block(index));
+
+            stmt = new StmtNode.If(condition, trueBlock, falseBlock, generateAttributeSource(start,
+                    ctx.getStop()));
+
+            falseBlock = new ArrayList<>();
+            falseBlock.add(stmt);
+        }
+
+        verify(stmt != null);
+
+        return stmt;
     }
 
     /**

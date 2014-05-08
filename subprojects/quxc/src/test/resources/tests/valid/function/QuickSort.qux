@@ -14,11 +14,10 @@
     for datum in data:
         if datum < pivot:
             lhs = lhs + [datum]
+        elif datum > pivot:
+            rhs = rhs + [datum]
         else:
-            if datum > pivot:
-                rhs = rhs + [datum]
-            else:
-                pivots = pivots + [datum]
+            pivots = pivots + [datum]
 
     return sort(lhs) + pivots + sort(rhs)
 

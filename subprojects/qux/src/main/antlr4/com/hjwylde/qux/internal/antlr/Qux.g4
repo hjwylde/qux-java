@@ -121,7 +121,7 @@ stmtAssign : Identifier '=' expr NEWLINE
 stmtFor : 'for' Identifier BOP_IN expr block
         ;
 
-stmtIf : 'if' expr block ('else' block)?
+stmtIf : 'if' expr block ('elif' expr block)* ('else' block)?
        ;
 
 stmtPrint : 'print' expr NEWLINE
@@ -319,6 +319,7 @@ Exponent : 'e' [+-] Numeral ;
 
 ANY     : 'any' ;
 BOOL    : 'bool' ;
+ELIF    : 'elif' ;
 ELSE    : 'else' ;
 FALSE   : 'false' ;
 IF      : 'if' ;
