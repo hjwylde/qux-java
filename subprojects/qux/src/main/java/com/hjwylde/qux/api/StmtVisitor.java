@@ -15,11 +15,11 @@ public interface StmtVisitor {
 
     void visitStmtAssign(StmtNode.Assign stmt);
 
+    void visitStmtExpr(StmtNode.Expr stmt);
+
     void visitStmtFor(StmtNode.For stmt);
 
     void visitStmtFunction(StmtNode.Function stmt);
-
-    void visitStmtFunctionCall(StmtNode.FunctionCall stmt);
 
     void visitStmtIf(StmtNode.If stmt);
 

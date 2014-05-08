@@ -109,7 +109,7 @@ stmt : stmtAccessAssign
      | stmtPrint
      | stmtReturn
      | stmtWhile
-     | exprFunction NEWLINE
+     | stmtExpr
      ;
 
 stmtAccessAssign : Identifier ('[' expr ']')+ '=' expr NEWLINE
@@ -132,6 +132,10 @@ stmtReturn : 'return' expr? NEWLINE
 
 stmtWhile : 'while' expr block
           ;
+
+stmtExpr : exprFunction NEWLINE
+         | exprIncrement NEWLINE
+         ;
 
 block : ':' NEWLINE INDENT stmt* DEDENT
       ;
@@ -201,6 +205,7 @@ exprAccess_1_5 : '[' ':' ']'
 exprTerm : exprBrace
          | exprBracket
          | exprFunction
+         | exprIncrement
          | exprParen
          | exprVariable
          | value
@@ -214,6 +219,9 @@ exprBracket : '[' (expr (',' expr)*)? ']'
 
 exprFunction : Identifier '(' (expr (',' expr)*) ')'
              ;
+
+exprIncrement : Identifier UOP_INC
+              ;
 
 exprParen : '(' expr ')'
           ;
@@ -375,6 +383,7 @@ UOP_NOT : 'not' ;
 UOP_LEN: '|' ;
 
 UOP_NEG: '-' ;
+UOP_INC: '++' ;
 
 // Identifier
 

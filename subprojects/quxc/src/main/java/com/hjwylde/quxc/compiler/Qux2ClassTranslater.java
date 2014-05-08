@@ -333,17 +333,14 @@ public final class Qux2ClassTranslater extends QuxAdapter {
                 case ADD:
                     mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(lhsClass), "_add_",
                             getMethodDescriptor(lhsClass, "_add_", rhsClass), false);
-                    visitCheckcast(expr);
                     break;
                 case AND:
                     mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(And.class), "_and_",
                             getMethodDescriptor(And.class, "_and_", Bool.class), true);
-                    visitCheckcast(expr);
                     break;
                 case DIV:
                     mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(lhsClass), "_div_",
                             getMethodDescriptor(lhsClass, "_div_", rhsClass), false);
-                    visitCheckcast(expr);
                     break;
                 case EQ:
                     mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Eq.class), "_eq_",
@@ -382,7 +379,6 @@ public final class Qux2ClassTranslater extends QuxAdapter {
                 case MUL:
                     mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(lhsClass), "_mul_",
                             getMethodDescriptor(lhsClass, "_mul_", rhsClass), false);
-                    visitCheckcast(expr);
                     break;
                 case NEQ:
                     mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Neq.class), "_neq_",
@@ -399,12 +395,10 @@ public final class Qux2ClassTranslater extends QuxAdapter {
                 case REM:
                     mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(lhsClass), "_rem_",
                             getMethodDescriptor(lhsClass, "_rem_", rhsClass), false);
-                    visitCheckcast(expr);
                     break;
                 case SUB:
                     mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(lhsClass), "_sub_",
                             getMethodDescriptor(lhsClass, "_sub_", rhsClass), false);
-                    visitCheckcast(expr);
                     break;
                 case XOR:
                     mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Xor.class), "_xor_",
@@ -576,6 +570,15 @@ public final class Qux2ClassTranslater extends QuxAdapter {
             Class<?> clazz = Qux2ClassTranslater.getClass(expr.getTarget());
 
             switch (expr.getOp()) {
+                case INC:
+                    int index = locals.indexOf(((ExprNode.Variable) expr.getTarget()).getName());
+
+                    mv.visitInsn(DUP);
+                    visitExpr(new ExprNode.Constant(ExprNode.Constant.Type.INT, BigInteger.ONE));
+                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(Int.class), "_add_",
+                            getMethodDescriptor(Int.class, "_add_", Int.class), false);
+                    mv.visitVarInsn(ASTORE, index);
+                    break;
                 case LEN:
                     mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Len.class), "_len_",
                             getMethodDescriptor(Len.class, "_len_"), true);
@@ -661,6 +664,20 @@ public final class Qux2ClassTranslater extends QuxAdapter {
          * {@inheritDoc}
          */
         @Override
+        public void visitStmtExpr(StmtNode.Expr stmt) {
+            visitLineNumber(stmt);
+
+            visitExpr(stmt.getExpr());
+
+            if (getType(stmt.getExpr()) != Type.VOID_TYPE) {
+                mv.visitInsn(POP);
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
         public void visitStmtFor(StmtNode.For stmt) {
             visitLineNumber(stmt);
 
@@ -728,20 +745,6 @@ public final class Qux2ClassTranslater extends QuxAdapter {
 
             mv.visitMethodInsn(INVOKESTATIC, Qux2ClassTranslater.this.name, stmt.getName(),
                     type.getDescriptor(), false);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void visitStmtFunctionCall(StmtNode.FunctionCall stmt) {
-            visitLineNumber(stmt);
-
-            visitExpr(stmt.getCall());
-
-            if (getType(stmt.getCall()) != Type.VOID_TYPE) {
-                mv.visitInsn(POP);
-            }
         }
 
         /**

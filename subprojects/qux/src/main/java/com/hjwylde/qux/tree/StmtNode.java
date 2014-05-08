@@ -1,11 +1,13 @@
 package com.hjwylde.qux.tree;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.hjwylde.common.lang.Pair;
+import com.hjwylde.common.error.MethodNotImplementedError;
 import com.hjwylde.common.lang.annotation.Alpha;
 import com.hjwylde.qux.api.StmtVisitor;
 import com.hjwylde.qux.util.Attribute;
+import com.hjwylde.qux.util.Op;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -118,6 +120,68 @@ public abstract class StmtNode extends Node {
      * TODO: Documentation.
      *
      * @author Henry J. Wylde
+     * @since TODO: SINCE
+     */
+    public static final class Expr extends StmtNode {
+
+        private final StmtNode.Expr.Type type;
+        private final ExprNode expr;
+
+        public Expr(StmtNode.Expr.Type type, ExprNode expr, Attribute... attributes) {
+            this(type, expr, Arrays.asList(attributes));
+        }
+
+        public Expr(StmtNode.Expr.Type type, ExprNode expr,
+                Collection<? extends Attribute> attributes) {
+            super(attributes);
+
+            this.type = checkNotNull(type, "type cannot be null");
+            this.expr = checkNotNull(expr, "expr cannot be null");
+
+            switch (type) {
+                case FUNCTION:
+                    checkArgument(expr instanceof ExprNode.Function);
+                    break;
+                case INCREMENT:
+                    checkArgument(expr instanceof ExprNode.Unary);
+                    checkArgument(((ExprNode.Unary) expr).getOp() == Op.Unary.INC);
+                    break;
+                default:
+                    throw new MethodNotImplementedError(type.toString());
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void accept(StmtVisitor sv) {
+            sv.visitStmtExpr(this);
+        }
+
+        public ExprNode getExpr() {
+            return expr;
+        }
+
+        public Type getType() {
+            return type;
+        }
+
+        /**
+         * TODO: Documentation
+         *
+         * @author Henry J. Wylde
+         * @since TODO: SINCE
+         */
+        public static enum Type {
+            FUNCTION, INCREMENT;
+        }
+    }
+
+    /**
+     * TODO: Documentation.
+     *
+     * @author Henry J. Wylde
      * @since 0.1.2
      */
     public static final class For extends StmtNode {
@@ -196,39 +260,6 @@ public abstract class StmtNode extends Node {
 
         public String getName() {
             return name;
-        }
-    }
-
-    /**
-     * TODO: Documentation.
-     *
-     * @author Henry J. Wylde
-     * @since TODO: SINCE
-     */
-    public static final class FunctionCall extends StmtNode {
-
-        private final ExprNode.Function call;
-
-        public FunctionCall(ExprNode.Function call, Attribute... attributes) {
-            this(call, Arrays.asList(attributes));
-        }
-
-        public FunctionCall(ExprNode.Function call, Collection<? extends Attribute> attributes) {
-            super(attributes);
-
-            this.call = checkNotNull(call, "call cannot be null");
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void accept(StmtVisitor sv) {
-            sv.visitStmtFunctionCall(this);
-        }
-
-        public ExprNode.Function getCall() {
-            return call;
         }
     }
 
