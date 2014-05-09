@@ -58,6 +58,7 @@ import org.objectweb.asm.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.PrintStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -95,18 +96,15 @@ import qux.util.Iterator;
  */
 public final class Qux2ClassTranslater extends QuxAdapter {
 
-    // TODO: Change from depending on qrt to using a ClassLoader and getting the runtime files that way
-    // This may mean the user can specify the runtime library to compile against?
-    // May need to do some checks about the version of the runtime library though
-
     private static final Logger logger = LoggerFactory.getLogger(QuxVisitor.class);
 
-    private final String name;
+    private final String source;
 
     private final ClassVisitor cv;
+    private String name;
 
-    public Qux2ClassTranslater(String name, ClassVisitor cv) {
-        this.name = checkNotNull(name, "fileName cannot be null");
+    public Qux2ClassTranslater(String source, ClassVisitor cv) {
+        this.source = checkNotNull(source, "source cannot be null");
 
         this.cv = checkNotNull(cv, "cv cannot be null");
     }
@@ -116,11 +114,12 @@ public final class Qux2ClassTranslater extends QuxAdapter {
      */
     @Override
     public void visit(int version, String name) {
+        this.name = name;
+
         cv.visit(V1_7, ACC_PUBLIC | ACC_FINAL, name, null, Type.getInternalName(Obj.class),
                 new String[0]);
 
-        // TODO: This only prints out the file name, not the extension
-        cv.visitSource(name, null);
+        cv.visitSource(getFileName(), null);
     }
 
     /**
@@ -213,6 +212,12 @@ public final class Qux2ClassTranslater extends QuxAdapter {
         }
 
         throw new MethodNotImplementedError(type.getClass().toString());
+    }
+
+    private String getFileName() {
+        int index = source.lastIndexOf(File.separator);
+
+        return index < 0 ? source : source.substring(index + 1);
     }
 
     /**

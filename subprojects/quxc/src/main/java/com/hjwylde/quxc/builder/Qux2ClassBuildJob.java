@@ -116,14 +116,14 @@ public final class Qux2ClassBuildJob extends BuildJob {
     }
 
     /**
-     * Generates an output path based on the given output directory, name and extension.
+     * Generates a path based on the given output directory, name and extension.
      *
      * @param outdir the output directory the path should be resolved from.
      * @param name the name of the output file.
      * @param extension the extension of the output file.
-     * @return the generated output path.
+     * @return the generated path.
      */
-    private static Path generateOutpath(Path outdir, String name, String extension) {
+    private static Path generatePath(Path outdir, String name, String extension) {
         return outdir.resolve(name + "." + extension);
     }
 
@@ -132,7 +132,7 @@ public final class Qux2ClassBuildJob extends BuildJob {
      *
      * @return the file name, excluding the extension.
      */
-    private String getFileName() {
+    private String getFileNameWithoutExtension() {
         return com.google.common.io.Files.getNameWithoutExtension(source.toString());
     }
 
@@ -156,18 +156,17 @@ public final class Qux2ClassBuildJob extends BuildJob {
     }
 
     private byte[] translate(QuxNode node) {
-        // TODO: Make a consistent name of "fileName" or "name" or "identifier" for stuffs
         logger.debug("{}: translating to java bytecode", source);
 
         Stopwatch stopwatch = Stopwatch.createStarted();
 
         // Create the class writer, main function injector and check adapter
         ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
-        MainFunctionInjector mfi = new MainFunctionInjector(cw, node.getName());
+        MainFunctionInjector mfi = new MainFunctionInjector(cw, source.toString());
         CheckClassAdapter cca = new CheckClassAdapter(mfi, false);
 
         // Create the translator and let it visit the node
-        Qux2ClassTranslater q2ct = new Qux2ClassTranslater(node.getName(), cca);
+        Qux2ClassTranslater q2ct = new Qux2ClassTranslater(source.toString(), cca);
         CheckQuxAdapter cqa = new CheckQuxAdapter(q2ct);
         node.accept(cqa);
 
@@ -183,7 +182,7 @@ public final class Qux2ClassBuildJob extends BuildJob {
 
         Stopwatch stopwatch = Stopwatch.createStarted();
 
-        Path outpath = generateOutpath(context.getProject().getOutdir(), getFileName().toString(),
+        Path outpath = generatePath(context.getProject().getOutdir(), getFileNameWithoutExtension(),
                 "class");
 
         logger.debug("{}: writing to {}", source, outpath);

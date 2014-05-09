@@ -8,8 +8,6 @@ import com.hjwylde.qux.internal.compiler.SyntaxErrorListener;
 import com.hjwylde.qux.internal.util.QuxParserUtils;
 import com.hjwylde.qux.tree.QuxNode;
 
-import com.google.common.io.Files;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
@@ -43,7 +41,10 @@ public final class QuxReader {
 
     private QuxReader(QuxParser parser) throws CompilerError {
         // TODO: Test what happens when the parser doesn't have a source name
-        String source = Files.getNameWithoutExtension(parser.getSourceName());
+        String source = parser.getSourceName();
+        if (source == null) {
+            source = "<empty>";
+        }
 
         SyntaxErrorListener listener = new SyntaxErrorListener(source);
         parser.removeErrorListeners();
