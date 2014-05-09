@@ -42,7 +42,7 @@ public abstract class ExprNode extends Node {
      * TODO: Documentation
      *
      * @author Henry J. Wylde
-     * @since TODO: SINCE
+     * @since 0.1.3
      */
     public static final class Access extends ExprNode {
 
@@ -246,7 +246,7 @@ public abstract class ExprNode extends Node {
      * TODO: Documentation
      *
      * @author Henry J. Wylde
-     * @since TODO: SINCE
+     * @since 0.1.3
      */
     public static final class Set extends ExprNode {
 
@@ -279,7 +279,7 @@ public abstract class ExprNode extends Node {
      * TODO: Documentation
      *
      * @author Henry J. Wylde
-     * @since TODO: SINCE
+     * @since 0.1.3
      */
     public static final class Slice extends ExprNode {
 

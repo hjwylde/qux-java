@@ -271,7 +271,7 @@ public class Meta extends Obj {
      * TODO: Documentation
      *
      * @author Henry J. Wylde
-     * @since TODO: SINCE
+     * @since 0.1.3
      */
     private static final class Set extends Meta {
 
