@@ -21,6 +21,8 @@ import static org.objectweb.asm.Opcodes.INVOKESTATIC;
 import static org.objectweb.asm.Opcodes.ISTORE;
 import static org.objectweb.asm.Opcodes.RETURN;
 
+import com.google.common.io.Files;
+
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
@@ -50,19 +52,19 @@ public class MainFunctionInjector extends ClassVisitor {
             com.hjwylde.qux.util.Type.forFunction(com.hjwylde.qux.util.Type.TYPE_VOID,
                     com.hjwylde.qux.util.Type.forList(com.hjwylde.qux.util.Type.TYPE_STR));
 
-    private final String name;
+    private final String source;
 
     /**
      * Creates a new {@code MainFunctionInjector} with the given next {@link
      * org.objectweb.asm.ClassVisitor} and name of the source compile file.
      *
      * @param cv the next class visitor.
-     * @param name the name of the Qux source file.
+     * @param source the name of the Qux source file (inclusive of extension).
      */
-    public MainFunctionInjector(ClassVisitor cv, String name) {
+    public MainFunctionInjector(ClassVisitor cv, String source) {
         super(ASM5, cv);
 
-        this.name = checkNotNull(name, "name cannot be null");
+        this.source = checkNotNull(source, "source cannot be null");
     }
 
     /**
@@ -72,10 +74,9 @@ public class MainFunctionInjector extends ClassVisitor {
     public MethodVisitor visitMethod(int access, String name, String desc, String signature,
             String[] exceptions) {
         // If there is a main function using the Qux types, then add an adapter function to call it
-        if (access == FUNCTION_MAIN_FLAGS && name.equals(FUNCTION_MAIN_NAME) && desc.equals(
-                getType(FUNCTION_MAIN_TYPE).getDescriptor())) {
-            logger.debug("main function detected, injecting proxy function for {}.{}:{}", this.name,
-                    name, desc);
+        if (access == FUNCTION_MAIN_FLAGS && name.equals(FUNCTION_MAIN_NAME) && desc.equals(getType(
+                FUNCTION_MAIN_TYPE).getDescriptor())) {
+            logger.debug("{}: main function detected, injecting proxy function", source);
 
             injectMainFunction();
         }
@@ -147,7 +148,8 @@ public class MainFunctionInjector extends ClassVisitor {
         mv.visitVarInsn(ALOAD, strs);
         mv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(List.class), "valueOf",
                 getMethodDescriptor(List.class, "valueOf", Obj[].class), false);
-        mv.visitMethodInsn(INVOKESTATIC, this.name, FUNCTION_MAIN_NAME, getType(FUNCTION_MAIN_TYPE).getDescriptor(), false);
+        mv.visitMethodInsn(INVOKESTATIC, Files.getNameWithoutExtension(source), FUNCTION_MAIN_NAME,
+                getType(FUNCTION_MAIN_TYPE).getDescriptor(), false);
         mv.visitInsn(RETURN);
 
         // These values are ignored so long as ClassWriter.COMPUTE_MAXS is set

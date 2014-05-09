@@ -8,8 +8,6 @@ tokens { INDENT, DEDENT }
 
     import com.hjwylde.common.error.CompilerErrors;
 
-    import com.google.common.io.Files;
-
     import java.util.ArrayDeque;
     import java.util.Deque;
     import java.util.Stack;
@@ -55,7 +53,10 @@ tokens { INDENT, DEDENT }
                     pending.offer(dedent);
                 }
                 if (level != dents.peek()) {
-                    String source = Files.getNameWithoutExtension(getSourceName());
+                    String source = getSourceName();
+                    if (source == null) {
+                        source = "<empty>";
+                    }
                     int length = (next.getStopIndex() + 1) - next.getStartIndex();
 
                     throw CompilerErrors.invalidDedent(source, next.getLine(),

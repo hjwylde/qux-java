@@ -4,14 +4,17 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * TODO: Documentation
+ * An attribute can hold any type of extra information. It may be attached to a {@link
+ * com.hjwylde.qux.tree.Node}.
  *
  * @author Henry J. Wylde
  */
 public interface Attribute {
 
     /**
-     * TODO: Documentation
+     * A source attribute. This attribute holds information regarding the source file that this
+     * {@link com.hjwylde.qux.tree.Node} originated from. It includes the following information: the
+     * source file name, the line number, the column number and the length.
      *
      * @author Henry J. Wylde
      */
@@ -71,7 +74,8 @@ public interface Attribute {
     }
 
     /**
-     * TODO: Documentation
+     * A type attribute. This attribute holds information regarding the type of the {@link
+     * com.hjwylde.qux.tree.Node}.
      *
      * @author Henry J. Wylde
      * @since 0.1.1

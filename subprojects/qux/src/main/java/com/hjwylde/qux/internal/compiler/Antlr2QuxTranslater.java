@@ -2,7 +2,7 @@ package com.hjwylde.qux.internal.compiler;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Verify.verify;
-import static com.hjwylde.qux.util.Constants.QUX0_1_1;
+import static com.hjwylde.qux.util.Constants.QUX0_1_3;
 import static com.hjwylde.qux.util.Op.ACC_PUBLIC;
 import static com.hjwylde.qux.util.Op.ACC_STATIC;
 
@@ -16,6 +16,8 @@ import com.hjwylde.qux.tree.StmtNode;
 import com.hjwylde.qux.util.Attribute;
 import com.hjwylde.qux.util.Op;
 import com.hjwylde.qux.util.Type;
+
+import com.google.common.io.Files;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
@@ -34,13 +36,20 @@ import java.util.Locale;
  */
 public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
 
-    private final String name;
+    private final String source;
 
     private final QuxVisitor qv;
     private FunctionVisitor fv;
 
-    public Antlr2QuxTranslater(String name, QuxVisitor qv) {
-        this.name = checkNotNull(name, "name cannot be null");
+    /**
+     * Creates a new {@code Antlr2QuxTranslater} with the given source file name and visitor. The
+     * source file name should include the extension (if applicable).
+     *
+     * @param source the source file name (inclusive of extension).
+     * @param qv the qux visitor.
+     */
+    public Antlr2QuxTranslater(String source, QuxVisitor qv) {
+        this.source = checkNotNull(source, "source cannot be null");
 
         this.qv = checkNotNull(qv, "qv cannot be null");
     }
@@ -111,8 +120,6 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
      */
     @Override
     public ExprNode visitExprAccess(@NotNull QuxParser.ExprAccessContext ctx) {
-        Token start = ctx.exprTerm().getStart();
-
         ExprNode target = visitExprTerm(ctx.exprTerm());
 
         if (ctx.exprAccess_1().isEmpty()) {
@@ -125,31 +132,26 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
                 // target[index]
                 ExprNode index = visitExpr(ectx.exprAccess_1_1().expr());
 
-                target = new ExprNode.Access(target, index, generateAttributeSource(start,
-                        ectx.getStop()));
+                target = new ExprNode.Access(target, index, generateAttributeSource(ctx, ectx));
             } else if (ectx.exprAccess_1_2() != null) {
                 // target[low:high]
                 ExprNode low = visitExpr(ectx.exprAccess_1_2().expr(0));
                 ExprNode high = visitExpr(ectx.exprAccess_1_2().expr(1));
 
-                target = new ExprNode.Slice(target, low, high, generateAttributeSource(start,
-                        ectx.getStop()));
+                target = new ExprNode.Slice(target, low, high, generateAttributeSource(ctx, ectx));
             } else if (ectx.exprAccess_1_3() != null) {
                 // target[low:]
                 ExprNode low = visitExpr(ectx.exprAccess_1_3().expr());
 
-                target = new ExprNode.Slice(target, low, null, generateAttributeSource(start,
-                        ectx.getStop()));
+                target = new ExprNode.Slice(target, low, null, generateAttributeSource(ctx, ectx));
             } else if (ectx.exprAccess_1_4() != null) {
                 // target[:high]
                 ExprNode high = visitExpr(ectx.exprAccess_1_4().expr());
 
-                target = new ExprNode.Slice(target, null, high, generateAttributeSource(start,
-                        ectx.getStop()));
+                target = new ExprNode.Slice(target, null, high, generateAttributeSource(ctx, ectx));
             } else if (ectx.exprAccess_1_5() != null) {
                 // target[:]
-                target = new ExprNode.Slice(target, null, null, generateAttributeSource(start,
-                        ectx.getStop()));
+                target = new ExprNode.Slice(target, null, null, generateAttributeSource(ctx, ectx));
             }
         }
 
@@ -512,7 +514,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
      */
     @Override
     public Object visitFile(@NotNull QuxParser.FileContext ctx) {
-        qv.visit(QUX0_1_1, name);
+        qv.visit(QUX0_1_3, Files.getNameWithoutExtension(source));
 
         super.visitFile(ctx);
 
@@ -534,16 +536,14 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
      */
     @Override
     public StmtNode visitStmtAccessAssign(@NotNull QuxParser.StmtAccessAssignContext ctx) {
-        Token start = ctx.getStart();
-
         ExprNode access = new ExprNode.Variable(ctx.Identifier().getText(), generateAttributeSource(
-                start));
+                ctx.Identifier().getSymbol()));
 
         // Create a series of nested accesses
         for (int i = 0; i < ctx.expr().size() - 1; i++) {
             // TODO: VERIFY: The "ctx.expr(i).getStop()" may not include the suffix "]'
             access = new ExprNode.Access(access, visitExpr(ctx.expr(i)), generateAttributeSource(
-                    start, ctx.expr(i).getStop()));
+                    ctx, ctx.expr(i)));
         }
 
         ExprNode expr = visitExpr(ctx.expr(ctx.expr().size() - 1));
@@ -609,13 +609,13 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         }
 
         for (; index >= 0; index--) {
-            Token start = ctx.expr(index).getStart();
+            QuxParser.ExprContext start = ctx.expr(index);
 
             ExprNode condition = visitExpr(ctx.expr(index));
             List<StmtNode> trueBlock = visitBlock(ctx.block(index));
 
             stmt = new StmtNode.If(condition, trueBlock, falseBlock, generateAttributeSource(start,
-                    ctx.getStop()));
+                    ctx));
 
             falseBlock = new ArrayList<>();
             falseBlock.add(stmt);
@@ -786,7 +786,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         int col = start.getCharPositionInLine();
         int length = (end.getStopIndex() + 1) - start.getStartIndex();
 
-        return new Attribute.Source(name, line, col, length);
+        return new Attribute.Source(source, line, col, length);
     }
 
     private Attribute.Source generateAttributeSource(Token token) {

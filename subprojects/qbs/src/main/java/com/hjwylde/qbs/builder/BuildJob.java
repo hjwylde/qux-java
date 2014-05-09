@@ -53,6 +53,12 @@ public abstract class BuildJob implements Callable<BuildResult> {
         return result;
     }
 
+    /**
+     * Checks whether this job is complete. If the job has not started yet, or is still going then
+     * this job is considered incomplete.
+     *
+     * @return true if this job is complete.
+     */
     public final boolean isComplete() {
         return result != null;
     }
