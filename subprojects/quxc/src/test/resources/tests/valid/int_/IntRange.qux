@@ -1,0 +1,11 @@
+void f([int] is):
+    for i in is:
+        print i
+
+void main([str] args):
+    f(0..1)
+    f(0..0)
+    f(5..10)
+    f(0..3 - [1])
+    print 0..2
+

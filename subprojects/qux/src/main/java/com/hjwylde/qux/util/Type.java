@@ -63,10 +63,15 @@ public abstract class Type {
     public static final String VOID = "V";
     public static final Type.Void TYPE_VOID = new Type.Void();
 
+    public static final Type.List TYPE_LIST_ANY = Type.forList(TYPE_ANY);
+    public static final Type.Set TYPE_SET_ANY = Type.forSet(TYPE_ANY);
+
     static final String FUNCTION_START = "(";
     static final String FUNCTION_PARAM_END = ")";
 
     static final String LIST_START = "[";
+
+    static final String SET_START = "{";
 
     static final String UNION_START = "U";
     static final String UNION_END = ";";
@@ -89,7 +94,7 @@ public abstract class Type {
     }
 
     public static Type forDescriptor(String desc) {
-        return forDescriptor(desc, true);
+        return Types.normalise(forDescriptor(desc, true));
     }
 
     public static Type.Function forFunction(Type returnType, java.util.List<Type> parameterTypes) {
@@ -101,7 +106,11 @@ public abstract class Type {
     }
 
     public static Type.List forList(Type innerType) {
-        return Types.normalise(new Type.List(innerType));
+        return new Type.List(Types.normalise(innerType));
+    }
+
+    public static Type.Set forSet(Type innerType) {
+        return new Type.Set(Types.normalise(innerType));
     }
 
     public static Type forUnion(Collection<Type> types) {
@@ -519,6 +528,61 @@ public abstract class Type {
         @Override
         public String toString() {
             return "real";
+        }
+    }
+
+    /**
+     * TODO: Documentation
+     *
+     * @author Henry J. Wylde
+     * @since 0.1.3
+     */
+    public static final class Set extends Type {
+
+        private final Type innerType;
+
+        Set(Type innerType) {
+            this.innerType = checkNotNull(innerType, "innerType cannot be null");
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean equals(Object obj) {
+            if (!super.equals(obj)) {
+                return false;
+            }
+
+            return innerType.equals(((Type.Set) obj).innerType);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getDescriptor() {
+            return SET_START + innerType.getDescriptor();
+        }
+
+        public Type getInnerType() {
+            return innerType;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int hashCode() {
+            return 10 + 31 * innerType.hashCode();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String toString() {
+            return "{" + innerType + "}";
         }
     }
 

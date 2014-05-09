@@ -3,7 +3,9 @@ package qux.lang;
 import static qux.lang.Bool.FALSE;
 import static qux.lang.Bool.TRUE;
 
+import qux.lang.op.Comp;
 import qux.lang.op.Desc;
+import qux.lang.op.Dup;
 import qux.lang.op.Eq;
 import qux.lang.op.Hash;
 import qux.lang.op.Neq;
@@ -13,7 +15,7 @@ import qux.lang.op.Neq;
  *
  * @author Henry J. Wylde
  */
-public abstract class Obj implements Desc, Eq, Neq, Hash {
+public abstract class Obj implements Desc, Dup, Eq, Neq, Hash, Comp {
 
     /**
      * {@inheritDoc}
@@ -35,12 +37,28 @@ public abstract class Obj implements Desc, Eq, Neq, Hash {
         return (obj != null && getClass() == obj.getClass()) ? TRUE : FALSE;
     }
 
+    public Bool _gt_(Obj t) {
+        return _comp_(t)._gt_(Int.ZERO);
+    }
+
+    public Bool _gte_(Obj t) {
+        return _comp_(t)._gte_(Int.ZERO);
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
     public Int _hash_() {
         return Int.valueOf(hashCode());
+    }
+
+    public Bool _lt_(Obj t) {
+        return _comp_(t)._lt_(Int.ZERO);
+    }
+
+    public Bool _lte_(Obj t) {
+        return _comp_(t)._lte_(Int.ZERO);
     }
 
     /**

@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.hjwylde.common.error.BuildError;
 import com.hjwylde.common.error.CompilerError;
+import com.hjwylde.common.error.IllegalTimeUnitNameException;
 import com.hjwylde.common.util.ExitCode;
 import com.hjwylde.common.util.LoggerUtils;
 import com.hjwylde.qbs.compiler.Compiler;
@@ -14,6 +15,7 @@ import com.hjwylde.quxc.compiler.QuxCompileSpec;
 import com.hjwylde.quxc.compiler.QuxCompilerFactory;
 import com.hjwylde.quxc.util.QuxcProperties;
 
+import com.google.common.base.CaseFormat;
 import com.google.common.base.Joiner;
 
 import org.apache.commons.cli.CommandLine;
@@ -27,31 +29,34 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.UnsupportedCharsetException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Locale;
 
 /**
- * Class for the command line call of "quxc". Used for compiling qux source files into quux binary
+ * Class for the command line call of "quxc". Used for compiling qux source files into Java class
  * files.
  *
  * @author Henry J. Wylde
  */
 public final class Quxc {
 
-    private static final Logger logger = LoggerFactory.getLogger(Quxc.class);
+    public static final String OPT_CHARSET = "charset";
+    public static final String OPT_CLASSPATH = "classpath";
+    public static final String OPT_HELP = "help";
+    public static final String OPT_OUTDIR = "outdir";
+    public static final String OPT_PROPERTIES = "properties";
+    public static final String OPT_TIMEOUT = "timeout";
+    public static final String OPT_TIMEOUT_UNIT = "timeout-unit";
+    public static final String OPT_VERBOSE = "verbose";
+    public static final String OPT_VERSION = "version";
+    public static final String OPT_VERSION_CODE = "version-code";
 
-    private static final String OPT_CHARSET = "charset";
-    private static final String OPT_CLASSPATH = "classpath";
-    private static final String OPT_HELP = "help";
-    private static final String OPT_OUTDIR = "outdir";
-    private static final String OPT_PROPERTIES = "properties";
-    private static final String OPT_VERBOSE = "verbose";
-    private static final String OPT_VERSION = "version";
+    private static final Logger logger = LoggerFactory.getLogger(Quxc.class);
 
     private static final String OPT_PROPERTIES_DEFAULT = "quxc.properties";
 
@@ -127,8 +132,10 @@ public final class Quxc {
         }
 
         QuxCompileOptions.Builder optionsBuilder = QuxCompileOptions.builder();
-        optionsBuilder.setVerbose(Boolean.valueOf(properties.getVerbose()));
-        optionsBuilder.setCharset(Charset.forName(properties.getCharset()));
+        optionsBuilder.setCharset(properties.getCharset());
+        optionsBuilder.setTimeout(properties.getTimeout());
+        optionsBuilder.setTimeoutUnit(properties.getTimeoutUnit());
+        optionsBuilder.setVerbose(properties.getVerbose());
 
         spec.setOptions(optionsBuilder.build());
 
@@ -204,6 +211,12 @@ public final class Quxc {
         if (cl.hasOption(OPT_OUTDIR)) {
             properties.setOutdir(cl.getOptionValue(OPT_OUTDIR));
         }
+        if (cl.hasOption(OPT_TIMEOUT)) {
+            properties.setTimeout(cl.getOptionValue(OPT_TIMEOUT));
+        }
+        if (cl.hasOption(OPT_TIMEOUT_UNIT)) {
+            properties.setTimeoutUnit(cl.getOptionValue(OPT_TIMEOUT_UNIT));
+        }
         if (cl.hasOption(OPT_VERBOSE)) {
             properties.setVerbose("true");
         }
@@ -228,30 +241,54 @@ public final class Quxc {
             } else if (cl.hasOption(OPT_VERSION)) {
                 printVersion();
                 System.exit(ExitCode.SUCCESS);
+            } else if (cl.hasOption(OPT_VERSION_CODE)) {
+                printVersionCode();
+                System.exit(ExitCode.SUCCESS);
             } else if (cl.getArgs().length == 0) {
                 throw new ParseException("no source files specified");
             }
 
             System.exit(new Quxc(generateCompileSpec(cl)).run());
         } catch (ParseException e) {
-            logger.error(e.getMessage() + "\n");
+            String message = e.getMessage();
+            if (message != null && !message.isEmpty()) {
+                message = message.substring(0, 1).toLowerCase(Locale.ENGLISH) + message.substring(
+                        1);
+            } else {
+                message = message == null ? null : message.toLowerCase(Locale.ENGLISH);
+            }
+
+            logger.error(message + "\n");
             printHelp();
 
             System.exit(ExitCode.FAIL);
         } catch (NoSuchFileException e) {
-            logger.error("file not found: " + e.getMessage());
+            logger.error("file not found: {}", e.getMessage());
 
             System.exit(ExitCode.FAIL);
         } catch (IllegalCharsetNameException e) {
-            logger.error("illegal charset name: " + e.getMessage());
+            logger.error("illegal charset name: {}", e.getMessage());
 
             System.exit(ExitCode.FAIL);
         } catch (UnsupportedCharsetException e) {
-            logger.error("unsupported charset: " + e.getMessage());
+            logger.error("unsupported charset: {}", e.getMessage());
+
+            System.exit(ExitCode.FAIL);
+        } catch (NumberFormatException e) {
+            logger.error("illegal number: {}", e.getMessage());
+
+            System.exit(ExitCode.FAIL);
+        } catch (IllegalTimeUnitNameException e) {
+            logger.error("illegal timeout unit name: {}", e.getMessage());
 
             System.exit(ExitCode.FAIL);
         } catch (IOException e) {
-            logger.error("{}: {}", e.getClass(), e.getMessage());
+            // TODO: Verify what this outputs
+            String thrown = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_HYPHEN,
+                    e.getClass().getSimpleName());
+            thrown = thrown.replace("-", " ");
+
+            logger.error("{}: {}", thrown, e.getMessage());
 
             System.exit(ExitCode.FAIL);
         }
@@ -308,6 +345,10 @@ public final class Quxc {
                 "Specifies the classpath for compilation; this is a path separator separated list");
 
         // Compile options
+        Option timeout = new Option("t", OPT_TIMEOUT, true,
+                "Sets the timeout for the build process, may set to '0' to disable, defaults to '10'");
+        Option timeoutUnit = new Option("tu", OPT_TIMEOUT_UNIT, true,
+                "Sets the timeout unit, defaults to 'seconds'");
         Option verbose = new Option("v", OPT_VERBOSE, false, "Sets the compiler to be extra noisy");
         Option charset = new Option("cs", OPT_CHARSET, true,
                 "Sets the character set to use to read the source files, defaults to 'utf8'");
@@ -318,10 +359,14 @@ public final class Quxc {
 
         Option help = new Option("h", OPT_HELP, false, "Prints this message");
         Option version = new Option("V", OPT_VERSION, false, "Prints the version of this compiler");
+        Option versionCode = new Option("VC", OPT_VERSION_CODE, false,
+                "Prints the version code of this compiler");
 
         options.addOption(outdir);
         options.addOption(classpath);
 
+        options.addOption(timeout);
+        options.addOption(timeoutUnit);
         options.addOption(verbose);
         options.addOption(charset);
 
@@ -329,6 +374,7 @@ public final class Quxc {
 
         options.addOption(help);
         options.addOption(version);
+        options.addOption(versionCode);
 
         return options;
     }
@@ -341,9 +387,16 @@ public final class Quxc {
     }
 
     /**
-     * Prints the version of the compiler language and intermediate language.
+     * Prints the version of the compiler.
      */
     private static void printVersion() {
         logger.warn(QuxProperties.VERSION_NAME);
+    }
+
+    /**
+     * Prints the version code of the compiler.
+     */
+    private static void printVersionCode() {
+        logger.warn(String.valueOf(QuxProperties.VERSION_CODE));
     }
 }

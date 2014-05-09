@@ -1,0 +1,33 @@
+[any] sort([any] data):
+    return mergesort(data)
+
+[any] mergesort([any] data):
+    if |data| <= 1:
+        return data
+
+    mid = |data| / 2
+
+    return merge(mergesort(data[:mid]), mergesort(data[mid:]))
+
+[any] merge([any] lhs, [any] rhs):
+    sorted = []
+
+    i = 0
+    j = 0
+    while i < |lhs| and j < |rhs|:
+        if lhs[i] <= rhs[j]:
+            sorted = sorted + [lhs[i++]]
+        else:
+            sorted = sorted + [rhs[j++]]
+
+    sorted = sorted + lhs[i:]
+    sorted = sorted + rhs[j:]
+
+    return sorted
+
+void main([str] args):
+    print sort([])
+    print sort([4, 3, 6, 1, -5, null])
+    print sort([9000, 12, 5, 12, 50, 43, -5])
+    print sort([9, 8, 7, 6, 5, 4, 3, 2, 1, 0])
+

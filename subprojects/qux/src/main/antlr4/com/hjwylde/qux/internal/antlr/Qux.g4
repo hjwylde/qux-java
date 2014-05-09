@@ -28,7 +28,7 @@ tokens { INDENT, DEDENT }
             Token next = super.nextToken();
 
             pending.offer(next);
-            if (next.getType() == QuxParser.NL) {
+            if (next.getType() == QuxParser.NEWLINE) {
                 next = super.nextToken();
             } else {
                 continue;
@@ -63,7 +63,7 @@ tokens { INDENT, DEDENT }
                 }
             } else {
                 // Either we have reached the end of input, or next token isn't a DENT and last
-                // token was a NL, hence, we must dedent
+                // token was a NEWLINE, hence, we must dedent
 
                 while (dents.size() > 1) {
                     dents.pop();
@@ -84,7 +84,7 @@ tokens { INDENT, DEDENT }
 
 // Grammar section
 
-start : NL? file EOF
+start : NEWLINE? file EOF
       ;
 
 // File
@@ -102,65 +102,126 @@ declFunction : typeReturn Identifier '(' (type Identifier (',' type Identifier)*
 
 // Statements
 
-stmt : stmtAssign
+stmt : stmtAccessAssign
+     | stmtAssign
      | stmtFor
      | stmtIf
      | stmtPrint
      | stmtReturn
-     | exprFunction NL
+     | stmtWhile
+     | stmtExpr
      ;
 
-stmtAssign : Identifier '=' expr NL
+stmtAccessAssign : Identifier ('[' expr ']')+ '=' expr NEWLINE
+                 ;
+
+stmtAssign : Identifier '=' expr NEWLINE
            ;
 
 stmtFor : 'for' Identifier BOP_IN expr block
         ;
 
-stmtIf : 'if' expr block ('else' block)?
+stmtIf : 'if' expr block ('elif' expr block)* ('else' block)?
        ;
 
-stmtPrint : 'print' expr NL
+stmtPrint : 'print' expr NEWLINE
           ;
 
-stmtReturn : 'return' expr? NL
+stmtReturn : 'return' expr? NEWLINE
            ;
 
-block : ':' NL INDENT stmt* DEDENT ;
+stmtWhile : 'while' expr block
+          ;
+
+stmtExpr : exprFunction NEWLINE
+         | exprIncrement NEWLINE
+         ;
+
+block : ':' NEWLINE INDENT stmt* DEDENT
+      ;
 
 // Expressions
 
-// TODO: Could push a mode that skips NL, INDENT and DEDENT tokens, then pop it at the end
+// TODO: Could push a mode that skips NEWLINE, INDENT and DEDENT tokens, then pop it at the end
 expr : exprBinary ;
 
-exprBinary : exprUnary ((BOP_MUL | BOP_DIV | BOP_REM) expr)*
-           | exprUnary ((BOP_ADD | BOP_SUB) expr)*
-           | exprUnary ((BOP_LT | BOP_LTE | BOP_GT | BOP_GTE) expr)*
-           | exprUnary ((BOP_EQ | BOP_NEQ) expr)*
-           | exprUnary ((BOP_AND | BOP_OR) expr)*
-           | exprUnary ((BOP_XOR | BOP_IFF) expr)*
-           | exprUnary ((BOP_IMPLIES) expr)*
+exprBinary : exprBinary_1
            ;
 
-exprUnary : UOP_NEG? exprTerm
-          | UOP_NOT? exprTerm
-          | exprLength
+exprBinary_1 : exprBinary_2 ((BOP_IMPLIES) exprBinary_2)*
+             ;
+
+exprBinary_2 : exprBinary_3 ((BOP_XOR | BOP_IFF) exprBinary_3)*
+             ;
+
+exprBinary_3 : exprBinary_4 ((BOP_AND | BOP_OR) exprBinary_4)*
+             ;
+
+exprBinary_4 : exprBinary_5 ((BOP_EQ | BOP_NEQ) exprBinary_5)*
+             ;
+
+exprBinary_5 : exprBinary_6 ((BOP_LT | BOP_LTE | BOP_GT | BOP_GTE) exprBinary_6)*
+             ;
+
+exprBinary_6 : exprBinary_7 ((BOP_ADD | BOP_SUB) exprBinary_7)*
+             ;
+
+exprBinary_7 : exprRange ((BOP_MUL | BOP_DIV | BOP_REM) exprRange)*
+             ;
+
+exprRange : exprUnary (BOP_RANGE exprUnary)?
           ;
 
-exprTerm : exprBracket
+exprUnary : UOP_NEG? exprAccess
+          | UOP_NOT? exprAccess
+          | UOP_LEN exprAccess UOP_LEN
+          ;
+
+exprAccess : exprTerm exprAccess_1*
+           ;
+
+exprAccess_1 : exprAccess_1_1
+             | exprAccess_1_2
+             | exprAccess_1_3
+             | exprAccess_1_4
+             | exprAccess_1_5
+             ;
+
+exprAccess_1_1 : '[' expr ']'
+               ;
+
+exprAccess_1_2 : '[' expr ':' expr ']'
+               ;
+
+exprAccess_1_3 : '[' expr ':' ']'
+               ;
+
+exprAccess_1_4 : '[' ':' expr ']'
+               ;
+
+exprAccess_1_5 : '[' ':' ']'
+               ;
+
+exprTerm : exprBrace
+         | exprBracket
          | exprFunction
+         | exprIncrement
          | exprParen
          | exprVariable
          | value
          ;
 
-exprLength : UOP_LEN exprTerm UOP_LEN
-           ;
+exprBrace : '{' (expr (',' expr)*)? '}'
+          ;
 
 exprBracket : '[' (expr (',' expr)*)? ']'
             ;
 
 exprFunction : Identifier '(' (expr (',' expr)*) ')'
              ;
+
+exprIncrement : Identifier UOP_INC
+              ;
 
 exprParen : '(' expr ')'
           ;
@@ -170,22 +231,31 @@ exprVariable : Identifier
 
 // Values
 
-value : ValueKeyword
+value : valueKeyword
       | ValueInt
       | ValueReal
       | ValueString
       ;
 
+valueKeyword : FALSE
+             | NULL
+             | TRUE
+             ;
+
 // Types
 
-type : typeTerm
-     | typeList
+type : typeList
+     | typeSet
+     | typeTerm
      ;
 
-typeTerm : typeKeyword
+typeList : '[' type ']'
          ;
 
-typeList : '[' type ']'
+typeSet : '{' type '}'
+         ;
+
+typeTerm : typeKeyword
          ;
 
 typeKeyword : ANY
@@ -203,11 +273,6 @@ typeReturn : type
 // Lexer section
 
 // Values
-
-ValueKeyword : FALSE
-             | NULL
-             | TRUE
-             ;
 
 ValueString : '\'' StringCharacter* '\'' ;
 
@@ -262,13 +327,16 @@ Exponent : 'e' [+-] Numeral ;
 
 ANY     : 'any' ;
 BOOL    : 'bool' ;
+ELIF    : 'elif' ;
 ELSE    : 'else' ;
 FALSE   : 'false' ;
 IF      : 'if' ;
 INT     : 'int' ;
+LIST    : 'list' ;
 NULL    : 'null' ;
 REAL    : 'real' ;
 RETURN  : 'return' ;
+SET     : 'set' ;
 STR     : 'str' ;
 TRUE    : 'true' ;
 VOID    : 'void' ;
@@ -302,6 +370,8 @@ BOP_IMPLIES : 'implies' ;
 
 BOP_IN : 'in' ;
 
+BOP_RANGE : '..' ;
+
 BOP_ADD : '+' ;
 BOP_SUB : '-' ;
 BOP_MUL : '*' ;
@@ -310,9 +380,10 @@ BOP_REM : '%' ;
 
 UOP_NOT : 'not' ;
 
-UOP_NEG: '-' ;
-
 UOP_LEN: '|' ;
+
+UOP_NEG: '-' ;
+UOP_INC: '++' ;
 
 // Identifier
 
@@ -326,11 +397,11 @@ COMMENT_DOC : '/**' .*? '*/' -> skip ;
 
 COMMENT_BLOCK : '/*' .*? '*/' -> skip ;
 
-NL : (' '* '\r'? '\n')+ ;
+NEWLINE : (' '* '\r'? '\n')+ ;
 
 DENT : { getCharPositionInLine() == 0 }? [ ]+ ;
 
-WS : [ ]+ -> skip;
+WHITESPACE : [ ]+ -> skip;
 
 UNKNOWN : .+? ;
 

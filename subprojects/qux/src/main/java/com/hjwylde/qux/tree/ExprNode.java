@@ -7,10 +7,13 @@ import com.hjwylde.qux.api.ExprVisitor;
 import com.hjwylde.qux.util.Attribute;
 import com.hjwylde.qux.util.Op;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 import java.util.Arrays;
 import java.util.Collection;
+
+import javax.annotation.Nullable;
 
 /**
  * TODO: Documentation
@@ -39,6 +42,45 @@ public abstract class ExprNode extends Node {
      * TODO: Documentation
      *
      * @author Henry J. Wylde
+     * @since 0.1.3
+     */
+    public static final class Access extends ExprNode {
+
+        private final ExprNode target;
+        private final ExprNode index;
+
+        public Access(ExprNode target, ExprNode index, Attribute... attributes) {
+            this(target, index, Arrays.asList(attributes));
+        }
+
+        public Access(ExprNode target, ExprNode index, Collection<? extends Attribute> attributes) {
+            super(attributes);
+
+            this.target = checkNotNull(target, "target cannot be null");
+            this.index = checkNotNull(index, "index cannot be null");
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void accept(ExprVisitor ev) {
+            ev.visitExprAccess(this);
+        }
+
+        public ExprNode getIndex() {
+            return index;
+        }
+
+        public ExprNode getTarget() {
+            return target;
+        }
+    }
+
+    /**
+     * TODO: Documentation
+     *
+     * @author Henry J. Wylde
      */
     public static final class Binary extends ExprNode {
 
@@ -49,7 +91,8 @@ public abstract class ExprNode extends Node {
             this(op, lhs, rhs, Arrays.asList(attributes));
         }
 
-        public Binary(Op.Binary op, ExprNode lhs, ExprNode rhs, Collection<Attribute> attributes) {
+        public Binary(Op.Binary op, ExprNode lhs, ExprNode rhs,
+                Collection<? extends Attribute> attributes) {
             super(attributes);
 
             this.op = checkNotNull(op, "op cannot be null");
@@ -92,7 +135,7 @@ public abstract class ExprNode extends Node {
             this(type, value, Arrays.asList(attributes));
         }
 
-        public Constant(Type type, Object value, Collection<Attribute> attribtues) {
+        public Constant(Type type, Object value, Collection<? extends Attribute> attribtues) {
             super(attribtues);
 
             checkArgument(value != null || type == Type.NULL,
@@ -102,6 +145,9 @@ public abstract class ExprNode extends Node {
             this.value = value;
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void accept(ExprVisitor ev) {
             ev.visitExprConstant(this);
@@ -140,13 +186,16 @@ public abstract class ExprNode extends Node {
         }
 
         public Function(String name, java.util.List<ExprNode> arguments,
-                Collection<Attribute> attributes) {
+                Collection<? extends Attribute> attributes) {
             super(attributes);
 
             this.name = checkNotNull(name, "name cannot be null");
             this.arguments = ImmutableList.copyOf(arguments);
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void accept(ExprVisitor ev) {
             ev.visitExprFunction(this);
@@ -174,12 +223,15 @@ public abstract class ExprNode extends Node {
             this(values, Arrays.asList(attributes));
         }
 
-        public List(java.util.List<ExprNode> values, Collection<Attribute> attributes) {
+        public List(java.util.List<ExprNode> values, Collection<? extends Attribute> attributes) {
             super(attributes);
 
             this.values = ImmutableList.copyOf(values);
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void accept(ExprVisitor ev) {
             ev.visitExprList(this);
@@ -187,6 +239,86 @@ public abstract class ExprNode extends Node {
 
         public ImmutableList<ExprNode> getValues() {
             return values;
+        }
+    }
+
+    /**
+     * TODO: Documentation
+     *
+     * @author Henry J. Wylde
+     * @since 0.1.3
+     */
+    public static final class Set extends ExprNode {
+
+        private final ImmutableList<ExprNode> values;
+
+        public Set(java.util.List<ExprNode> values, Attribute... attributes) {
+            this(values, Arrays.asList(attributes));
+        }
+
+        public Set(java.util.List<ExprNode> values, Collection<? extends Attribute> attributes) {
+            super(attributes);
+
+            this.values = ImmutableList.copyOf(values);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void accept(ExprVisitor ev) {
+            ev.visitExprSet(this);
+        }
+
+        public ImmutableList<ExprNode> getValues() {
+            return values;
+        }
+    }
+
+    /**
+     * TODO: Documentation
+     *
+     * @author Henry J. Wylde
+     * @since 0.1.3
+     */
+    public static final class Slice extends ExprNode {
+
+        private final ExprNode target;
+        private final Optional<ExprNode> from;
+        private final Optional<ExprNode> to;
+
+        public Slice(ExprNode target, @Nullable ExprNode from, @Nullable ExprNode to,
+                Attribute... attributes) {
+            this(target, from, to, Arrays.asList(attributes));
+        }
+
+        public Slice(ExprNode target, @Nullable ExprNode from, @Nullable ExprNode to,
+                Collection<? extends Attribute> attributes) {
+            super(attributes);
+
+            this.target = checkNotNull(target, "target cannot be null");
+            this.from = Optional.fromNullable(from);
+            this.to = Optional.fromNullable(to);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void accept(ExprVisitor ev) {
+            ev.visitExprSlice(this);
+        }
+
+        public Optional<ExprNode> getFrom() {
+            return from;
+        }
+
+        public ExprNode getTarget() {
+            return target;
+        }
+
+        public Optional<ExprNode> getTo() {
+            return to;
         }
     }
 
@@ -204,13 +336,16 @@ public abstract class ExprNode extends Node {
             this(op, target, Arrays.asList(attributes));
         }
 
-        public Unary(Op.Unary op, ExprNode target, Collection<Attribute> attributes) {
+        public Unary(Op.Unary op, ExprNode target, Collection<? extends Attribute> attributes) {
             super(attributes);
 
             this.op = checkNotNull(op, "op cannot be null");
             this.target = checkNotNull(target, "target cannot be null");
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void accept(ExprVisitor ev) {
             ev.visitExprUnary(this);
@@ -238,12 +373,15 @@ public abstract class ExprNode extends Node {
             this(name, Arrays.asList(attributes));
         }
 
-        public Variable(String name, Collection<Attribute> attributes) {
+        public Variable(String name, Collection<? extends Attribute> attributes) {
             super(attributes);
 
             this.name = checkNotNull(name, "name cannot be null");
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void accept(ExprVisitor ev) {
             ev.visitExprVariable(this);

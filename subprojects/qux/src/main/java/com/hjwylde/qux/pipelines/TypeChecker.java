@@ -1,11 +1,12 @@
 package com.hjwylde.qux.pipelines;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.hjwylde.qux.util.Type.TYPE_ANY;
 import static com.hjwylde.qux.util.Type.TYPE_BOOL;
 import static com.hjwylde.qux.util.Type.TYPE_INT;
+import static com.hjwylde.qux.util.Type.TYPE_LIST_ANY;
 import static com.hjwylde.qux.util.Type.TYPE_NULL;
 import static com.hjwylde.qux.util.Type.TYPE_REAL;
+import static com.hjwylde.qux.util.Type.TYPE_SET_ANY;
 import static com.hjwylde.qux.util.Type.TYPE_STR;
 
 import com.hjwylde.common.error.CompilerErrors;
@@ -40,7 +41,7 @@ import java.util.Set;
  *
  * @author Henry J. Wylde
  */
-public final class TypeChecker extends Pipeline {
+public final class TypeChecker extends Pipeline implements QuxVisitor {
 
     private final ImmutableMap<String, Type> functions;
 
@@ -50,19 +51,24 @@ public final class TypeChecker extends Pipeline {
         functions = initialiseFunctions(node);
     }
 
-    public TypeChecker(QuxVisitor next, QuxNode node) {
-        super(next, node);
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void visit(int version, String name) {}
 
-        functions = initialiseFunctions(node);
-    }
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void visitEnd() {}
 
     /**
      * {@inheritDoc}
      */
     @Override
     public FunctionVisitor visitFunction(int flags, String name, Type.Function type) {
-        FunctionVisitor fv = super.visitFunction(flags, name, type);
-
+        FunctionVisitor fv = FunctionVisitor.NULL_INSTANCE;
         FunctionTypeChecker fvc = new FunctionTypeChecker(fv);
 
         return fvc;
@@ -169,12 +175,35 @@ public final class TypeChecker extends Pipeline {
          * {@inheritDoc}
          */
         @Override
+        public void visitExprAccess(ExprNode.Access expr) {
+            visitExpr(expr.getTarget());
+            checkSubtype(expr.getTarget(), Type.forUnion(TYPE_LIST_ANY, TYPE_SET_ANY, TYPE_STR));
+
+            visitExpr(expr.getIndex());
+            checkSubtype(expr.getIndex(), TYPE_INT);
+
+            // TODO: Not quite right, when we introduce union types this is going to break
+            Type targetType = getType(expr.getTarget());
+            if (targetType instanceof Type.List) {
+                setType(expr, ((Type.List) targetType).getInnerType());
+            } else if (targetType instanceof Type.Set) {
+                setType(expr, ((Type.Set) targetType).getInnerType());
+            } else if (targetType instanceof Type.Str) {
+                setType(expr, TYPE_STR);
+            } else {
+                throw new MethodNotImplementedError(targetType.toString());
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
         public void visitExprBinary(ExprNode.Binary expr) {
             visitExpr(expr.getLhs());
             visitExpr(expr.getRhs());
 
             Type lhsType = getType(expr.getLhs());
-            Type rhsType = getType(expr.getRhs());
 
             // TODO: Properly type check using references to methods that exist
             switch (expr.getOp()) {
@@ -185,9 +214,15 @@ public final class TypeChecker extends Pipeline {
                 case REM:
                     setType(expr, lhsType);
                     break;
+                case IN:
                 case EQ:
                 case NEQ:
                     setType(expr, TYPE_BOOL);
+                    break;
+                case RANGE:
+                    checkEquivalent(expr.getLhs(), TYPE_INT);
+                    checkEquivalent(expr.getRhs(), TYPE_INT);
+                    setType(expr, Type.forList(TYPE_INT));
                     break;
                 case GT:
                 case GTE:
@@ -195,11 +230,6 @@ public final class TypeChecker extends Pipeline {
                 case LTE:
                     // TODO: This feels wrong, what is the lhs and rhs are equivalent unions? Surely we can't do a binary operation then!
                     checkEquivalent(expr.getRhs(), lhsType);
-                    setType(expr, TYPE_BOOL);
-                    break;
-                case IN:
-                    checkSubtype(expr.getRhs(), Type.forList(TYPE_ANY));
-                    checkSubtype(expr.getLhs(), ((Type.List) rhsType).getInnerType());
                     setType(expr, TYPE_BOOL);
                     break;
                 case AND:
@@ -266,18 +296,51 @@ public final class TypeChecker extends Pipeline {
                 types.add(getType(value));
             }
 
-            Type type;
             if (types.isEmpty()) {
-                type = Type.forList(TYPE_ANY);
-            } else if (types.size() == 1) {
-                type = Type.forList(types.iterator().next());
+                setType(expr, TYPE_LIST_ANY);
             } else {
-                type = Type.forList(Type.forUnion(types));
+                setType(expr, Type.forList(Type.forUnion(types)));
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void visitExprSet(ExprNode.Set expr) {
+            Set<Type> types = new HashSet<>();
+
+            for (ExprNode value : expr.getValues()) {
+                visitExpr(value);
+                types.add(getType(value));
             }
 
-            type = Types.normalise(type);
+            if (types.isEmpty()) {
+                setType(expr, TYPE_SET_ANY);
+            } else {
+                setType(expr, Type.forSet(Type.forUnion(types)));
+            }
+        }
 
-            setType(expr, type);
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void visitExprSlice(ExprNode.Slice expr) {
+            visitExpr(expr.getTarget());
+            checkSubtype(expr.getTarget(), Type.forUnion(TYPE_LIST_ANY, TYPE_SET_ANY, TYPE_STR));
+
+            if (expr.getFrom().isPresent()) {
+                visitExpr(expr.getFrom().get());
+                checkSubtype(expr.getFrom().get(), TYPE_INT);
+            }
+
+            if (expr.getTo().isPresent()) {
+                visitExpr(expr.getTo().get());
+                checkSubtype(expr.getTo().get(), TYPE_INT);
+            }
+
+            setType(expr, getType(expr.getTarget()));
         }
 
         /**
@@ -290,9 +353,14 @@ public final class TypeChecker extends Pipeline {
             Type targetType = getType(expr.getTarget());
 
             switch (expr.getOp()) {
+                case INC:
+                    checkSubtype(expr.getTarget(), TYPE_INT);
+                    setType(expr, TYPE_INT);
+                    break;
                 case LEN:
-                    checkSubtype(expr.getTarget(), Type.forUnion(Type.forList(TYPE_ANY), TYPE_STR));
-                    setType(expr, ((Type.List) targetType).getInnerType());
+                    checkSubtype(expr.getTarget(), Type.forUnion(TYPE_LIST_ANY, TYPE_SET_ANY,
+                            TYPE_STR));
+                    setType(expr, TYPE_INT);
                     break;
                 case NEG:
                     setType(expr, targetType);
@@ -338,6 +406,17 @@ public final class TypeChecker extends Pipeline {
          * {@inheritDoc}
          */
         @Override
+        public void visitStmtAccessAssign(StmtNode.AccessAssign stmt) {
+            visitExpr(stmt.getAccess());
+            visitExpr(stmt.getExpr());
+
+            super.visitStmtAccessAssign(stmt);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
         public void visitStmtAssign(StmtNode.Assign stmt) {
             visitExpr(stmt.getExpr());
 
@@ -350,8 +429,19 @@ public final class TypeChecker extends Pipeline {
          * {@inheritDoc}
          */
         @Override
+        public void visitStmtExpr(StmtNode.Expr stmt) {
+            visitExpr(stmt.getExpr());
+
+            super.visitStmtExpr(stmt);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
         public void visitStmtFor(StmtNode.For stmt) {
             visitExpr(stmt.getExpr());
+            checkSubtype(stmt.getExpr(), Type.forUnion(TYPE_LIST_ANY, TYPE_SET_ANY));
 
             Type type = getType(stmt.getExpr());
 
@@ -359,6 +449,8 @@ public final class TypeChecker extends Pipeline {
             Type inner;
             if (type instanceof Type.List) {
                 inner = ((Type.List) type).getInnerType();
+            } else if (type instanceof Type.Set) {
+                inner = ((Type.Set) type).getInnerType();
             } else {
                 throw new MethodNotImplementedError(type.toString());
             }
@@ -432,6 +524,25 @@ public final class TypeChecker extends Pipeline {
             }
 
             super.visitStmtReturn(stmt);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void visitStmtWhile(StmtNode.While stmt) {
+            visitExpr(stmt.getExpr());
+            checkSubtype(stmt.getExpr(), TYPE_BOOL);
+
+            env = env.push();
+
+            visitBlock(stmt.getBody());
+
+            Environment<String, Type> whileEnv = env.pop();
+
+            env.putAll(mergeEnvironments(env, whileEnv));
+
+            super.visitStmtWhile(stmt);
         }
 
         private void checkEquivalent(ExprNode expr, Type expected) {

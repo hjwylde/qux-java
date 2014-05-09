@@ -1,0 +1,15 @@
+void f({any} anys):
+    for a in anys:
+        if a == null:
+            return
+
+        print a
+
+void main([str] args):
+    f({0, 1, 'foo', null, 2})
+    f({null, 'bar', {'2'}})
+    f({})
+    f({{{{}}}, [], [{[null]}], null, {}})
+    f({true, false, 1, 1.1, 'foo', {}, []})
+    f({true, false, 1, 1.1, 'foo', {}, [], null})
+

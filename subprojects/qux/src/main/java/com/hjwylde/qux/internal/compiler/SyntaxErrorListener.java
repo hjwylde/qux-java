@@ -36,6 +36,9 @@ public final class SyntaxErrorListener extends BaseErrorListener {
         return ImmutableList.copyOf(errors);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void syntaxError(Recognizer<?, ?> recognizer, @Nullable Object offendingSymbol, int line,
             int charPositionInLine, String msg, @Nullable RecognitionException e) {

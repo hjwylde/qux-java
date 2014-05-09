@@ -1,16 +1,19 @@
 package qux.lang;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkElementIndex;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkPositionIndex;
 import static qux.lang.Bool.FALSE;
 import static qux.lang.Bool.TRUE;
 
 import java.math.BigInteger;
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 
+import qux.lang.op.Access;
+import qux.lang.op.Assign;
 import qux.lang.op.Len;
+import qux.lang.op.Slice;
 import qux.util.Iterable;
 import qux.util.Iterator;
 
@@ -19,7 +22,7 @@ import qux.util.Iterator;
  *
  * @author Henry J. Wylde
  */
-public final class List extends Obj implements Len, Iterable<Obj> {
+public final class List extends Obj implements Access, Assign, Iterable, Len, Slice {
 
     private Obj[] data;
     private int count;
@@ -34,6 +37,11 @@ public final class List extends Obj implements Len, Iterable<Obj> {
     private List(List list) {
         this.data = list.data;
         this.count = list.count;
+
+        // Lazily clone the data only when the first write is performed
+        refs = 1;
+        // Can't forget the fact that this list also references the prior list!
+        list.refs++;
     }
 
     private List(Obj[] data) {
@@ -47,26 +55,65 @@ public final class List extends Obj implements Len, Iterable<Obj> {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Obj _access_(Int index) {
+        return get(index);
+    }
+
     public List _add_(List list) {
         List union = new List(this);
 
         union.ensureCapacity(list._len_());
 
-        for (Iterator<Obj> it = list._iter_(); it.hasNext() == TRUE; ) {
+        for (Iterator it = list._iter_(); it.hasNext() == TRUE; ) {
             union.add(it.next());
         }
 
         return union;
     }
 
-    public Bool _contains_(Obj obj) {
-        for (Iterator<Obj> it = _iter_(); it.hasNext() == TRUE; ) {
-            if (it.next().equals(obj)) {
-                return TRUE;
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void _assign_(Int index, Obj value) {
+        set(index, value);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Int _comp_(Obj obj) {
+        if (!(obj instanceof List)) {
+            return meta()._comp_(obj.meta());
+        }
+
+        List that = (List) obj;
+
+        Int comp = _len_()._comp_(that._len_());
+        if (!comp.equals(Int.ZERO)) {
+            return comp;
+        }
+
+        Iterator thisIt = _iter_();
+        Iterator thatIt = that._iter_();
+
+        while (thisIt.hasNext() == TRUE) {
+            comp = thisIt.next()._comp_(thatIt.next());
+            if (!comp.equals(Int.ZERO)) {
+                return comp;
             }
         }
 
-        return FALSE;
+        return Int.ZERO;
+    }
+
+    public Bool _contains_(Obj obj) {
+        return indexOf(obj) >= 0 ? TRUE : FALSE;
     }
 
     /**
@@ -77,14 +124,24 @@ public final class List extends Obj implements Len, Iterable<Obj> {
         StringBuilder sb = new StringBuilder();
 
         sb.append("[");
-        for (Iterator<Obj> it = _iter_(); it.hasNext() == TRUE; ) {
+        for (Iterator it = _iter_(); it.hasNext() == TRUE; ) {
             sb.append(it.next()._desc_());
             sb.append(", ");
         }
-        sb.setLength(sb.length() - 2);
+        if (sb.length() > 2) {
+            sb.setLength(sb.length() - 2);
+        }
         sb.append("]");
 
         return Str.valueOf(sb.toString());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List _dup_() {
+        return new List(this);
     }
 
     /**
@@ -98,15 +155,15 @@ public final class List extends Obj implements Len, Iterable<Obj> {
 
         List that = (List) obj;
 
-        if (_len_()._eq_(that._len_()) == FALSE) {
+        if (!_len_().equals(that._len_())) {
             return FALSE;
         }
 
-        Iterator<Obj> thisIt = _iter_();
-        Iterator<Obj> thatIt = that._iter_();
+        Iterator thisIt = _iter_();
+        Iterator thatIt = that._iter_();
 
         while (thisIt.hasNext() == TRUE) {
-            if (thisIt.next()._eq_(thatIt.next()) == FALSE) {
+            if (!thisIt.next().equals(thatIt.next())) {
                 return FALSE;
             }
         }
@@ -119,36 +176,23 @@ public final class List extends Obj implements Len, Iterable<Obj> {
      */
     @Override
     public Int _hash_() {
-        Int hash = Int.valueOf(0);
+        Int hash = Int.ZERO;
 
-        for (Iterator<Obj> it = _iter_(); it.hasNext() == TRUE; ) {
+        for (Iterator it = _iter_(); it.hasNext() == TRUE; ) {
             hash = hash._add_(it.next()._hash_());
         }
 
         return hash;
     }
 
-    public Obj _indexof_(Obj obj) {
-        Int index = Int.valueOf(0);
-        for (Iterator<Obj> it = _iter_(); it.hasNext() == TRUE; ) {
-            if (it.next().equals(obj)) {
-                return index;
-            }
-
-            index = index._add_(Int.valueOf(1));
-        }
-
-        return Null.INSTANCE;
-    }
-
     /**
      * {@inheritDoc}
      */
     @Override
-    public synchronized Iterator<Obj> _iter_() {
+    public synchronized Iterator _iter_() {
         refs++;
 
-        return new Iterator<Obj>() {
+        return new Iterator() {
 
             private Obj[] data = List.this.data;
             private int count = List.this.count;
@@ -156,7 +200,16 @@ public final class List extends Obj implements Len, Iterable<Obj> {
 
             @Override
             public Bool hasNext() {
-                return index < count ? TRUE : FALSE;
+                if (index < count) {
+                    return TRUE;
+                }
+
+                // Check if the list is still the same, if it is we can decrement the refs count
+                if (List.this.data == data) {
+                    refs--;
+                }
+
+                return FALSE;
             }
 
             @Override
@@ -175,48 +228,39 @@ public final class List extends Obj implements Len, Iterable<Obj> {
     }
 
     public List _mul_(Int value) {
-        checkArgument(value._gte_(Int.valueOf(0)) == TRUE,
-                "cannot multiply a list by negative value");
+        checkArgument(value._gte_(Int.ZERO) == TRUE, "cannot multiply a list by negative value");
 
         List mul = new List();
 
-        if (value._eq_(Int.valueOf(0)) == TRUE) {
+        if (value.equals(Int.ZERO)) {
             return mul;
         }
 
-        while (value._gt_(Int.valueOf(0)) == TRUE) {
+        while (value._gt_(Int.ZERO) == TRUE) {
             mul = mul._add_(this);
 
-            value = value._sub_(Int.valueOf(1));
+            value = value._sub_(Int.ONE);
         }
 
         return mul;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List _slice_(Int from, Int to) {
+        return sublist(from, to);
+    }
+
     public List _sub_(List list) {
         List difference = new List(this);
 
-        for (Iterator<Obj> it = list._iter_(); it.hasNext() == TRUE; ) {
+        for (Iterator it = list._iter_(); it.hasNext() == TRUE; ) {
             difference.remove(it.next());
         }
 
         return difference;
-    }
-
-    public synchronized void add(Obj obj) {
-        checkRefs();
-
-        ensureCapacity();
-
-        data[count++] = checkNotNull(obj, "obj cannot be null");
-    }
-
-    public synchronized void clear() {
-        checkRefs();
-
-        ensureCapacity();
-
-        count = 0;
     }
 
     /**
@@ -224,47 +268,118 @@ public final class List extends Obj implements Len, Iterable<Obj> {
      */
     @Override
     public Meta meta() {
-        Set<Meta> types = new HashSet<>();
+        Set types = Set.valueOf();
 
-        for (Iterator<Obj> it = _iter_(); it.hasNext() == TRUE; ) {
+        for (Iterator it = _iter_(); it.hasNext() == TRUE; ) {
             types.add(it.next().meta());
         }
 
-        // TODO: Normalise the list before the checks
-        // The normalisation should happen in the Meta.forList methods
-
-        if (types.isEmpty()) {
-            return Meta.forList(Meta.META_ANY);
+        if (types.isEmpty() == TRUE) {
+            return Meta.forSet(Meta.META_ANY);
         }
 
-        if (types.size() == 1) {
-            return Meta.forList(types.iterator().next());
+        if (types._len_().equals(Int.ONE)) {
+            return Meta.forSet((Meta) types._iter_().next());
         }
 
-        return Meta.forList(Meta.forUnion(types));
+        return Meta.forSet(Meta.forUnion(types));
     }
 
-    public synchronized void remove(Obj obj) {
+    public static List valueOf(Obj... data) {
+        return new List(data);
+    }
+
+    synchronized void add(Obj obj) {
         checkRefs();
 
-        Obj tmp = _indexof_(obj);
+        ensureCapacity();
 
-        if (tmp instanceof Null) {
-            return;
+        data[count++] = checkNotNull(obj, "obj cannot be null");
+    }
+
+    Obj get(Int index) {
+        return get(index._value_());
+    }
+
+    synchronized Obj get(int index) {
+        checkElementIndex(index, count);
+
+        return data[index];
+    }
+
+    Obj get(BigInteger index) {
+        checkArgument(index.bitLength() < 32, "lists of size larger than 32 bits is unsupported");
+
+        return get(index.intValue());
+    }
+
+    int indexOf(Obj obj) {
+        int index = 0;
+        for (Iterator it = _iter_(); it.hasNext() == TRUE; ) {
+            if (it.next().equals(obj)) {
+                return index;
+            }
+
+            index++;
         }
 
-        checkArgument(((Int) tmp)._value_().bitLength() < 32,
-                "lists of size larger than 32 bits is unsupported");
+        return -index;
+    }
 
-        int index = ((Int) tmp)._value_().intValue();
+    Bool isEmpty() {
+        return count == 0 ? TRUE : FALSE;
+    }
+
+    synchronized void remove(Obj obj) {
+        checkRefs();
+
+        int index = indexOf(obj);
+
+        if (index < 0) {
+            return;
+        }
 
         System.arraycopy(data, index + 1, data, index, count - (index + 1));
 
         count--;
     }
 
-    public static List valueOf(Obj... data) {
-        return new List(data);
+    void set(Int index, Obj value) {
+        set(index._value_(), value);
+    }
+
+    synchronized void set(int index, Obj value) {
+        checkElementIndex(index, count);
+
+        checkRefs();
+
+        data[index] = checkNotNull(value, "value cannot be null");
+    }
+
+    void set(BigInteger index, Obj value) {
+        checkArgument(index.bitLength() < 32, "lists of size larger than 32 bits is unsupported");
+
+        set(index.intValue(), value);
+    }
+
+    List sublist(Int from, Int to) {
+        return sublist(from._value_(), to._value_());
+    }
+
+    synchronized List sublist(int from, int to) {
+        checkPositionIndex(from, count, "from");
+        checkPositionIndex(to, count, "to");
+        checkArgument(from <= to, "from must be less than or equal to to (from=%s, to=%s)", from,
+                to);
+
+        return valueOf(Arrays.copyOfRange(data, from, to));
+    }
+
+    List sublist(BigInteger from, BigInteger to) {
+        checkArgument(from.bitLength() < 32, "lists of size larger than 32 bits is unsupported");
+        checkArgument(to.bitLength() < 32, "lists of size larger than 32 bits is unsupported");
+
+        return sublist(from.intValue(), to.intValue());
     }
 
     private synchronized void checkRefs() {

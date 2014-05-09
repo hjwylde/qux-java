@@ -17,8 +17,18 @@ public final class ValidListTests extends Harness {
     }
 
     @Test
+    public void ListAccess() {
+        run("ListAccess");
+    }
+
+    @Test
     public void ListAdd() {
         run("ListAdd");
+    }
+
+    @Test
+    public void ListAssign() {
+        run("ListAssign");
     }
 
     @Test
@@ -32,6 +42,11 @@ public final class ValidListTests extends Harness {
     }
 
     @Test
+    public void ListLoop() {
+        run("ListLoop");
+    }
+
+    @Test
     public void ListMul() {
         run("ListMul");
     }
@@ -39,6 +54,11 @@ public final class ValidListTests extends Harness {
     @Test
     public void ListNeq() {
         run("ListNeq");
+    }
+
+    @Test
+    public void ListSlice() {
+        run("ListSlice");
     }
 
     @Test

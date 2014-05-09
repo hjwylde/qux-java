@@ -31,7 +31,7 @@ public final class QuxNode extends Node implements QuxVisitor {
         super(attributes);
     }
 
-    public QuxNode(Collection<Attribute> attributes) {
+    public QuxNode(Collection<? extends Attribute> attributes) {
         super(attributes);
     }
 

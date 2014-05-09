@@ -39,7 +39,19 @@ final class NullFunctionVisitor implements FunctionVisitor {
      * {@inheritDoc}
      */
     @Override
+    public void visitStmtAccessAssign(StmtNode.AccessAssign stmt) {}
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void visitStmtAssign(StmtNode.Assign stmt) {}
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void visitStmtExpr(StmtNode.Expr stmt) {}
 
     /**
      * {@inheritDoc}
@@ -70,4 +82,10 @@ final class NullFunctionVisitor implements FunctionVisitor {
      */
     @Override
     public void visitStmtReturn(StmtNode.Return stmt) {}
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void visitStmtWhile(StmtNode.While stmt) {}
 }

@@ -42,6 +42,11 @@ public final class ValidIntTests extends Harness {
     }
 
     @Test
+    public void IntInc() {
+        run("IntInc");
+    }
+
+    @Test
     public void IntLt() {
         run("IntLt");
     }
@@ -64,6 +69,11 @@ public final class ValidIntTests extends Harness {
     @Test
     public void IntNeq() {
         run("IntNeq");
+    }
+
+    @Test
+    public void IntRange() {
+        run("IntRange");
     }
 
     @Test

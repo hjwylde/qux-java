@@ -37,8 +37,34 @@ public final class Bool extends Obj implements And, Or, Xor, Iff, Implies, Not {
      * {@inheritDoc}
      */
     @Override
+    public Int _comp_(Obj obj) {
+        if (!(obj instanceof Bool)) {
+            return meta()._comp_(obj.meta());
+        }
+
+        Bool that = (Bool) obj;
+
+        if (this == that) {
+            return Int.ZERO;
+        }
+
+        return this == TRUE ? Int.ONE : Int.M_ONE;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public Str _desc_() {
         return Str.valueOf(value ? "true" : "false");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Bool _dup_() {
+        return this;
     }
 
     /**
@@ -51,14 +77,6 @@ public final class Bool extends Obj implements And, Or, Xor, Iff, Implies, Not {
         }
 
         return this == obj ? TRUE : FALSE;
-    }
-
-    public Bool _gt_(Bool t) {
-        return (this == TRUE && t == FALSE) ? TRUE : FALSE;
-    }
-
-    public Bool _gte_(Bool t) {
-        return (this == TRUE || t == FALSE) ? TRUE : FALSE;
     }
 
     /**
@@ -74,14 +92,6 @@ public final class Bool extends Obj implements And, Or, Xor, Iff, Implies, Not {
      */
     @Override
     public Bool _implies_(Bool t) {
-        return (this == FALSE || t == TRUE) ? TRUE : FALSE;
-    }
-
-    public Bool _lt_(Bool t) {
-        return (this == FALSE && t == TRUE) ? TRUE : FALSE;
-    }
-
-    public Bool _lte_(Bool t) {
         return (this == FALSE || t == TRUE) ? TRUE : FALSE;
     }
 

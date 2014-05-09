@@ -17,8 +17,18 @@ public final class ValidStrTests extends Harness {
     }
 
     @Test
+    public void StrAccess() {
+        run("StrAccess");
+    }
+
+    @Test
     public void StrAdd() {
         run("StrAdd");
+    }
+
+    @Test
+    public void StrAssign() {
+        run("StrAssign");
     }
 
     @Test
@@ -54,6 +64,11 @@ public final class ValidStrTests extends Harness {
     @Test
     public void StrNeq() {
         run("StrNeq");
+    }
+
+    @Test
+    public void StrSlice() {
+        run("StrSlice");
     }
 
     @Test

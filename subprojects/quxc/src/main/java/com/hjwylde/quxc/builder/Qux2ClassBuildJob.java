@@ -8,7 +8,6 @@ import static java.nio.file.StandardOpenOption.WRITE;
 import com.hjwylde.common.error.BuildError;
 import com.hjwylde.qbs.builder.BuildJob;
 import com.hjwylde.qbs.builder.BuildResult;
-import com.hjwylde.qbs.builder.Context;
 import com.hjwylde.qux.api.CheckQuxAdapter;
 import com.hjwylde.qux.api.QuxReader;
 import com.hjwylde.qux.api.QuxVisitor;
@@ -52,7 +51,7 @@ public final class Qux2ClassBuildJob extends BuildJob {
 
     private final Path source;
 
-    private final Context context;
+    private final QuxContext context;
 
     /**
      * Creates a new {@code Qux2ClassBuildJob} with the given path and context.
@@ -60,7 +59,7 @@ public final class Qux2ClassBuildJob extends BuildJob {
      * @param source the source path.
      * @param context the context.
      */
-    public Qux2ClassBuildJob(Path source, Context context) {
+    public Qux2ClassBuildJob(Path source, QuxContext context) {
         this.source = checkNotNull(source, "source cannot be null");
 
         this.context = checkNotNull(context, "context cannot be null");
@@ -84,9 +83,7 @@ public final class Qux2ClassBuildJob extends BuildJob {
 
             // Apply the pipelines
             for (Class<? extends Pipeline> clazz : pipelines) {
-                Pipeline pipeline = clazz.getConstructor(QuxNode.class).newInstance(node);
-
-                apply(pipeline, node);
+                apply(clazz, node);
             }
 
             // Translate the file to the java bytecode format
@@ -97,18 +94,22 @@ public final class Qux2ClassBuildJob extends BuildJob {
 
             logger.debug("{}: building finished in {}", source, stopwatch);
         } catch (IOException | InvocationTargetException | NoSuchMethodException | InstantiationException | IllegalAccessException e) {
-            throw new BuildError(e);
+            throw new BuildError(e.getMessage(), e);
         }
 
         return BuildResult.success();
     }
 
-    private void apply(QuxVisitor pipeline, QuxNode node) {
-        logger.debug("{}: applying pipeline '{}'", source, pipeline.getClass().getName());
+    private void apply(Class<? extends Pipeline> clazz, QuxNode node)
+            throws NoSuchMethodException, IllegalAccessException, InvocationTargetException,
+            InstantiationException {
+        logger.debug("{}: applying pipeline '{}'", source, clazz.getName());
 
         Stopwatch stopwatch = Stopwatch.createStarted();
 
-        node.accept(pipeline);
+        Pipeline pipeline = clazz.getConstructor(QuxNode.class).newInstance(node);
+
+        pipeline.apply();
 
         stopwatch.stop();
 
@@ -147,7 +148,7 @@ public final class Qux2ClassBuildJob extends BuildJob {
 
         Stopwatch stopwatch = Stopwatch.createStarted();
 
-        Charset charset = ((QuxProject) context.getProject()).getOptions().getCharset();
+        Charset charset = context.getProject().getOptions().getCharset();
         new QuxReader(source, charset).accept(qv);
 
         stopwatch.stop();

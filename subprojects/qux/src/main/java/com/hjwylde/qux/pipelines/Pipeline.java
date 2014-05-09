@@ -2,7 +2,6 @@ package com.hjwylde.qux.pipelines;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.hjwylde.qux.api.QuxAdapter;
 import com.hjwylde.qux.api.QuxVisitor;
 import com.hjwylde.qux.tree.QuxNode;
 
@@ -12,7 +11,7 @@ import com.hjwylde.qux.tree.QuxNode;
  * @author Henry J. Wylde
  * @since 0.1.2
  */
-public abstract class Pipeline extends QuxAdapter {
+public abstract class Pipeline {
 
     private final QuxNode node;
 
@@ -20,13 +19,17 @@ public abstract class Pipeline extends QuxAdapter {
         this.node = checkNotNull(node, "node cannot be null");
     }
 
-    public Pipeline(QuxVisitor next, QuxNode node) {
-        super(next);
-
-        this.node = checkNotNull(node, "node cannot be null");
+    public final void apply() {
+        if (this instanceof QuxVisitor) {
+            node.accept((QuxVisitor) this);
+        } else {
+            apply(node);
+        }
     }
 
-    protected QuxNode getQuxNode() {
+    protected void apply(QuxNode node) {}
+
+    protected final QuxNode getQuxNode() {
         return node;
     }
 }

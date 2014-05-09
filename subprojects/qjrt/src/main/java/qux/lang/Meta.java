@@ -9,9 +9,8 @@ import com.google.common.base.Joiner;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.collect.ImmutableSet;
 
-import java.util.Set;
+import qux.util.Iterator;
 
 /**
  * TODO: Documentation
@@ -30,21 +29,28 @@ public class Meta extends Obj {
     static final Meta META_STR = new Str();
 
     private static final LoadingCache<Meta, Meta> listMetas =
-            CacheBuilder.<Meta, Meta>newBuilder().weakKeys().build(new CacheLoader<Meta, Meta>() {
-                                                                       @Override
-                                                                       public Meta load(Meta key) {
-                                                                           return new List(key);
-                                                                       }
-                                                                   }
+            CacheBuilder.<Meta, Meta>newBuilder().build(new CacheLoader<Meta, Meta>() {
+                                                            @Override
+                                                            public Meta load(Meta key) {
+                                                                return new List(key);
+                                                            }
+                                                        }
             );
-    private static final LoadingCache<Set<Meta>, Meta> unionMetas =
-            CacheBuilder.<Meta, Meta>newBuilder().weakKeys().build(
-                    new CacheLoader<Set<Meta>, Meta>() {
-                        @Override
-                        public Meta load(Set<Meta> key) {
-                            return new Union(key);
-                        }
-                    }
+    private static final LoadingCache<Meta, Meta> setMetas =
+            CacheBuilder.<Meta, Meta>newBuilder().build(new CacheLoader<Meta, Meta>() {
+                                                            @Override
+                                                            public Meta load(Meta key) {
+                                                                return new Set(key);
+                                                            }
+                                                        }
+            );
+    private static final LoadingCache<qux.lang.Set, Meta> unionMetas =
+            CacheBuilder.<Meta, Meta>newBuilder().build(new CacheLoader<qux.lang.Set, Meta>() {
+                                                            @Override
+                                                            public Meta load(qux.lang.Set key) {
+                                                                return new Union(key);
+                                                            }
+                                                        }
             );
 
     /**
@@ -56,8 +62,28 @@ public class Meta extends Obj {
      * {@inheritDoc}
      */
     @Override
+    public qux.lang.Int _comp_(Obj obj) {
+        if (!(obj instanceof Meta)) {
+            return qux.lang.Int.M_ONE;
+        }
+
+        return _desc_()._comp_(obj._desc_());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public qux.lang.Str _desc_() {
         return qux.lang.Str.valueOf("meta");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Meta _dup_() {
+        return this;
     }
 
     /**
@@ -72,12 +98,16 @@ public class Meta extends Obj {
         return this == obj ? TRUE : FALSE;
     }
 
-    public static Meta forList(Meta inner) {
-        return listMetas.getUnchecked(inner);
+    public static Meta forList(Meta innerType) {
+        return listMetas.getUnchecked(normalise(innerType));
     }
 
-    public static Meta forUnion(Set<Meta> types) {
-        return unionMetas.getUnchecked(types);
+    public static Meta forSet(Meta innerType) {
+        return setMetas.getUnchecked(normalise(innerType));
+    }
+
+    public static Meta forUnion(qux.lang.Set types) {
+        return unionMetas.getUnchecked(normalise(types));
     }
 
     /**
@@ -86,6 +116,23 @@ public class Meta extends Obj {
     @Override
     public Meta meta() {
         return META_META;
+    }
+
+    private static qux.lang.Set normalise(qux.lang.Set types) {
+        // TODO: Implement normalise(Set)
+        throw new InternalError("normalise(Set) not implemented");
+    }
+
+    private static Meta normalise(Meta meta) {
+        if (meta instanceof Meta.List) {
+            return forList(((List) meta).innerType);
+        } else if (meta instanceof Meta.Set) {
+            return forSet(((Set) meta).innerType);
+        } else if (meta instanceof Meta.Union) {
+            return forUnion(((Union) meta).types);
+        }
+
+        return meta;
     }
 
     /**
@@ -147,10 +194,10 @@ public class Meta extends Obj {
      */
     private static final class List extends Meta {
 
-        private final Meta inner;
+        private final Meta innerType;
 
-        public List(Meta inner) {
-            this.inner = checkNotNull(inner, "inner cannot be null");
+        public List(Meta innerType) {
+            this.innerType = checkNotNull(innerType, "inner cannot be null");
         }
 
         /**
@@ -158,7 +205,7 @@ public class Meta extends Obj {
          */
         @Override
         public qux.lang.Str _desc_() {
-            return qux.lang.Str.valueOf("[" + inner + "]");
+            return qux.lang.Str.valueOf("[" + innerType + "]");
         }
 
         /**
@@ -170,7 +217,7 @@ public class Meta extends Obj {
                 return FALSE;
             }
 
-            return inner._eq_(((List) obj).inner);
+            return innerType._eq_(((List) obj).innerType);
         }
 
         /**
@@ -178,11 +225,11 @@ public class Meta extends Obj {
          */
         @Override
         public qux.lang.Int _hash_() {
-            return inner._hash_();
+            return innerType._hash_();
         }
 
-        public Meta getInner() {
-            return inner;
+        public Meta getInnerType() {
+            return innerType;
         }
     }
 
@@ -224,6 +271,53 @@ public class Meta extends Obj {
      * TODO: Documentation
      *
      * @author Henry J. Wylde
+     * @since 0.1.3
+     */
+    private static final class Set extends Meta {
+
+        private final Meta innerType;
+
+        public Set(Meta innerType) {
+            this.innerType = checkNotNull(innerType, "inner cannot be null");
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public qux.lang.Str _desc_() {
+            return qux.lang.Str.valueOf("{" + innerType + "}");
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public qux.lang.Bool _eq_(Obj obj) {
+            if (super._eq_(obj) == FALSE) {
+                return FALSE;
+            }
+
+            return innerType._eq_(((Set) obj).innerType);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public qux.lang.Int _hash_() {
+            return innerType._hash_();
+        }
+
+        public Meta getInnerType() {
+            return innerType;
+        }
+    }
+
+    /**
+     * TODO: Documentation
+     *
+     * @author Henry J. Wylde
      * @since 0.1.2
      */
     private static final class Str extends Meta {
@@ -245,13 +339,14 @@ public class Meta extends Obj {
      */
     private static final class Union extends Meta {
 
-        // TODO: Change this over to the Qux set type when it exists
-        private final ImmutableSet<Meta> types;
+        // TODO: Change this to a frozenset when it exists
+        private final qux.lang.Set types;
 
-        public Union(Set<Meta> types) {
-            checkArgument(types.size() >= 2, "types must have at least 2 elements");
+        public Union(qux.lang.Set types) {
+            checkArgument(types._len_()._gte_(qux.lang.Int.TWO) == TRUE,
+                    "types must have at least 2 elements");
 
-            this.types = ImmutableSet.copyOf(types);
+            this.types = types;
         }
 
         /**
@@ -259,7 +354,27 @@ public class Meta extends Obj {
          */
         @Override
         public qux.lang.Str _desc_() {
-            return qux.lang.Str.valueOf(Joiner.on("|").join(types));
+            java.util.Iterator<Obj> it = new java.util.Iterator<Obj>() {
+
+                Iterator it = types._iter_();
+
+                @Override
+                public boolean hasNext() {
+                    return it.hasNext() == TRUE;
+                }
+
+                @Override
+                public Obj next() {
+                    return it.next();
+                }
+
+                @Override
+                public void remove() {
+                    throw new UnsupportedOperationException();
+                }
+            };
+
+            return qux.lang.Str.valueOf(Joiner.on("|").join(it));
         }
 
         /**
@@ -282,7 +397,7 @@ public class Meta extends Obj {
             return qux.lang.Int.valueOf(types.hashCode());
         }
 
-        public ImmutableSet<Meta> getTypes() {
+        public qux.lang.Set getTypes() {
             return types;
         }
     }

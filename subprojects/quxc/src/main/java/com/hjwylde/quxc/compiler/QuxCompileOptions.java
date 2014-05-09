@@ -2,10 +2,15 @@ package com.hjwylde.quxc.compiler;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.hjwylde.common.error.IllegalTimeUnitNameException;
 import com.hjwylde.qbs.compiler.CompileOptions;
 import com.hjwylde.quxc.util.QuxcProperties;
 
 import java.nio.charset.Charset;
+import java.nio.charset.IllegalCharsetNameException;
+import java.nio.charset.UnsupportedCharsetException;
+import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 /**
  * TODO: Documentation.
@@ -22,10 +27,16 @@ public class QuxCompileOptions extends CompileOptions {
 
     private final Charset charset;
 
+    private final long timeout;
+    private final TimeUnit timeoutUnit;
+
     protected QuxCompileOptions(Builder builder) {
         this.verbose = builder.verbose;
 
         this.charset = checkNotNull(builder.charset, "charset cannot be null");
+
+        this.timeout = builder.timeout;
+        this.timeoutUnit = checkNotNull(builder.timeoutUnit, "timeoutUnit cannot be null");
     }
 
     /**
@@ -51,6 +62,14 @@ public class QuxCompileOptions extends CompileOptions {
         return charset;
     }
 
+    public Long getTimeout() {
+        return timeout;
+    }
+
+    public TimeUnit getTimeoutUnit() {
+        return timeoutUnit;
+    }
+
     public final boolean isVerbose() {
         return verbose;
     }
@@ -66,6 +85,9 @@ public class QuxCompileOptions extends CompileOptions {
 
         private Charset charset;
 
+        private long timeout;
+        private TimeUnit timeoutUnit;
+
         /**
          * Creates a new {@code Builder} and initialises the verbose and character set fields to the
          * defaults as found in the {@link com.hjwylde.quxc.util.QuxcProperties}.
@@ -74,9 +96,12 @@ public class QuxCompileOptions extends CompileOptions {
             // Get the default properties
             QuxcProperties properties = QuxcProperties.loadDefaultProperties();
 
-            verbose = Boolean.valueOf(properties.getVerbose());
+            setVerbose(properties.getVerbose());
 
-            charset = Charset.forName(properties.getCharset());
+            setCharset(properties.getCharset());
+
+            setTimeout(properties.getTimeout());
+            setTimeoutUnit(properties.getTimeoutUnit());
         }
 
         /**
@@ -89,6 +114,9 @@ public class QuxCompileOptions extends CompileOptions {
             this.verbose = options.verbose;
 
             this.charset = options.charset;
+
+            this.timeout = options.timeout;
+            this.timeoutUnit = options.timeoutUnit;
         }
 
         /**
@@ -105,10 +133,96 @@ public class QuxCompileOptions extends CompileOptions {
          *
          * @param charset the character set.
          * @return this for method chaining.
+         * @throws IllegalCharsetNameException if the character set name is illegal.
+         * @throws UnsupportedCharsetException if the character set is not supported.
+         */
+        public final Builder setCharset(String charset)
+                throws IllegalCharsetNameException, UnsupportedCharsetException {
+            if (charset == null) {
+                this.charset = null;
+                return this;
+            }
+
+            return setCharset(Charset.forName(charset));
+        }
+
+        /**
+         * Sets the character set field.
+         *
+         * @param charset the character set.
+         * @return this for method chaining.
          */
         public final Builder setCharset(Charset charset) {
             this.charset = checkNotNull(charset, "charset cannot be null");
             return this;
+        }
+
+        /**
+         * Sets the timeout field.
+         *
+         * @param timeout the timeout.
+         * @return this for method chaining.
+         * @throws NumberFormatException if the timeout value is illegal.
+         */
+        public final Builder setTimeout(String timeout) throws NumberFormatException {
+            try {
+                return setTimeout(Long.valueOf(timeout));
+            } catch (NumberFormatException e) {
+                throw new NumberFormatException(timeout);
+            }
+        }
+
+        /**
+         * Sets the timeout field.
+         *
+         * @param timeout the timeout.
+         * @return this for method chaining.
+         */
+        public final Builder setTimeout(long timeout) {
+            this.timeout = timeout;
+            return this;
+        }
+
+        /**
+         * Sets the timeout unit field.
+         *
+         * @param timeoutUnit the timeout unit.
+         * @return this for method chaining.
+         * @throws IllegalTimeUnitNameException if the timeout unit name is illegal.
+         */
+        public final Builder setTimeoutUnit(String timeoutUnit)
+                throws IllegalTimeUnitNameException {
+            if (timeoutUnit == null) {
+                this.timeoutUnit = null;
+                return this;
+            }
+
+            try {
+                return setTimeoutUnit(TimeUnit.valueOf(timeoutUnit.toUpperCase(Locale.ENGLISH)));
+            } catch (IllegalArgumentException e) {
+                throw new IllegalTimeUnitNameException(timeoutUnit);
+            }
+        }
+
+        /**
+         * Sets the timeout unit field.
+         *
+         * @param timeoutUnit the timeout unit.
+         * @return this for method chaining.
+         */
+        public final Builder setTimeoutUnit(TimeUnit timeoutUnit) {
+            this.timeoutUnit = timeoutUnit;
+            return this;
+        }
+
+        /**
+         * Sets the verbose field.
+         *
+         * @param verbose the verbose field.
+         * @return this for method chaining.
+         */
+        public final Builder setVerbose(String verbose) {
+            return setVerbose(Boolean.valueOf(verbose));
         }
 
         /**

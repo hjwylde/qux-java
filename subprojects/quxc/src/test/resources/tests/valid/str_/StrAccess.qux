@@ -1,0 +1,13 @@
+str f(str foo):
+    foo = 'qux'
+
+    return foo
+
+void main([str] args):
+    foo = 'bar'
+    print foo[0]
+    print foo[1]
+    print foo[2]
+    print f(foo)[0]
+    print foo[0]
+

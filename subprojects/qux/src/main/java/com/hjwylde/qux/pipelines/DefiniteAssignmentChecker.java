@@ -23,15 +23,23 @@ import java.util.List;
  *
  * @author Henry J. Wylde
  */
-public final class DefiniteAssignmentChecker extends Pipeline {
+public final class DefiniteAssignmentChecker extends Pipeline implements QuxVisitor {
 
     public DefiniteAssignmentChecker(QuxNode node) {
         super(node);
     }
 
-    public DefiniteAssignmentChecker(QuxVisitor next, QuxNode node) {
-        super(next, node);
-    }
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void visit(int version, String name) {}
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void visitEnd() {}
 
     /**
      * {@inheritDoc}
@@ -39,8 +47,7 @@ public final class DefiniteAssignmentChecker extends Pipeline {
     @Override
     public FunctionVisitor visitFunction(int flags, String name, Type.Function type) {
         // TODO: Check if a function is declared twice
-        FunctionVisitor fv = super.visitFunction(flags, name, type);
-
+        FunctionVisitor fv = FunctionVisitor.NULL_INSTANCE;
         FunctionDefiniteAssignmentChecker fvc = new FunctionDefiniteAssignmentChecker(fv);
 
         return fvc;
@@ -78,17 +85,35 @@ public final class DefiniteAssignmentChecker extends Pipeline {
             expr.accept(this);
         }
 
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void visitExprAccess(ExprNode.Access expr) {
+            visitExpr(expr.getTarget());
+            visitExpr(expr.getIndex());
+        }
+
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void visitExprBinary(ExprNode.Binary expr) {
             visitExpr(expr.getLhs());
             visitExpr(expr.getRhs());
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void visitExprConstant(ExprNode.Constant expr) {
             // Do nothing
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void visitExprFunction(ExprNode.Function expr) {
             for (ExprNode argument : expr.getArguments()) {
@@ -96,6 +121,9 @@ public final class DefiniteAssignmentChecker extends Pipeline {
             }
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void visitExprList(ExprNode.List expr) {
             for (ExprNode value : expr.getValues()) {
@@ -103,11 +131,41 @@ public final class DefiniteAssignmentChecker extends Pipeline {
             }
         }
 
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void visitExprSet(ExprNode.Set expr) {
+            for (ExprNode value : expr.getValues()) {
+                visitExpr(value);
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void visitExprSlice(ExprNode.Slice expr) {
+            visitExpr(expr.getTarget());
+            if (expr.getFrom().isPresent()) {
+                visitExpr(expr.getFrom().get());
+            }
+            if (expr.getTo().isPresent()) {
+                visitExpr(expr.getTo().get());
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void visitExprUnary(ExprNode.Unary expr) {
             visitExpr(expr.getTarget());
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void visitExprVariable(ExprNode.Variable expr) {
             // Check to see if the variable exists
@@ -153,12 +211,33 @@ public final class DefiniteAssignmentChecker extends Pipeline {
          * {@inheritDoc}
          */
         @Override
+        public void visitStmtAccessAssign(StmtNode.AccessAssign stmt) {
+            visitExpr(stmt.getAccess());
+            visitExpr(stmt.getExpr());
+
+            super.visitStmtAccessAssign(stmt);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
         public void visitStmtAssign(StmtNode.Assign stmt) {
             visitExpr(stmt.getExpr());
 
             env.put(stmt.getVar(), true);
 
             super.visitStmtAssign(stmt);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void visitStmtExpr(StmtNode.Expr stmt) {
+            visitExpr(stmt.getExpr());
+
+            super.visitStmtExpr(stmt);
         }
 
         /**
@@ -199,7 +278,7 @@ public final class DefiniteAssignmentChecker extends Pipeline {
 
             super.visitStmtIf(stmt);
 
-            // TODO: Implement visitStmtIf(ExprNode, ImmutableList<StmtNode>, ImmutableList<StmtNode>)
+            // TODO: Implement visitStmtIf(StmtNode.If)
             throw new MethodNotImplementedError();
         }
 
@@ -223,6 +302,20 @@ public final class DefiniteAssignmentChecker extends Pipeline {
             }
 
             super.visitStmtReturn(stmt);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void visitStmtWhile(StmtNode.While stmt) {
+            visitExpr(stmt.getExpr());
+            visitBlock(stmt.getBody());
+
+            super.visitStmtWhile(stmt);
+
+            // TODO: Implement visitStmtWhile(StmtNode.While)
+            throw new MethodNotImplementedError();
         }
     }
 }

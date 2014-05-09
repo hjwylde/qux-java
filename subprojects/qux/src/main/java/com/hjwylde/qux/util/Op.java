@@ -34,7 +34,8 @@ public interface Op {
      * @author Henry J. Wylde
      */
     public static enum Binary implements Op {
-        EQ, NEQ, LT, LTE, GT, GTE, AND, OR, XOR, IFF, IMPLIES, IN, ADD, SUB, MUL, DIV, REM;
+        // TODO: CONSIDER: You could add Access as a binary operator
+        EQ, NEQ, LT, LTE, GT, GTE, AND, OR, XOR, IFF, IMPLIES, IN, RANGE, ADD, SUB, MUL, DIV, REM;
     }
 
     /**
@@ -43,6 +44,6 @@ public interface Op {
      * @author Henry J. Wylde
      */
     public static enum Unary implements Op {
-        LEN, NEG, NOT;
+        INC, LEN, NEG, NOT;
     }
 }

@@ -1,0 +1,10 @@
+void main([str] args):
+    foo = {{0, 1, 2}, {3, 4, 5}, {6, 7, 8}}
+    bar = foo[1:]
+
+    print foo
+    print bar
+    print bar[1:2]
+
+    print foo[:1]
+

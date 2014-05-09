@@ -1,5 +1,6 @@
 package qux.lang;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static qux.lang.Bool.FALSE;
 import static qux.lang.Bool.TRUE;
@@ -20,6 +21,11 @@ import qux.errors.InternalError;
  */
 public final class Int extends Obj {
 
+    public static final Int M_ONE;
+    public static final Int ZERO;
+    public static final Int ONE;
+    public static final Int TWO;
+
     private static final LoadingCache<BigInteger, Int> cache =
             CacheBuilder.<BigInteger, Int>newBuilder().weakKeys().build(
                     new CacheLoader<BigInteger, Int>() {
@@ -29,8 +35,14 @@ public final class Int extends Obj {
                         }
                     }
             );
-
     private final BigInteger value;
+
+    static {
+        M_ONE = valueOf(-1);
+        ZERO = valueOf(0);
+        ONE = valueOf(1);
+        TWO = valueOf(2);
+    }
 
     private Int(BigInteger value) {
         this.value = checkNotNull(value, "value cannot be null");
@@ -44,16 +56,36 @@ public final class Int extends Obj {
      * {@inheritDoc}
      */
     @Override
+    public Int _comp_(Obj obj) {
+        if (!(obj instanceof Int)) {
+            return meta()._comp_(obj.meta());
+        }
+
+        return valueOf(value.compareTo(((Int) obj).value));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public Str _desc_() {
         return Str.valueOf(value.toString());
     }
 
     public Int _div_(Int t) {
-        if (t.value.equals(BigInteger.ZERO)) {
+        if (t.equals(Int.ZERO)) {
             throw new InternalError("attempted division by zero");
         }
 
         return valueOf(value.divide(t.value));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Int _dup_() {
+        return this;
     }
 
     /**
@@ -68,12 +100,28 @@ public final class Int extends Obj {
         return value.equals(((Int) obj).value) ? TRUE : FALSE;
     }
 
-    public Bool _gt_(Int t) {
-        return value.compareTo(t.value) > 0 ? TRUE : FALSE;
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Bool _gt_(Obj t) {
+        if (!(t instanceof Int)) {
+            return super._gt_(t);
+        }
+
+        return value.compareTo(((Int) t).value) > 0 ? TRUE : FALSE;
     }
 
-    public Bool _gte_(Int t) {
-        return value.compareTo(t.value) >= 0 ? TRUE : FALSE;
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Bool _gte_(Obj t) {
+        if (!(t instanceof Int)) {
+            return super._gt_(t);
+        }
+
+        return value.compareTo(((Int) t).value) >= 0 ? TRUE : FALSE;
     }
 
     /**
@@ -84,12 +132,28 @@ public final class Int extends Obj {
         return valueOf(value.hashCode());
     }
 
-    public Bool _lt_(Int t) {
-        return value.compareTo(t.value) < 0 ? TRUE : FALSE;
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Bool _lt_(Obj t) {
+        if (!(t instanceof Int)) {
+            return super._gt_(t);
+        }
+
+        return value.compareTo(((Int) t).value) < 0 ? TRUE : FALSE;
     }
 
-    public Bool _lte_(Int t) {
-        return value.compareTo(t.value) <= 0 ? TRUE : FALSE;
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Bool _lte_(Obj t) {
+        if (!(t instanceof Int)) {
+            return super._gt_(t);
+        }
+
+        return value.compareTo(((Int) t).value) <= 0 ? TRUE : FALSE;
     }
 
     public Int _mul_(Int t) {
@@ -98,6 +162,21 @@ public final class Int extends Obj {
 
     public Int _neg_() {
         return valueOf(value.negate());
+    }
+
+    public List _range_(Int to) {
+        checkArgument(_lte_(to) == TRUE,
+                "this must be less than or equal to high (this=%s, high=%s)", this, to);
+
+        Int from = this;
+
+        List range = List.valueOf();
+        while (from._lt_(to) == TRUE) {
+            range.add(from);
+            from = from._add_(Int.ONE);
+        }
+
+        return range;
     }
 
     public Int _rem_(Int t) {
@@ -110,6 +189,15 @@ public final class Int extends Obj {
 
     public BigInteger _value_() {
         return value;
+    }
+
+    public Int gcd(Int t) {
+        // TODO: Add in tests for this
+        if (t.equals(ZERO)) {
+            return this;
+        }
+
+        return t.gcd(this._rem_(t));
     }
 
     /**

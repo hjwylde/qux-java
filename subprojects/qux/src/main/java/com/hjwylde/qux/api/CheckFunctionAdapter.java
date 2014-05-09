@@ -84,12 +84,38 @@ public class CheckFunctionAdapter extends FunctionAdapter {
      * {@inheritDoc}
      */
     @Override
+    public void visitStmtAccessAssign(StmtNode.AccessAssign stmt) {
+        checkState(visitedCode,
+                "must call visitCode() before visitStmtAccessAssign(StmtNode.AccessAssign)");
+        checkState(!visitedEnd,
+                "must call visitStmtAccessAssign(StmtNode.AccessAssign) before visitEnd()");
+        checkNotNull(stmt, "stmt cannot be null");
+
+        super.visitStmtAccessAssign(stmt);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void visitStmtAssign(StmtNode.Assign stmt) {
         checkState(visitedCode, "must call visitCode() before visitStmtAssign(StmtNode.Assign)");
         checkState(!visitedEnd, "must call visitStmtAssign(StmtNode.Assign) before visitEnd()");
         checkNotNull(stmt, "stmt cannot be null");
 
         super.visitStmtAssign(stmt);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void visitStmtExpr(StmtNode.Expr stmt) {
+        checkState(visitedCode, "must call visitCode() before visitStmtExpr(StmtNode.Expr)");
+        checkState(!visitedEnd, "must call visitStmtExpr(StmtNode.Expr) before visitEnd()");
+        checkNotNull(stmt, "stmt cannot be null");
+
+        super.visitStmtExpr(stmt);
     }
 
     /**
@@ -151,5 +177,17 @@ public class CheckFunctionAdapter extends FunctionAdapter {
         checkNotNull(stmt, "stmt cannot be null");
 
         super.visitStmtReturn(stmt);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void visitStmtWhile(StmtNode.While stmt) {
+        checkState(visitedCode, "must call visitCode() before visitStmtWhile(StmtNode.While)");
+        checkState(!visitedEnd, "must call visitStmtWhile(StmtNode.While) before visitEnd()");
+        checkNotNull(stmt, "stmt cannot be null");
+
+        super.visitStmtWhile(stmt);
     }
 }
