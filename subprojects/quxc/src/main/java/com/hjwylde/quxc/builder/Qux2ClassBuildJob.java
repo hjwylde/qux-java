@@ -12,7 +12,6 @@ import com.hjwylde.qux.api.CheckQuxAdapter;
 import com.hjwylde.qux.api.QuxReader;
 import com.hjwylde.qux.api.QuxVisitor;
 import com.hjwylde.qux.pipelines.Pipeline;
-import com.hjwylde.qux.pipelines.TypeChecker;
 import com.hjwylde.qux.tree.QuxNode;
 import com.hjwylde.quxc.compiler.MainFunctionInjector;
 import com.hjwylde.quxc.compiler.Qux2ClassTranslater;
@@ -30,7 +29,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -42,27 +40,28 @@ public final class Qux2ClassBuildJob extends BuildJob {
 
     private static final Logger logger = LoggerFactory.getLogger(Qux2ClassBuildJob.class);
 
-    // TODO: Change the location of default pipelines into the properties / compiler
-    private static final ImmutableList<Class<? extends Pipeline>> DEFAULT_PIPELINES =
-            ImmutableList.<Class<? extends Pipeline>>of(TypeChecker.class);
-    //      new TypeChecker(), new DefiniteAssignmentChecker());
-
-    private final List<Class<? extends Pipeline>> pipelines = new ArrayList<>(DEFAULT_PIPELINES);
-
     private final Path source;
 
     private final QuxContext context;
 
+    private final ImmutableList<Class<? extends Pipeline>> pipelines;
+
     /**
-     * Creates a new {@code Qux2ClassBuildJob} with the given path and context.
+     * Creates a new {@code Qux2ClassBuildJob} with the given path, context and pipelines. The
+     * pipelines are the different stages that the compilation goes through before the final
+     * translation stage.
      *
      * @param source the source path.
      * @param context the context.
+     * @param pipelines the pipelines.
      */
-    public Qux2ClassBuildJob(Path source, QuxContext context) {
+    public Qux2ClassBuildJob(Path source, QuxContext context,
+            List<Class<? extends Pipeline>> pipelines) {
         this.source = checkNotNull(source, "source cannot be null");
 
         this.context = checkNotNull(context, "context cannot be null");
+
+        this.pipelines = ImmutableList.copyOf(pipelines);
     }
 
     /**
