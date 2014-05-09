@@ -535,7 +535,7 @@ public abstract class Type {
      * TODO: Documentation
      *
      * @author Henry J. Wylde
-     * @since TODO: SINCE
+     * @since 0.1.3
      */
     public static final class Set extends Type {
 

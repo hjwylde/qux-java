@@ -20,7 +20,7 @@ import qux.util.Iterator;
  * TODO: Documentation
  *
  * @author Henry J. Wylde
- * @since TODO: SINCE
+ * @since 0.1.3
  */
 public final class Set extends Obj implements Access, Iterable, Len, Slice {
 

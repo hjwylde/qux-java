@@ -4,7 +4,7 @@ package com.hjwylde.common.error;
  * TODO: Documentation.
  *
  * @author Henry J. Wylde
- * @since TODO: SINCE
+ * @since 0.1.3
  */
 public class IllegalTimeUnitNameException extends RuntimeException {
 

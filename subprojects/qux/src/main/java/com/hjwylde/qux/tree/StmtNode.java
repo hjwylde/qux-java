@@ -120,7 +120,7 @@ public abstract class StmtNode extends Node {
      * TODO: Documentation.
      *
      * @author Henry J. Wylde
-     * @since TODO: SINCE
+     * @since 0.1.3
      */
     public static final class Expr extends StmtNode {
 
@@ -171,7 +171,7 @@ public abstract class StmtNode extends Node {
          * TODO: Documentation
          *
          * @author Henry J. Wylde
-         * @since TODO: SINCE
+         * @since 0.1.3
          */
         public static enum Type {
             FUNCTION, INCREMENT;
@@ -394,7 +394,7 @@ public abstract class StmtNode extends Node {
      * TODO: Documentation.
      *
      * @author Henry J. Wylde
-     * @since TODO: SINCE
+     * @since 0.1.3
      */
     public static final class While extends StmtNode {
 
