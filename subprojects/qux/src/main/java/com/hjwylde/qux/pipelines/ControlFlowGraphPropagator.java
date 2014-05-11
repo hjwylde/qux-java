@@ -9,7 +9,7 @@ import com.hjwylde.qux.util.Attribute;
  * TODO: Documentation.
  *
  * @author Henry J. Wylde
- * @since TODO: SINCE
+ * @since 0.2.0
  */
 public final class ControlFlowGraphPropagator extends Pipeline {
 

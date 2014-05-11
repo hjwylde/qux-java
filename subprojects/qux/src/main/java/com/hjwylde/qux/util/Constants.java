@@ -13,11 +13,12 @@ public final class Constants {
     public static final int QUX0_1_1 = 0 << 16 | 1 << 8 | 1;
     public static final int QUX0_1_2 = 0 << 16 | 1 << 8 | 2;
     public static final int QUX0_1_3 = 0 << 16 | 1 << 8 | 3;
+    public static final int QUX0_2_0 = 0 << 16 | 2 << 8 | 0;
 
     /**
      * A list of supported Qux versions for this API.
      */
-    public static final ImmutableList<Integer> SUPPORTED_VERSIONS = ImmutableList.of(QUX0_1_3);
+    public static final ImmutableList<Integer> SUPPORTED_VERSIONS = ImmutableList.of(QUX0_2_0);
 
     /**
      * This class cannot be instantiated.

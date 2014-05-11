@@ -46,7 +46,7 @@ import java.util.Set;
  * TODO: Documentation
  *
  * @author Henry J. Wylde
- * @since TODO: SINCE
+ * @since 0.2.0
  */
 public final class TypePropagator extends Pipeline {
 
@@ -147,7 +147,7 @@ public final class TypePropagator extends Pipeline {
      * TODO: Documentation.
      *
      * @author Henry J. Wylde
-     * @since TODO: SINCE
+     * @since 0.2.0
      */
     private final class FunctionTypePropagator extends AbstractControlFlowGraphListener
             implements ExprVisitor, StmtVisitor {

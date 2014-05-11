@@ -19,7 +19,7 @@ import org.jgrapht.event.VertexTraversalEvent;
  * TODO: Documentation.
  *
  * @author Henry J. Wylde
- * @since TODO: SINCE
+ * @since 0.2.0
  */
 public final class DeadCodeChecker extends Pipeline {
 
@@ -59,7 +59,7 @@ public final class DeadCodeChecker extends Pipeline {
      * TODO: Documentation.
      *
      * @author Henry J. Wylde
-     * @since TODO: SINCE
+     * @since 0.2.0
      */
     private static final class FunctionDeadCodeChecker extends AbstractControlFlowGraphListener {
 
