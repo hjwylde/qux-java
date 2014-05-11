@@ -229,45 +229,6 @@ public abstract class StmtNode extends Node {
      *
      * @author Henry J. Wylde
      */
-    public static final class Function extends StmtNode {
-
-        private final String name;
-        private final ImmutableList<ExprNode> arguments;
-
-        public Function(String name, List<ExprNode> arguments, Attribute... attributes) {
-            this(name, arguments, Arrays.asList(attributes));
-        }
-
-        public Function(String name, List<ExprNode> arguments,
-                Collection<? extends Attribute> attributes) {
-            super(attributes);
-
-            this.name = checkNotNull(name, "name cannot be null");
-            this.arguments = ImmutableList.copyOf(arguments);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void accept(StmtVisitor sv) {
-            sv.visitStmtFunction(this);
-        }
-
-        public ImmutableList<ExprNode> getArguments() {
-            return arguments;
-        }
-
-        public String getName() {
-            return name;
-        }
-    }
-
-    /**
-     * TODO: Documentation.
-     *
-     * @author Henry J. Wylde
-     */
     public static final class If extends StmtNode {
 
         private final ExprNode condition;
@@ -398,18 +359,18 @@ public abstract class StmtNode extends Node {
      */
     public static final class While extends StmtNode {
 
-        private final ExprNode expr;
+        private final ExprNode condition;
         private final ImmutableList<StmtNode> body;
 
-        public While(ExprNode expr, List<StmtNode> body, Attribute... attributes) {
-            this(expr, body, Arrays.asList(attributes));
+        public While(ExprNode condition, List<StmtNode> body, Attribute... attributes) {
+            this(condition, body, Arrays.asList(attributes));
         }
 
-        public While(ExprNode expr, List<StmtNode> body,
+        public While(ExprNode condition, List<StmtNode> body,
                 Collection<? extends Attribute> attributes) {
             super(attributes);
 
-            this.expr = checkNotNull(expr, "expr cannot be null");
+            this.condition = checkNotNull(condition, "condition cannot be null");
             this.body = ImmutableList.copyOf(body);
         }
 
@@ -425,8 +386,8 @@ public abstract class StmtNode extends Node {
             return body;
         }
 
-        public ExprNode getExpr() {
-            return expr;
+        public ExprNode getCondition() {
+            return condition;
         }
     }
 }

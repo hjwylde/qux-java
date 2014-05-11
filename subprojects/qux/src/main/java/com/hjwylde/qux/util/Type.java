@@ -26,46 +26,39 @@ public abstract class Type {
      */
     public static final String ANY = "A";
     public static final Type.Any TYPE_ANY = new Type.Any();
-
+    public static final Type.List TYPE_LIST_ANY = Type.forList(TYPE_ANY);
+    public static final Type.Set TYPE_SET_ANY = Type.forSet(TYPE_ANY);
     /**
      * String representation of the <code>bool</code> type.
      */
     public static final String BOOL = "B";
     public static final Type.Bool TYPE_BOOL = new Type.Bool();
-
     /**
      * String representation of the <code>int</code> type.
      */
     public static final String INT = "Z";
     public static final Type.Int TYPE_INT = new Type.Int();
-
     /**
      * String representation of the {@code int} type.
      */
     public static final String NULL = "N";
     public static final Type.Null TYPE_NULL = new Type.Null();
-
     /**
      * String representation of the <code>real</code> type.
      */
     public static final String REAL = "R";
     public static final Type.Real TYPE_REAL = new Type.Real();
-
     /**
      * String representation of the <code>str</code> type.
      */
     public static final String STR = "S";
     public static final Type.Str TYPE_STR = new Type.Str();
-
+    public static final Type TYPE_ITERABLE = Type.forUnion(TYPE_LIST_ANY, TYPE_SET_ANY, TYPE_STR);
     /**
      * String representation of the <code>void</code> type.
      */
     public static final String VOID = "V";
     public static final Type.Void TYPE_VOID = new Type.Void();
-
-    public static final Type.List TYPE_LIST_ANY = Type.forList(TYPE_ANY);
-    public static final Type.Set TYPE_SET_ANY = Type.forSet(TYPE_ANY);
-
     static final String FUNCTION_START = "(";
     static final String FUNCTION_PARAM_END = ")";
 
@@ -122,6 +115,25 @@ public abstract class Type {
     }
 
     public abstract String getDescriptor();
+
+    public static Type getInnerType(Type type) {
+        if (type instanceof Type.Union) {
+            java.util.List<Type> inners = new ArrayList<>();
+            for (Type bound : ((Type.Union) type).getTypes()) {
+                inners.add(getInnerType(bound));
+            }
+
+            return Type.forUnion(inners);
+        } else if (type instanceof Type.List) {
+            return ((Type.List) type).getInnerType();
+        } else if (type instanceof Type.Set) {
+            return ((Type.Set) type).getInnerType();
+        } else if (type instanceof Type.Str) {
+            return TYPE_STR;
+        }
+
+        throw new MethodNotImplementedError(type.getClass().toString());
+    }
 
     /**
      * {@inheritDoc}

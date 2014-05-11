@@ -91,14 +91,6 @@ public abstract class FunctionAdapter implements FunctionVisitor {
      * {@inheritDoc}
      */
     @Override
-    public void visitStmtFunction(StmtNode.Function stmt) {
-        next.visitStmtFunction(stmt);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public void visitStmtIf(StmtNode.If stmt) {
         next.visitStmtIf(stmt);
     }

@@ -19,8 +19,6 @@ public interface StmtVisitor {
 
     void visitStmtFor(StmtNode.For stmt);
 
-    void visitStmtFunction(StmtNode.Function stmt);
-
     void visitStmtIf(StmtNode.If stmt);
 
     @Alpha

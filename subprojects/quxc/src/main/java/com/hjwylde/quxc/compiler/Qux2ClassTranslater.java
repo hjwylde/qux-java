@@ -688,6 +688,8 @@ public final class Qux2ClassTranslater extends QuxAdapter {
 
             visitExpr(stmt.getExpr());
 
+            // TODO: Change all these to using the Types.getInnerType() utility method
+            // TODO: Allow strings here
             com.hjwylde.qux.util.Type type = getQuxType(stmt.getExpr());
             com.hjwylde.qux.util.Type innerType;
             if (type instanceof com.hjwylde.qux.util.Type.List) {
@@ -728,28 +730,6 @@ public final class Qux2ClassTranslater extends QuxAdapter {
 
             mv.visitJumpInsn(GOTO, startLabel);
             mv.visitLabel(endLabel);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void visitStmtFunction(StmtNode.Function stmt) {
-            visitLineNumber(stmt);
-
-            Type returnType = Type.VOID_TYPE;
-            java.util.List<Type> argumentTypes = new ArrayList<>();
-
-            for (int i = stmt.getArguments().size() - 1; i >= 0; i--) {
-                visitExpr(stmt.getArguments().get(i));
-
-                argumentTypes.add(0, getType(stmt.getArguments().get(i)));
-            }
-
-            Type type = Type.getMethodType(returnType, argumentTypes.toArray(new Type[0]));
-
-            mv.visitMethodInsn(INVOKESTATIC, Qux2ClassTranslater.this.name, stmt.getName(),
-                    type.getDescriptor(), false);
         }
 
         /**
@@ -798,9 +778,6 @@ public final class Qux2ClassTranslater extends QuxAdapter {
 
             visitExpr(stmt.getExpr());
 
-            Attribute.Type attribute = Attributes.getAttributeUnchecked(stmt.getExpr(),
-                    Attribute.Type.class);
-
             mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(Object.class), "toString",
                     getMethodDescriptor(Object.class, "toString"), false);
             mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(PrintStream.class), "println",
@@ -835,7 +812,7 @@ public final class Qux2ClassTranslater extends QuxAdapter {
 
             mv.visitLabel(startLabel);
 
-            visitExpr(stmt.getExpr());
+            visitExpr(stmt.getCondition());
 
             mv.visitFieldInsn(GETSTATIC, Type.getInternalName(Bool.class), "TRUE",
                     Type.getDescriptor(Bool.class));
@@ -948,14 +925,14 @@ public final class Qux2ClassTranslater extends QuxAdapter {
             // Create the new byte array
             mv.visitIntInsn(NEWARRAY, T_BYTE);
 
-            for (int i = 0; i < value.length; i++) {
+            for (byte b : value) {
                 // Duplicate the array reference
                 mv.visitInsn(DUP);
 
                 // Push the array index
                 visitValue(1);
                 // Push the byte value
-                visitValue(value[i]);
+                visitValue(b);
                 // Store to the array reference
                 mv.visitInsn(BASTORE);
             }

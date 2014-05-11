@@ -3,8 +3,11 @@ package com.hjwylde.quxc.compiler;
 import com.hjwylde.common.util.LoggerUtils;
 import com.hjwylde.qbs.builder.BuildResult;
 import com.hjwylde.qbs.compiler.Compiler;
+import com.hjwylde.qux.pipelines.ControlFlowGraphPropagator;
+import com.hjwylde.qux.pipelines.DeadCodeChecker;
 import com.hjwylde.qux.pipelines.Pipeline;
 import com.hjwylde.qux.pipelines.TypeChecker;
+import com.hjwylde.qux.pipelines.TypePropagator;
 import com.hjwylde.quxc.builder.Qux2ClassBuilder;
 import com.hjwylde.quxc.builder.QuxContext;
 import com.hjwylde.quxc.builder.QuxProject;
@@ -30,7 +33,9 @@ public final class QuxCompiler implements Compiler<QuxCompileSpec> {
     private static final Logger logger = LoggerFactory.getLogger(QuxCompiler.class);
 
     private static final ImmutableList<Class<? extends Pipeline>> DEFAULT_PIPELINES =
-            ImmutableList.<Class<? extends Pipeline>>of(TypeChecker.class);
+            ImmutableList.<Class<? extends Pipeline>>of(ControlFlowGraphPropagator.class,
+                    //                    DefiniteAssignmentChecker.class,
+                    DeadCodeChecker.class, TypePropagator.class, TypeChecker.class);
 
     /**
      * {@inheritDoc}
