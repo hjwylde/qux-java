@@ -22,6 +22,7 @@ import com.google.common.io.Files;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.misc.NotNull;
+import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -427,7 +428,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
     @Override
     public ExprNode visitExprIncrement(@NotNull QuxParser.ExprIncrementContext ctx) {
         ExprNode.Variable target = new ExprNode.Variable(ctx.Identifier().getText(),
-                generateAttributeSource(ctx.Identifier().getSymbol()));
+                generateAttributeSource(ctx.Identifier()));
 
         return new ExprNode.Unary(Op.Unary.INC, target, generateAttributeSource(ctx));
     }
@@ -537,7 +538,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
     @Override
     public StmtNode visitStmtAccessAssign(@NotNull QuxParser.StmtAccessAssignContext ctx) {
         ExprNode access = new ExprNode.Variable(ctx.Identifier().getText(), generateAttributeSource(
-                ctx.Identifier().getSymbol()));
+                ctx.Identifier()));
 
         // Create a series of nested accesses
         for (int i = 0; i < ctx.expr().size() - 1; i++) {
@@ -560,6 +561,32 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         String var = ctx.Identifier().getText();
 
         ExprNode expr = visitExpr(ctx.expr());
+
+        TerminalNode node = null;
+        Op.Binary op = null;
+        if (ctx.AOP_ADD() != null) {
+            node = ctx.AOP_ADD();
+            op = Op.Binary.ADD;
+        } else if (ctx.AOP_DIV() != null) {
+            node = ctx.AOP_DIV();
+            op = Op.Binary.DIV;
+        } else if (ctx.AOP_MUL() != null) {
+            node = ctx.AOP_MUL();
+            op = Op.Binary.MUL;
+        } else if (ctx.AOP_REM() != null) {
+            node = ctx.AOP_REM();
+            op = Op.Binary.REM;
+        } else if (ctx.AOP_SUB() != null) {
+            node = ctx.AOP_SUB();
+            op = Op.Binary.SUB;
+        } else if (ctx.AOP() == null) {
+            throw new MethodNotImplementedError(ctx.getText());
+        }
+
+        if (op != null) {
+            ExprNode varExpr =  new ExprNode.Variable(var, generateAttributeSource(node));
+            expr = new ExprNode.Binary(op, varExpr, expr, generateAttributeSource(node.getSymbol(), ctx.getStop()));
+        }
 
         return new StmtNode.Assign(var, expr, generateAttributeSource(ctx));
     }
@@ -789,6 +816,9 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         return new Attribute.Source(source, line, col, length);
     }
 
+    private Attribute.Source generateAttributeSource(TerminalNode node) {
+        return generateAttributeSource(node.getSymbol());
+    }
     private Attribute.Source generateAttributeSource(Token token) {
         return generateAttributeSource(token, token);
     }

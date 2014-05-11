@@ -1,7 +1,7 @@
 int average([int] is):
     total = 0
     for i in is:
-        total = total + i
+        total += i
 
     return total / |is|
 

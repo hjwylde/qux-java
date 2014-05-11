@@ -116,7 +116,7 @@ stmt : stmtAccessAssign
 stmtAccessAssign : Identifier ('[' expr ']')+ '=' expr NEWLINE
                  ;
 
-stmtAssign : Identifier '=' expr NEWLINE
+stmtAssign : Identifier (AOP | AOP_ADD | AOP_SUB | AOP_MUL | AOP_DIV | AOP_REM) expr NEWLINE
            ;
 
 stmtFor : 'for' Identifier BOP_IN expr block
@@ -354,7 +354,7 @@ COMMA       : ',' ;
 SEMI_COLON  : ';' ;
 COLON       : ':' ;
 
-// Operators
+// Binary operators
 
 BOP_EQ : '==' ;
 BOP_NEQ : '!=' ;
@@ -379,12 +379,23 @@ BOP_MUL : '*' ;
 BOP_DIV : '/' ;
 BOP_REM : '%' ;
 
+// Unary operators
+
 UOP_NOT : 'not' ;
 
 UOP_LEN: '|' ;
 
 UOP_NEG: '-' ;
 UOP_INC: '++' ;
+
+// Assignment operators
+
+AOP : '=' ;
+AOP_ADD : '+=' ;
+AOP_SUB : '-=' ;
+AOP_MUL : '*=' ;
+AOP_DIV : '/=' ;
+AOP_REM : '%=' ;
 
 // Identifier
 
