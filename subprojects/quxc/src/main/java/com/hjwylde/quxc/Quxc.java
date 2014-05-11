@@ -21,6 +21,7 @@ import com.google.common.base.Joiner;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
@@ -339,27 +340,40 @@ public final class Quxc {
         Options options = new Options();
 
         // Specification options
-        Option outdir = new Option("od", OPT_OUTDIR, true,
-                "Specifies where to write the compiled source files to, defaults to '.'");
-        Option classpath = new Option("cp", OPT_CLASSPATH, true,
-                "Specifies the classpath for compilation; this is a path separator separated list");
+        Option outdir = OptionBuilder.withLongOpt(OPT_OUTDIR).hasArg().withArgName("dir")
+                .withDescription(
+                        "Specifies where to write the compiled source files to, defaults to '.'")
+                .create("od");
+        Option classpath = OptionBuilder.withLongOpt(OPT_CLASSPATH).hasArg().withArgName("file:...")
+                .withDescription(
+                        "Specifies the classpath for compilation as a ':' separated list of files, defaults to '.'")
+                .create("cp");
 
         // Compile options
-        Option timeout = new Option("t", OPT_TIMEOUT, true,
-                "Sets the timeout for the build process, may set to '0' to disable, defaults to '10'");
-        Option timeoutUnit = new Option("tu", OPT_TIMEOUT_UNIT, true,
-                "Sets the timeout unit, defaults to 'seconds'");
+        Option timeout = OptionBuilder.withLongOpt(OPT_TIMEOUT).hasArg().withArgName("long")
+                .withDescription(
+                        "Sets the timeout for the build process, may set to '0' to disable, defaults to '10'")
+                .create("t");
+        Option timeoutUnit = OptionBuilder.withLongOpt(OPT_TIMEOUT_UNIT).hasArg().withArgName(
+                "name").withDescription("Sets the timeout unit, defaults to 'seconds'").create(
+                "tu");
         Option verbose = new Option("v", OPT_VERBOSE, false, "Sets the compiler to be extra noisy");
-        Option charset = new Option("cs", OPT_CHARSET, true,
-                "Sets the character set to use to read the source files, defaults to 'utf8'");
+        Option charset = OptionBuilder.withLongOpt(OPT_CHARSET).hasArg().withArgName("name")
+                .withDescription(
+                        "Sets the character set to use to read the source files, defaults to 'utf8'")
+                .create("cs");
+
 
         // Properties
-        Option properties = new Option("qp", OPT_PROPERTIES, true,
-                "Specifies where to load the quxc properties file from, defaults to 'quxc.properties'");
+        Option properties = OptionBuilder.withLongOpt(OPT_PROPERTIES).hasArg().withArgName("file")
+                .withDescription(
+                        "Specifies where to laod the quxc properties file from, defaults to 'quxc.properties'")
+                .create("qp");
 
         Option help = new Option("h", OPT_HELP, false, "Prints this message");
-        Option version = new Option("V", OPT_VERSION, false, "Prints the version of this compiler");
-        Option versionCode = new Option("VC", OPT_VERSION_CODE, false,
+        Option version = new Option(null, OPT_VERSION, false,
+                "Prints the version of this compiler");
+        Option versionCode = new Option(null, OPT_VERSION_CODE, false,
                 "Prints the version code of this compiler");
 
         options.addOption(outdir);
@@ -383,7 +397,7 @@ public final class Quxc {
      * Prints the help for how to call <code>Quxc</code>.
      */
     private static void printHelp() {
-        new HelpFormatter().printHelp("quxc [options] <source>", OPTIONS);
+        new HelpFormatter().printHelp(120, "quxc [options] file...", null, OPTIONS, null);
     }
 
     /**

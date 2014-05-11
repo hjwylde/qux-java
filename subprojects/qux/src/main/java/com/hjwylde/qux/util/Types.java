@@ -1,5 +1,6 @@
 package com.hjwylde.qux.util;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.ImmutableSet;
@@ -9,7 +10,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * TODO: Documentation
+ * Utility class for methods pertaining to a {@link com.hjwylde.qux.util.Type}.
  *
  * @author Henry J. Wylde
  * @since 0.1.1
@@ -21,6 +22,14 @@ public final class Types {
      */
     private Types() {}
 
+    /**
+     * Flattens the given union type. Flattening a union type will check all of the inner types, if
+     * any one of them is a union type, then its inner types are added to the flattened list. The
+     * end result is a single union of types.
+     *
+     * @param type the union type to flatten.
+     * @return the flattened union type.
+     */
     public static Type.Union flatten(Type.Union type) {
         List<Type> types = new ArrayList<>();
 
@@ -38,7 +47,7 @@ public final class Types {
 
     public static boolean isEquivalent(Type lhs, Type rhs) {
         // Because union types are represented with sets, we can just use standard equality
-        return lhs.equals(rhs);
+        return lhs.equals(checkNotNull(rhs, "rhs cannot be null"));
     }
 
     public static boolean isSubtype(Type lhs, Type rhs) {
@@ -100,7 +109,7 @@ public final class Types {
         }
 
         // Rest of the types are already normalised
-        return type;
+        return checkNotNull(type, "type cannot be null");
     }
 
     public static Type normalise(Type.Union type) {

@@ -3,9 +3,16 @@ package com.hjwylde.quxc.compiler;
 import com.hjwylde.common.util.LoggerUtils;
 import com.hjwylde.qbs.builder.BuildResult;
 import com.hjwylde.qbs.compiler.Compiler;
+import com.hjwylde.qux.pipelines.ControlFlowGraphPropagator;
+import com.hjwylde.qux.pipelines.DeadCodeChecker;
+import com.hjwylde.qux.pipelines.Pipeline;
+import com.hjwylde.qux.pipelines.TypeChecker;
+import com.hjwylde.qux.pipelines.TypePropagator;
 import com.hjwylde.quxc.builder.Qux2ClassBuilder;
 import com.hjwylde.quxc.builder.QuxContext;
 import com.hjwylde.quxc.builder.QuxProject;
+
+import com.google.common.collect.ImmutableList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +32,11 @@ public final class QuxCompiler implements Compiler<QuxCompileSpec> {
 
     private static final Logger logger = LoggerFactory.getLogger(QuxCompiler.class);
 
+    private static final ImmutableList<Class<? extends Pipeline>> DEFAULT_PIPELINES =
+            ImmutableList.<Class<? extends Pipeline>>of(ControlFlowGraphPropagator.class,
+                    //                    DefiniteAssignmentChecker.class,
+                    DeadCodeChecker.class, TypePropagator.class, TypeChecker.class);
+
     /**
      * {@inheritDoc}
      */
@@ -34,7 +46,7 @@ public final class QuxCompiler implements Compiler<QuxCompileSpec> {
 
         QuxProject project = QuxProject.builder(spec).build();
         QuxContext context = new QuxContext(project);
-        Qux2ClassBuilder builder = new Qux2ClassBuilder(context);
+        Qux2ClassBuilder builder = new Qux2ClassBuilder(context, DEFAULT_PIPELINES);
 
         Map<Path, BuildResult> results = builder.build(spec.getSource());
 

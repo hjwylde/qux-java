@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Optional;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -19,14 +20,24 @@ public final class Environment<K, V> implements Iterable<Map.Entry<K, V>> {
 
     private final Environment<K, V> previous;
 
-    private Map<K, V> mapping = new HashMap<>();
+    private final Map<K, V> mapping;
 
     public Environment() {
-        this(null);
+        this(null, new HashMap<K, V>());
+    }
+
+    private Environment(Environment<K, V> previous, Map<K, V> mapping) {
+        this.previous = previous;
+
+        this.mapping = checkNotNull(mapping, "mapping cannot be null");
+    }
+
+    private Environment(Map<K, V> mapping) {
+        this(null, mapping);
     }
 
     private Environment(Environment<K, V> previous) {
-        this.previous = previous;
+        this(previous, new HashMap<K, V>());
     }
 
     /**
@@ -38,15 +49,23 @@ public final class Environment<K, V> implements Iterable<Map.Entry<K, V>> {
     public boolean contains(K key) {
         checkNotNull(key, "key cannot be null");
 
-        if (mapping.containsKey(key)) {
-            return true;
-        }
-
-        return previous != null && previous.contains(key);
+        return mapping.containsKey(key) || (previous != null && previous.contains(key));
     }
 
-    public Set<Map.Entry<K, V>> entries() {
+    public Set<Map.Entry<K, V>> entrySet() {
         return mapping.entrySet();
+    }
+
+    public Environment<K, V> flatten() {
+        Map<K, V> flattened = new HashMap<>();
+        for (Environment<K, V> env = this; env != null; env = env.previous) {
+            Map<K, V> tmp = flattened;
+
+            flattened = new HashMap<>(env.mapping);
+            flattened.putAll(tmp);
+        }
+
+        return new Environment<>(flattened);
     }
 
     /**
@@ -59,11 +78,9 @@ public final class Environment<K, V> implements Iterable<Map.Entry<K, V>> {
     public Optional<V> get(K key) {
         checkNotNull(key, "key cannot be null");
 
-        if (mapping.containsKey(key)) {
-            return Optional.of(mapping.get(key));
-        }
+        Optional<V> value = Optional.fromNullable(mapping.get(key));
 
-        return previous != null ? previous.get(key) : Optional.<V>absent();
+        return previous != null ? value.or(previous.get(key)) : value;
     }
 
     /**
@@ -75,14 +92,21 @@ public final class Environment<K, V> implements Iterable<Map.Entry<K, V>> {
      * @throws IllegalStateException if the environment does not contain the key.
      */
     public V getUnchecked(K key) throws IllegalStateException {
-        checkState(contains(key), "environment does not contain key '{}'", key);
+        checkState(contains(key), "environment does not contain key '%s'", key);
 
         return get(key).get();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Iterator<Map.Entry<K, V>> iterator() {
         return mapping.entrySet().iterator();
+    }
+
+    public Set<K> keySet() {
+        return mapping.keySet();
     }
 
     public Environment<K, V> pop() {
@@ -103,7 +127,7 @@ public final class Environment<K, V> implements Iterable<Map.Entry<K, V>> {
     }
 
     public void putAll(Map<K, V> mapping) {
-        mapping.putAll(mapping);
+        this.mapping.putAll(mapping);
     }
 
     public void putAll(Environment<K, V> env) {
@@ -132,5 +156,13 @@ public final class Environment<K, V> implements Iterable<Map.Entry<K, V>> {
 
     public V removeUnchecked(K key, boolean recurse) {
         return remove(key, recurse).get();
+    }
+
+    public String toString() {
+        return mapping.toString();
+    }
+
+    public Collection<V> values() {
+        return mapping.values();
     }
 }

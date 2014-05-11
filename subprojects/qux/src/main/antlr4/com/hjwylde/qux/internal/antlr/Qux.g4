@@ -8,8 +8,6 @@ tokens { INDENT, DEDENT }
 
     import com.hjwylde.common.error.CompilerErrors;
 
-    import com.google.common.io.Files;
-
     import java.util.ArrayDeque;
     import java.util.Deque;
     import java.util.Stack;
@@ -55,7 +53,10 @@ tokens { INDENT, DEDENT }
                     pending.offer(dedent);
                 }
                 if (level != dents.peek()) {
-                    String source = Files.getNameWithoutExtension(getSourceName());
+                    String source = getSourceName();
+                    if (source == null) {
+                        source = "<empty>";
+                    }
                     int length = (next.getStopIndex() + 1) - next.getStartIndex();
 
                     throw CompilerErrors.invalidDedent(source, next.getLine(),
@@ -115,7 +116,7 @@ stmt : stmtAccessAssign
 stmtAccessAssign : Identifier ('[' expr ']')+ '=' expr NEWLINE
                  ;
 
-stmtAssign : Identifier '=' expr NEWLINE
+stmtAssign : Identifier (AOP | AOP_ADD | AOP_SUB | AOP_MUL | AOP_DIV | AOP_REM) expr NEWLINE
            ;
 
 stmtFor : 'for' Identifier BOP_IN expr block
@@ -353,7 +354,7 @@ COMMA       : ',' ;
 SEMI_COLON  : ';' ;
 COLON       : ':' ;
 
-// Operators
+// Binary operators
 
 BOP_EQ : '==' ;
 BOP_NEQ : '!=' ;
@@ -378,12 +379,23 @@ BOP_MUL : '*' ;
 BOP_DIV : '/' ;
 BOP_REM : '%' ;
 
+// Unary operators
+
 UOP_NOT : 'not' ;
 
 UOP_LEN: '|' ;
 
 UOP_NEG: '-' ;
 UOP_INC: '++' ;
+
+// Assignment operators
+
+AOP : '=' ;
+AOP_ADD : '+=' ;
+AOP_SUB : '-=' ;
+AOP_MUL : '*=' ;
+AOP_DIV : '/=' ;
+AOP_REM : '%=' ;
 
 // Identifier
 

@@ -4,14 +4,43 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * TODO: Documentation
+ * An attribute can hold any type of extra information. It may be attached to a {@link
+ * com.hjwylde.qux.tree.Node}.
  *
  * @author Henry J. Wylde
  */
 public interface Attribute {
 
     /**
-     * TODO: Documentation
+     * A control flow graph attribute. This attribute holds information regarding the control flow
+     * graph of a particular function.<p/>May only be attached to a {@link
+     * com.hjwylde.qux.tree.FunctionNode}.
+     *
+     * @author Henry J. Wylde
+     * @since 0.2.0
+     */
+    public static final class ControlFlowGraph implements Attribute {
+
+        private final com.hjwylde.qux.builder.ControlFlowGraph cfg;
+
+        public ControlFlowGraph(com.hjwylde.qux.builder.ControlFlowGraph cfg) {
+            this.cfg = checkNotNull(cfg);
+        }
+
+        /**
+         * Gets the control flow graph.
+         *
+         * @return the control flow graph.
+         */
+        public com.hjwylde.qux.builder.ControlFlowGraph getControlFlowGraph() {
+            return cfg;
+        }
+    }
+
+    /**
+     * A source attribute. This attribute holds information regarding the source file that this
+     * {@link com.hjwylde.qux.tree.Node} originated from. It includes the following information: the
+     * source file name, the line number, the column number and the length.
      *
      * @author Henry J. Wylde
      */
@@ -71,7 +100,8 @@ public interface Attribute {
     }
 
     /**
-     * TODO: Documentation
+     * A type attribute. This attribute holds information regarding the type of the {@link
+     * com.hjwylde.qux.tree.Node}.
      *
      * @author Henry J. Wylde
      * @since 0.1.1

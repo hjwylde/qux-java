@@ -5,14 +5,17 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.hjwylde.common.error.BuildErrors;
 import com.hjwylde.qbs.builder.BuildResult;
 import com.hjwylde.qbs.builder.Builder;
+import com.hjwylde.qux.pipelines.Pipeline;
 
 import com.google.common.base.Stopwatch;
+import com.google.common.collect.ImmutableList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
@@ -32,19 +35,24 @@ import java.util.concurrent.TimeoutException;
  */
 public final class Qux2ClassBuilder implements Builder {
 
-    // TODO: Consider making changes such that it is possible to register different pipelines to be used in the build job
-
     private static final Logger logger = LoggerFactory.getLogger(Qux2ClassBuilder.class);
 
     private final QuxContext context;
 
+    private final ImmutableList<Class<? extends Pipeline>> pipelines;
+
     /**
-     * Creates a new {@code Qux2ClassBuilder} with the given context.
+     * Creates a new {@code Qux2ClassBuilder} with the given context and pipelines. The pipelines
+     * are the different stages that the compilation goes through before the final translation
+     * stage.
      *
      * @param context the context.
+     * @param pipelines the pipelines.
      */
-    public Qux2ClassBuilder(QuxContext context) {
+    public Qux2ClassBuilder(QuxContext context, List<Class<? extends Pipeline>> pipelines) {
         this.context = checkNotNull(context, "context cannot be null");
+
+        this.pipelines = ImmutableList.copyOf(pipelines);
     }
 
     /**
@@ -68,7 +76,7 @@ public final class Qux2ClassBuilder implements Builder {
         Map<Path, Future<BuildResult>> jobs = new HashMap<>();
 
         for (Path path : source) {
-            Qux2ClassBuildJob job = new Qux2ClassBuildJob(path, context);
+            Qux2ClassBuildJob job = new Qux2ClassBuildJob(path, context, pipelines);
 
             Future<BuildResult> future = completion.submit(job);
             jobs.put(path, future);

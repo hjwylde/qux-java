@@ -16,12 +16,12 @@
     j = 0
     while i < |lhs| and j < |rhs|:
         if lhs[i] <= rhs[j]:
-            sorted = sorted + [lhs[i++]]
+            sorted += [lhs[i++]]
         else:
-            sorted = sorted + [rhs[j++]]
+            sorted += [rhs[j++]]
 
-    sorted = sorted + lhs[i:]
-    sorted = sorted + rhs[j:]
+    sorted += lhs[i:]
+    sorted += rhs[j:]
 
     return sorted
 
