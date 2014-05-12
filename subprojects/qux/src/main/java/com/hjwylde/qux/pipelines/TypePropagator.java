@@ -227,14 +227,15 @@ public final class TypePropagator extends Pipeline {
                 case OR:
                 case XOR:
                 case IFF:
-                case IMPLIES:
+                case IMP:
                 case GT:
                 case GTE:
                 case LT:
                 case LTE:
                     setType(expr, TYPE_BOOL);
                     break;
-                case RANGE:
+                case RNG:
+                case EXP:
                     setType(expr, Type.forList(TYPE_INT));
                     break;
                 default:

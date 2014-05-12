@@ -137,7 +137,8 @@ public final class TypeChecker extends Pipeline {
                 case LT:
                 case LTE:
                     break;
-                case RANGE:
+                case RNG:
+                case EXP:
                     checkEquivalent(expr.getLhs(), TYPE_INT);
                     checkEquivalent(expr.getRhs(), TYPE_INT);
                     break;
@@ -145,7 +146,7 @@ public final class TypeChecker extends Pipeline {
                 case OR:
                 case XOR:
                 case IFF:
-                case IMPLIES:
+                case IMP:
                     checkSubtype(expr.getLhs(), TYPE_BOOL);
                     checkSubtype(expr.getRhs(), TYPE_BOOL);
                     break;

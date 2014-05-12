@@ -100,6 +100,13 @@ public final class Int extends Obj {
         return value.equals(((Int) obj).value) ? TRUE : FALSE;
     }
 
+    public Int _exp_(Int t) {
+        checkArgument(t.value.bitLength() < 32,
+                "exponents of size larger than 32 bits is unsupported");
+
+        return valueOf(value.pow(t.value.intValue()));
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -164,7 +171,11 @@ public final class Int extends Obj {
         return valueOf(value.negate());
     }
 
-    public List _range_(Int to) {
+    public Int _rem_(Int t) {
+        return valueOf(value.remainder(t.value));
+    }
+
+    public List _rng_(Int to) {
         checkArgument(_lte_(to) == TRUE,
                 "this must be less than or equal to high (this=%s, high=%s)", this, to);
 
@@ -177,10 +188,6 @@ public final class Int extends Obj {
         }
 
         return range;
-    }
-
-    public Int _rem_(Int t) {
-        return valueOf(value.remainder(t.value));
     }
 
     public Int _sub_(Int t) {
