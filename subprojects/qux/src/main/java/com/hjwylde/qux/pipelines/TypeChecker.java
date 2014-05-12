@@ -218,6 +218,7 @@ public final class TypeChecker extends Pipeline {
             visitExpr(expr.getTarget());
 
             switch (expr.getOp()) {
+                case DEC:
                 case INC:
                     checkSubtype(expr.getTarget(), TYPE_INT);
                     break;

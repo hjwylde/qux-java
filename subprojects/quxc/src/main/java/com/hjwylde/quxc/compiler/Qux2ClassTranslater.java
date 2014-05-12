@@ -575,8 +575,17 @@ public final class Qux2ClassTranslater extends QuxAdapter {
             Class<?> clazz = Qux2ClassTranslater.getClass(expr.getTarget());
 
             switch (expr.getOp()) {
-                case INC:
+                case DEC:
                     int index = locals.indexOf(((ExprNode.Variable) expr.getTarget()).getName());
+
+                    mv.visitInsn(DUP);
+                    visitExpr(new ExprNode.Constant(ExprNode.Constant.Type.INT, BigInteger.ONE));
+                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(Int.class), "_sub_",
+                            getMethodDescriptor(Int.class, "_sub_", Int.class), false);
+                    mv.visitVarInsn(ASTORE, index);
+                    break;
+                case INC:
+                    index = locals.indexOf(((ExprNode.Variable) expr.getTarget()).getName());
 
                     mv.visitInsn(DUP);
                     visitExpr(new ExprNode.Constant(ExprNode.Constant.Type.INT, BigInteger.ONE));

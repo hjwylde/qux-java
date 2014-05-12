@@ -134,7 +134,8 @@ stmtReturn : 'return' expr? NEWLINE
 stmtWhile : 'while' expr block
           ;
 
-stmtExpr : exprFunction NEWLINE
+stmtExpr : exprDecrement NEWLINE
+         | exprFunction NEWLINE
          | exprIncrement NEWLINE
          ;
 
@@ -205,6 +206,7 @@ exprAccess_1_5 : '[' ':' ']'
 
 exprTerm : exprBrace
          | exprBracket
+         | exprDecrement
          | exprFunction
          | exprIncrement
          | exprParen
@@ -217,6 +219,9 @@ exprBrace : '{' (expr (',' expr)*)? '}'
 
 exprBracket : '[' (expr (',' expr)*)? ']'
             ;
+
+exprDecrement : Identifier UOP_DEC
+              ;
 
 exprFunction : Identifier '(' (expr (',' expr)*) ')'
              ;
@@ -386,6 +391,7 @@ UOP_NOT : 'not' ;
 UOP_LEN: '|' ;
 
 UOP_NEG: '-' ;
+UOP_DEC: '--' ;
 UOP_INC: '++' ;
 
 // Assignment operators
