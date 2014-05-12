@@ -150,7 +150,7 @@ expr : exprBinary ;
 exprBinary : exprBinary_1
            ;
 
-exprBinary_1 : exprBinary_2 ((BOP_IMPLIES) exprBinary_2)*
+exprBinary_1 : exprBinary_2 (BOP_IMP exprBinary_2)*
              ;
 
 exprBinary_2 : exprBinary_3 ((BOP_XOR | BOP_IFF) exprBinary_3)*
@@ -168,11 +168,14 @@ exprBinary_5 : exprBinary_6 ((BOP_LT | BOP_LTE | BOP_GT | BOP_GTE) exprBinary_6)
 exprBinary_6 : exprBinary_7 ((BOP_ADD | BOP_SUB) exprBinary_7)*
              ;
 
-exprBinary_7 : exprRange ((BOP_MUL | BOP_DIV | BOP_REM) exprRange)*
+exprBinary_7 : exprBinary_8 ((BOP_MUL | BOP_DIV | BOP_REM) exprBinary_8)*
              ;
 
-exprRange : exprUnary (BOP_RANGE exprUnary)?
-          ;
+exprBinary_8 : exprBinary_9 (BOP_EXP exprBinary_9)*
+             ;
+
+exprBinary_9 : exprUnary (BOP_RNG exprUnary)?
+             ;
 
 exprUnary : UOP_NEG? exprAccess
           | UOP_NOT? exprAccess
@@ -372,11 +375,12 @@ BOP_AND : 'and' ;
 BOP_OR : 'or' ;
 BOP_XOR : 'xor' ;
 BOP_IFF : 'iff' ;
-BOP_IMPLIES : 'implies' ;
+BOP_IMP : 'implies' ;
 
 BOP_IN : 'in' ;
 
-BOP_RANGE : '..' ;
+BOP_RNG : '..' ;
+BOP_EXP : '**' ;
 
 BOP_ADD : '+' ;
 BOP_SUB : '-' ;

@@ -2,19 +2,12 @@ package qux.lang;
 
 import static qux.lang.Meta.META_BOOL;
 
-import qux.lang.op.And;
-import qux.lang.op.Iff;
-import qux.lang.op.Implies;
-import qux.lang.op.Not;
-import qux.lang.op.Or;
-import qux.lang.op.Xor;
-
 /**
  * TODO: Documentation
  *
  * @author Henry J. Wylde
  */
-public final class Bool extends Obj implements And, Or, Xor, Iff, Implies, Not {
+public final class Bool extends Obj {
 
     public static final Bool TRUE = new Bool(true);
     public static final Bool FALSE = new Bool(false);
@@ -25,10 +18,6 @@ public final class Bool extends Obj implements And, Or, Xor, Iff, Implies, Not {
         this.value = value;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Bool _and_(Bool t) {
         return (this == TRUE && t == TRUE) ? TRUE : FALSE;
     }
@@ -79,42 +68,22 @@ public final class Bool extends Obj implements And, Or, Xor, Iff, Implies, Not {
         return this == obj ? TRUE : FALSE;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Bool _iff_(Bool t) {
         return (this == t) ? TRUE : FALSE;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Bool _implies_(Bool t) {
+    public Bool _imp_(Bool t) {
         return (this == FALSE || t == TRUE) ? TRUE : FALSE;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Bool _not_() {
         return value ? FALSE : TRUE;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Bool _or_(Bool t) {
         return (this == TRUE || t == TRUE) ? TRUE : FALSE;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Bool _xor_(Bool t) {
         return (this == TRUE ^ t == TRUE) ? TRUE : FALSE;
     }
