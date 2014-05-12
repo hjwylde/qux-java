@@ -139,6 +139,10 @@ public abstract class StmtNode extends Node {
             this.expr = checkNotNull(expr, "expr cannot be null");
 
             switch (type) {
+                case DECREMENT:
+                    checkArgument(expr instanceof ExprNode.Unary);
+                    checkArgument(((ExprNode.Unary) expr).getOp() == Op.Unary.DEC);
+                    break;
                 case FUNCTION:
                     checkArgument(expr instanceof ExprNode.Function);
                     break;
@@ -174,7 +178,7 @@ public abstract class StmtNode extends Node {
          * @since 0.1.3
          */
         public static enum Type {
-            FUNCTION, INCREMENT;
+            DECREMENT, FUNCTION, INCREMENT;
         }
     }
 

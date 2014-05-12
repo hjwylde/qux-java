@@ -346,6 +346,7 @@ public final class TypePropagator extends Pipeline {
             Type targetType = getType(expr.getTarget());
 
             switch (expr.getOp()) {
+                case DEC:
                 case INC:
                 case LEN:
                     setType(expr, TYPE_INT);
@@ -453,7 +454,6 @@ public final class TypePropagator extends Pipeline {
                 if (envs.containsKey(in)) {
                     incomingEnvs.add(envs.get(in));
                 } else {
-                    // TODO: Verify if this is needed
                     setFinished(false);
                 }
             }

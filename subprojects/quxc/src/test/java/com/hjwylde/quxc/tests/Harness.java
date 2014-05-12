@@ -104,30 +104,34 @@ public abstract class Harness {
         ProcessBuilder pb = new ProcessBuilder(args);
         final Process quxc = pb.start();
 
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-
         try {
-            executor.submit(new Callable<Integer>() {
-                @Override
-                public Integer call() throws InterruptedException {
-                    return quxc.waitFor();
-                }
-            }).get(QUXC_TIMEOUT, TIMEOUT_UNIT);
-        } catch (InterruptedException e) {
-            fail("qux compilation interrupted");
-        } catch (TimeoutException e) {
-            fail("qux compilation timed out after " + QUXC_TIMEOUT + " " + TIMEOUT_UNIT.toString()
-                    .toLowerCase(Locale.ENGLISH));
-        }
+            ExecutorService executor = Executors.newSingleThreadExecutor();
 
-        List<String> output = new ArrayList<>();
-        output.addAll(CharStreams.readLines(new InputStreamReader(quxc.getInputStream(),
-                StandardCharsets.UTF_8)));
-        output.addAll(CharStreams.readLines(new InputStreamReader(quxc.getErrorStream(),
-                StandardCharsets.UTF_8)));
+            try {
+                executor.submit(new Callable<Integer>() {
+                    @Override
+                    public Integer call() throws InterruptedException {
+                        return quxc.waitFor();
+                    }
+                }).get(QUXC_TIMEOUT, TIMEOUT_UNIT);
+            } catch (InterruptedException e) {
+                fail("qux compilation interrupted");
+            } catch (TimeoutException e) {
+                fail("qux compilation timed out after " + QUXC_TIMEOUT + " " + TIMEOUT_UNIT
+                        .toString().toLowerCase(Locale.ENGLISH));
+            }
 
-        if (!output.isEmpty()) {
-            fail(Joiner.on("\n").join(output));
+            List<String> output = new ArrayList<>();
+            output.addAll(CharStreams.readLines(new InputStreamReader(quxc.getInputStream(),
+                    StandardCharsets.UTF_8)));
+            output.addAll(CharStreams.readLines(new InputStreamReader(quxc.getErrorStream(),
+                    StandardCharsets.UTF_8)));
+
+            if (!output.isEmpty()) {
+                fail(Joiner.on("\n").join(output));
+            }
+        } finally {
+            quxc.destroy();
         }
     }
 
@@ -139,31 +143,35 @@ public abstract class Harness {
         pb.directory(root.toFile());
         final Process java = pb.start();
 
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-
         try {
-            executor.submit(new Callable<Integer>() {
-                @Override
-                public Integer call() throws InterruptedException {
-                    return java.waitFor();
-                }
-            }).get(JAVA_TIMEOUT, TIMEOUT_UNIT);
-        } catch (InterruptedException e) {
-            fail("java execution interrupted");
-        } catch (TimeoutException e) {
-            fail("java execution timed out after " + JAVA_TIMEOUT + " " + TIMEOUT_UNIT.toString()
-                    .toLowerCase(Locale.ENGLISH));
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+
+            try {
+                executor.submit(new Callable<Integer>() {
+                    @Override
+                    public Integer call() throws InterruptedException {
+                        return java.waitFor();
+                    }
+                }).get(JAVA_TIMEOUT, TIMEOUT_UNIT);
+            } catch (InterruptedException e) {
+                fail("java execution interrupted");
+            } catch (TimeoutException e) {
+                fail("java execution timed out after " + JAVA_TIMEOUT + " " + TIMEOUT_UNIT
+                        .toString().toLowerCase(Locale.ENGLISH));
+            }
+
+            List<String> err = CharStreams.readLines(new InputStreamReader(java.getErrorStream(),
+                    StandardCharsets.UTF_8));
+
+            if (!err.isEmpty()) {
+                fail(Joiner.on("\n").join(err));
+            }
+
+            return CharStreams.readLines(new InputStreamReader(java.getInputStream(),
+                    StandardCharsets.UTF_8));
+        } finally {
+            java.destroy();
         }
-
-        List<String> err = CharStreams.readLines(new InputStreamReader(java.getErrorStream(),
-                StandardCharsets.UTF_8));
-
-        if (!err.isEmpty()) {
-            fail(Joiner.on("\n").join(err));
-        }
-
-        return CharStreams.readLines(new InputStreamReader(java.getInputStream(),
-                StandardCharsets.UTF_8));
     }
 
     protected final String getTestDirectory(String id) {
@@ -199,7 +207,7 @@ public abstract class Harness {
                 .normalize();
     }
 
-    protected final void run(String id) {
+    protected void run(String id) {
         try {
             compile(id);
             List<String> received = execute(id);

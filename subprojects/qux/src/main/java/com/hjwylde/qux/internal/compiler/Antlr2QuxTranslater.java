@@ -411,6 +411,17 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
      * {@inheritDoc}
      */
     @Override
+    public ExprNode visitExprDecrement(@NotNull QuxParser.ExprDecrementContext ctx) {
+        ExprNode.Variable target = new ExprNode.Variable(ctx.Identifier().getText(),
+                generateAttributeSource(ctx.Identifier()));
+
+        return new ExprNode.Unary(Op.Unary.DEC, target, generateAttributeSource(ctx));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public ExprNode.Function visitExprFunction(@NotNull QuxParser.ExprFunctionContext ctx) {
         String name = ctx.Identifier().getText();
 
@@ -468,6 +479,8 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
             return visitExprBrace(ctx.exprBrace());
         } else if (ctx.exprBracket() != null) {
             return visitExprBracket(ctx.exprBracket());
+        } else if (ctx.exprDecrement() != null) {
+            return visitExprDecrement(ctx.exprDecrement());
         } else if (ctx.exprFunction() != null) {
             return visitExprFunction(ctx.exprFunction());
         } else if (ctx.exprIncrement() != null) {
@@ -584,8 +597,9 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         }
 
         if (op != null) {
-            ExprNode varExpr =  new ExprNode.Variable(var, generateAttributeSource(node));
-            expr = new ExprNode.Binary(op, varExpr, expr, generateAttributeSource(node.getSymbol(), ctx.getStop()));
+            ExprNode varExpr = new ExprNode.Variable(var, generateAttributeSource(node));
+            expr = new ExprNode.Binary(op, varExpr, expr, generateAttributeSource(node.getSymbol(),
+                    ctx.getStop()));
         }
 
         return new StmtNode.Assign(var, expr, generateAttributeSource(ctx));
@@ -596,7 +610,10 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
      */
     @Override
     public StmtNode.Expr visitStmtExpr(@NotNull QuxParser.StmtExprContext ctx) {
-        if (ctx.exprFunction() != null) {
+        if (ctx.exprDecrement() != null) {
+            return new StmtNode.Expr(StmtNode.Expr.Type.DECREMENT, visitExprDecrement(
+                    ctx.exprDecrement()), generateAttributeSource(ctx));
+        } else if (ctx.exprFunction() != null) {
             return new StmtNode.Expr(StmtNode.Expr.Type.FUNCTION, visitExprFunction(
                     ctx.exprFunction()), generateAttributeSource(ctx));
         } else if (ctx.exprIncrement() != null) {
@@ -819,6 +836,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
     private Attribute.Source generateAttributeSource(TerminalNode node) {
         return generateAttributeSource(node.getSymbol());
     }
+
     private Attribute.Source generateAttributeSource(Token token) {
         return generateAttributeSource(token, token);
     }
