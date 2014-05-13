@@ -357,6 +357,10 @@ public final class Qux2ClassTranslater extends QuxAdapter {
                     mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(Obj.class), "_gte_",
                             getMethodDescriptor(Obj.class, "_gte_", Obj.class), false);
                     break;
+                case IDIV:
+                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(Int.class), "_idiv_",
+                            getMethodDescriptor(Int.class, "_idiv_", Int.class), false);
+                    break;
                 case IFF:
                     mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(Bool.class), "_iff_",
                             getMethodDescriptor(Bool.class, "_iff_", Bool.class), false);

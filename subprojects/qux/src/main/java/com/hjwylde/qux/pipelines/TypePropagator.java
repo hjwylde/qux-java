@@ -214,29 +214,34 @@ public final class TypePropagator extends Pipeline {
             // TODO: Properly type check using references to methods that exist
             switch (expr.getOp()) {
                 case ADD:
-                case SUB:
                 case MUL:
-                case DIV:
                 case REM:
+                case SUB:
                     setType(expr, getType(expr.getLhs()));
                     break;
-                case IN:
-                case EQ:
-                case NEQ:
+                case RNG:
+                    setType(expr, Type.forList(TYPE_INT));
+                    break;
+                case DIV:
+                    setType(expr, TYPE_REAL);
+                    break;
+                case IDIV:
+                case EXP:
+                    setType(expr, TYPE_INT);
+                    break;
                 case AND:
-                case OR:
-                case XOR:
+                case EQ:
                 case IFF:
                 case IMP:
+                case IN:
                 case GT:
                 case GTE:
                 case LT:
                 case LTE:
+                case NEQ:
+                case OR:
+                case XOR:
                     setType(expr, TYPE_BOOL);
-                    break;
-                case RNG:
-                case EXP:
-                    setType(expr, Type.forList(TYPE_INT));
                     break;
                 default:
                     throw new MethodNotImplementedError(expr.getOp().toString());

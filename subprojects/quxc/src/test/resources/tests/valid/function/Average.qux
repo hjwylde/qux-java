@@ -3,7 +3,7 @@ int average([int] is):
     for i in is:
         total += i
 
-    return total / |is|
+    return total // |is|
 
 void main([str] args):
     print average([0, 1, 2, 3])

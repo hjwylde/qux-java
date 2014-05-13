@@ -1,5 +1,5 @@
 void main([str] args):
-    print 1 / 2 * 3
+    print 1 / 2 * 3.0
     print 5 / 2
     print 10 / 5
     print -10 / 2

@@ -22,12 +22,8 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 /**
  * TODO: Documentation
@@ -41,6 +37,9 @@ public abstract class Harness {
 
     private static final String QUXC_EXECUTABLE = "build/install/quxc/bin/quxc";
     private static final String JAVA_EXECUTABLE = "java";
+    private static final String TIMEOUT_EXECUTABLE = "timeout";
+
+    private static final int TIMEOUT_EXIT_CODE = 124;
 
     private static final long QUXC_TIMEOUT = 4;
     private static final long JAVA_TIMEOUT = 4;
@@ -96,27 +95,18 @@ public abstract class Harness {
         this.root = Paths.get("src/test/resources/").resolve(root).toAbsolutePath().normalize();
     }
 
-    protected final void compile(final String id) throws IOException, ExecutionException {
-        String[] args =
-                new String[] {QUXC_EXECUTABLE, "-cp", QUXC_CLASSPATH, "-od", root.toString(),
-                        getTestPath(id, QUX_EXT).toString()};
+    protected final void compile(final String id) throws IOException {
+        long timeout = TimeUnit.SECONDS.convert(QUXC_TIMEOUT, TIMEOUT_UNIT);
+        String[] args = new String[] {TIMEOUT_EXECUTABLE, String.valueOf(timeout), QUXC_EXECUTABLE,
+                "-cp", QUXC_CLASSPATH, "-od", root.toString(), getTestPath(id, QUX_EXT).toString()};
 
         ProcessBuilder pb = new ProcessBuilder(args);
         final Process quxc = pb.start();
 
         try {
-            ExecutorService executor = Executors.newSingleThreadExecutor();
+            int result = quxc.waitFor();
 
-            try {
-                executor.submit(new Callable<Integer>() {
-                    @Override
-                    public Integer call() throws InterruptedException {
-                        return quxc.waitFor();
-                    }
-                }).get(QUXC_TIMEOUT, TIMEOUT_UNIT);
-            } catch (InterruptedException e) {
-                fail("qux compilation interrupted");
-            } catch (TimeoutException e) {
+            if (result == TIMEOUT_EXIT_CODE) {
                 fail("qux compilation timed out after " + QUXC_TIMEOUT + " " + TIMEOUT_UNIT
                         .toString().toLowerCase(Locale.ENGLISH));
             }
@@ -130,32 +120,26 @@ public abstract class Harness {
             if (!output.isEmpty()) {
                 fail(Joiner.on("\n").join(output));
             }
+        } catch (InterruptedException e) {
+            fail("qux compilation interrupted");
         } finally {
             quxc.destroy();
         }
     }
 
     protected final List<String> execute(final String id) throws IOException, ExecutionException {
-        String[] args = new String[] {JAVA_EXECUTABLE, "-cp", JAVA_CLASSPATH, getTestRelativePath(
-                id).toString()};
+        long timeout = TimeUnit.SECONDS.convert(JAVA_TIMEOUT, TIMEOUT_UNIT);
+        String[] args = new String[] {TIMEOUT_EXECUTABLE, String.valueOf(timeout), JAVA_EXECUTABLE,
+                "-cp", JAVA_CLASSPATH, getTestRelativePath(id).toString()};
 
         ProcessBuilder pb = new ProcessBuilder(args);
         pb.directory(root.toFile());
         final Process java = pb.start();
 
         try {
-            ExecutorService executor = Executors.newSingleThreadExecutor();
+            int result = java.waitFor();
 
-            try {
-                executor.submit(new Callable<Integer>() {
-                    @Override
-                    public Integer call() throws InterruptedException {
-                        return java.waitFor();
-                    }
-                }).get(JAVA_TIMEOUT, TIMEOUT_UNIT);
-            } catch (InterruptedException e) {
-                fail("java execution interrupted");
-            } catch (TimeoutException e) {
+            if (result == TIMEOUT_EXIT_CODE) {
                 fail("java execution timed out after " + JAVA_TIMEOUT + " " + TIMEOUT_UNIT
                         .toString().toLowerCase(Locale.ENGLISH));
             }
@@ -169,6 +153,9 @@ public abstract class Harness {
 
             return CharStreams.readLines(new InputStreamReader(java.getInputStream(),
                     StandardCharsets.UTF_8));
+        } catch (InterruptedException e) {
+            fail("java execution interrupted");
+            throw new InternalError("DEADCODE");
         } finally {
             java.destroy();
         }

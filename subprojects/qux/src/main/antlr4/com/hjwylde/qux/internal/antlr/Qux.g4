@@ -168,7 +168,7 @@ exprBinary_5 : exprBinary_6 ((BOP_LT | BOP_LTE | BOP_GT | BOP_GTE) exprBinary_6)
 exprBinary_6 : exprBinary_7 ((BOP_ADD | BOP_SUB) exprBinary_7)*
              ;
 
-exprBinary_7 : exprBinary_8 ((BOP_MUL | BOP_DIV | BOP_REM) exprBinary_8)*
+exprBinary_7 : exprBinary_8 ((BOP_MUL | BOP_DIV | BOP_IDIV | BOP_REM) exprBinary_8)*
              ;
 
 exprBinary_8 : exprBinary_9 (BOP_EXP exprBinary_9)*
@@ -386,6 +386,7 @@ BOP_ADD : '+' ;
 BOP_SUB : '-' ;
 BOP_MUL : '*' ;
 BOP_DIV : '/' ;
+BOP_IDIV : '//' ;
 BOP_REM : '%' ;
 
 // Unary operators
