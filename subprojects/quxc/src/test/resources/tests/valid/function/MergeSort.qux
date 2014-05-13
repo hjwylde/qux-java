@@ -5,7 +5,7 @@
     if |data| <= 1:
         return data
 
-    mid = |data| / 2
+    mid = |data| // 2
 
     return merge(mergesort(data[:mid]), mergesort(data[mid:]))
 

@@ -121,32 +121,33 @@ public final class TypeChecker extends Pipeline {
             // TODO: Properly type check using references to methods that exist
             switch (expr.getOp()) {
                 case ADD:
-                case SUB:
-                case MUL:
                 case DIV:
+                case MUL:
                 case REM:
+                case SUB:
                     checkEquivalent(expr.getLhs(), getType(expr.getRhs()));
+                    break;
+                case EXP:
+                case IDIV:
+                case RNG:
+                    checkEquivalent(expr.getLhs(), TYPE_INT);
+                    checkEquivalent(expr.getRhs(), TYPE_INT);
                     break;
                 case IN:
                     checkSubtype(expr.getRhs(), TYPE_ITERABLE);
                     checkSubtype(expr.getLhs(), getInnerType(getType(expr.getRhs())));
                 case EQ:
-                case NEQ:
                 case GT:
                 case GTE:
                 case LT:
                 case LTE:
-                    break;
-                case RNG:
-                case EXP:
-                    checkEquivalent(expr.getLhs(), TYPE_INT);
-                    checkEquivalent(expr.getRhs(), TYPE_INT);
+                case NEQ:
                     break;
                 case AND:
-                case OR:
-                case XOR:
                 case IFF:
                 case IMP:
+                case OR:
+                case XOR:
                     checkSubtype(expr.getLhs(), TYPE_BOOL);
                     checkSubtype(expr.getRhs(), TYPE_BOOL);
                     break;

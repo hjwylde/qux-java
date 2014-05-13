@@ -72,12 +72,12 @@ public final class Int extends Obj {
         return Str.valueOf(value.toString());
     }
 
-    public Int _div_(Int t) {
+    public Real _div_(Int t) {
         if (t.equals(Int.ZERO)) {
             throw new InternalError("attempted division by zero");
         }
 
-        return valueOf(value.divide(t.value));
+        return Real.valueOf(value)._div_(Real.valueOf(t.value));
     }
 
     /**
@@ -137,6 +137,14 @@ public final class Int extends Obj {
     @Override
     public Int _hash_() {
         return valueOf(value.hashCode());
+    }
+
+    public Int _idiv_(Int t) {
+        if (t.equals(Int.ZERO)) {
+            throw new InternalError("attempted division by zero");
+        }
+
+        return valueOf(value.divide(t.value));
     }
 
     /**

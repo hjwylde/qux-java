@@ -52,6 +52,11 @@ public final class ValidIntTests extends Harness {
     }
 
     @Test
+    public void IntIDiv() {
+        run("IntIDiv");
+    }
+
+    @Test
     public void IntInc() {
         run("IntInc");
     }

@@ -23,7 +23,7 @@ public interface Op {
      */
     public static enum Binary implements Op {
         // TODO: CONSIDER: You could add Access as a binary operator
-        EQ, NEQ, LT, LTE, GT, GTE, AND, OR, XOR, IFF, IMP, IN, RNG, EXP, ADD, SUB, MUL, DIV, REM;
+        EQ, NEQ, LT, LTE, GT, GTE, AND, OR, XOR, IFF, IMP, IN, RNG, EXP, ADD, SUB, MUL, DIV, IDIV, REM;
     }
 
     /**
