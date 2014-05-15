@@ -17,6 +17,13 @@ import java.util.Set;
 public interface CompileSpec extends Serializable {
 
     /**
+     * Gets the compile options.
+     *
+     * @return the compile options.
+     */
+    CompileOptions getOptions();
+
+    /**
      * Gets the output directory.
      *
      * @return the output directory.
@@ -24,18 +31,25 @@ public interface CompileSpec extends Serializable {
     Path getOutdir();
 
     /**
-     * Sets the output directory.
-     *
-     * @param outdir the output directory.
-     */
-    void setOutdir(Path outdir);
-
-    /**
      * Gets the source paths.
      *
      * @return the source paths.
      */
     ImmutableSet<Path> getSource();
+
+    /**
+     * Sets the compile options.
+     *
+     * @param options the compile options.
+     */
+    void setOptions(CompileOptions options);
+
+    /**
+     * Sets the output directory.
+     *
+     * @param outdir the output directory.
+     */
+    void setOutdir(Path outdir);
 
     /**
      * Sets the source paths.

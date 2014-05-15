@@ -8,8 +8,6 @@ import static qux.lang.Meta.META_REAL;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
-import qux.errors.InternalError;
-
 /**
  * TODO: Documentation
  *

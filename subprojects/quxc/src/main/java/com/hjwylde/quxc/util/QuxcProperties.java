@@ -2,47 +2,41 @@ package com.hjwylde.quxc.util;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.hjwylde.quxc.Quxc;
+import com.hjwylde.qbs.util.QuxProperties;
 
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Properties;
+import java.util.Set;
 
 /**
  * A properties helper to hold some common settings for a Qux compiler. The main utility of this
  * class is the ability to let the user specify compile properties via a standard properties file.
- * The properties may then be loaded in and used instantly.
+ * The properties may then be loaded in and used instantly. These properties extend a {@link
+ * com.hjwylde.qbs.util.QuxProperties}.
  * <p/>
- * The default properties are set as follows: <dl> <dt> charset </dt> <dd> utf-8 </dd> <dt>
- * classpath </dt> <dd> <i>&lt;empty&gt;</i> </dd> <dt>outdir</dt> <dd>.</dd> <dt>verbose</dt>
- * <dd>false</dd> </dl>
+ * The default properties for this class are set as follows: <dl> <dt> target </dt> <dd> jvm
+ * </dd></dl>
  *
  * @author Henry J. Wylde
+ * @since TODO: SINCE
  */
-public final class QuxcProperties {
+public final class QuxcProperties extends QuxProperties {
+
+    public static final String PROP_TARGET = "target";
+
+    private static final ImmutableSet<String> PROP_KEYS = ImmutableSet.of(PROP_TARGET);
 
     private static final Logger logger = LoggerFactory.getLogger(QuxcProperties.class);
-
-    private static final String PROP_CHARSET = Quxc.OPT_CHARSET;
-    private static final String PROP_CLASSPATH = Quxc.OPT_CLASSPATH;
-    private static final String PROP_OUTDIR = Quxc.OPT_OUTDIR;
-    private static final String PROP_TIMEOUT = Quxc.OPT_TIMEOUT;
-    private static final String PROP_TIMEOUT_UNIT = Quxc.OPT_TIMEOUT_UNIT;
-    private static final String PROP_VERBOSE = Quxc.OPT_VERBOSE;
-
-    private static final ImmutableList<String> PROP_KEYS = ImmutableList.of(PROP_CHARSET,
-            PROP_CLASSPATH, PROP_OUTDIR, PROP_TIMEOUT, PROP_TIMEOUT_UNIT, PROP_VERBOSE);
-
-    private final Properties properties;
 
     /**
      * This class can only be instantiated locally.
@@ -53,68 +47,16 @@ public final class QuxcProperties {
      * @param properties the properties to use as the backing.
      */
     private QuxcProperties(Properties properties) {
-        this.properties = (Properties) properties.clone();
-
-        // Check for any extraneous properties and warn the user
-        for (Object property : properties.keySet()) {
-            if (!PROP_KEYS.contains(property)) {
-                logger.warn("unrecognised property: {}", property);
-            }
-        }
+        super(properties);
     }
 
     /**
-     * Gets the character set name property.
+     * Gets the target property.
      *
-     * @return the character set name.
+     * @return the target.
      */
-    public String getCharset() {
-        return properties.getProperty(PROP_CHARSET);
-    }
-
-    /**
-     * Gets the classpath property.
-     *
-     * @return the classpath.
-     */
-    public String getClasspath() {
-        return properties.getProperty(PROP_CLASSPATH);
-    }
-
-    /**
-     * Gets the output directory property.
-     *
-     * @return the output directory.
-     */
-    public String getOutdir() {
-        return properties.getProperty(PROP_OUTDIR);
-    }
-
-    /**
-     * Gets the timeout property.
-     *
-     * @return the timeout.
-     */
-    public String getTimeout() {
-        return properties.getProperty(PROP_TIMEOUT);
-    }
-
-    /**
-     * Gets the timeout unit property.
-     *
-     * @return the timeout unit.
-     */
-    public String getTimeoutUnit() {
-        return properties.getProperty(PROP_TIMEOUT_UNIT);
-    }
-
-    /**
-     * Gets the verbose property.
-     *
-     * @return the verbose property.
-     */
-    public String getVerbose() {
-        return properties.getProperty(PROP_VERBOSE);
+    public final String getTarget() {
+        return getProperty(PROP_TARGET);
     }
 
     /**
@@ -155,60 +97,12 @@ public final class QuxcProperties {
     }
 
     /**
-     * Sets the character set name property. The value should be a valid character set name.
+     * Sets the target property. The value should be a {@link com.hjwylde.quxc.util.Target}.
      *
-     * @param charset the character set.
+     * @param target the target.
      */
-    public void setCharset(String charset) {
-        properties.setProperty(PROP_CHARSET, checkNotNull(charset, "charset cannot be null"));
-    }
-
-    /**
-     * Sets the classpath property. The value should be a list of valid paths, separated by the
-     * system path separator character.
-     *
-     * @param classpath the classpath.
-     */
-    public void setClasspath(String classpath) {
-        properties.setProperty(PROP_CLASSPATH, checkNotNull(classpath, "classpath cannot be null"));
-    }
-
-    /**
-     * Sets the output directory property. The value should be a valid single path.
-     *
-     * @param outdir the output directory.
-     */
-    public void setOutdir(String outdir) {
-        properties.setProperty(PROP_OUTDIR, checkNotNull(outdir, "outdir cannot be null"));
-    }
-
-    /**
-     * Sets the timeout property. The value should be a valid long value.
-     *
-     * @param timeout the timeout.
-     */
-    public void setTimeout(String timeout) {
-        properties.setProperty(PROP_TIMEOUT, checkNotNull(timeout, "timeout cannot be null"));
-    }
-
-    /**
-     * Sets the timeout unit property. The value should be a valid {@link
-     * java.util.concurrent.TimeUnit}.
-     *
-     * @param timeoutUnit the timeout unit.
-     */
-    public void setTimeoutUnit(String timeoutUnit) {
-        properties.setProperty(PROP_TIMEOUT_UNIT, checkNotNull(timeoutUnit,
-                "timeoutUnit cannot be null"));
-    }
-
-    /**
-     * Sets the verbose property. The value should a {@code boolean}.
-     *
-     * @param verbose the verbose property.
-     */
-    public void setVerbose(String verbose) {
-        properties.setProperty(PROP_VERBOSE, checkNotNull(verbose, "verbose cannot be null"));
+    public final void setTarget(String target) {
+        setProperty(PROP_TARGET, checkNotNull(target, "target cannot be null"));
     }
 
     /**
@@ -216,16 +110,19 @@ public final class QuxcProperties {
      *
      * @return the default properties.
      */
-    private static Properties generateDefaultProperties() {
-        Properties properties = new Properties();
+    protected static Properties generateDefaultProperties() {
+        Properties properties = QuxProperties.generateDefaultProperties();
 
-        properties.put(PROP_CLASSPATH, "");
-        properties.put(PROP_CHARSET, StandardCharsets.UTF_8.name());
-        properties.put(PROP_OUTDIR, ".");
-        properties.put(PROP_TIMEOUT, "10");
-        properties.put(PROP_TIMEOUT_UNIT, "seconds");
-        properties.put(PROP_VERBOSE, "false");
+        properties.put(PROP_TARGET, "jvm");
 
-        return properties;
+        return new Properties(properties);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected Set<String> getPropertyKeys() {
+        return Sets.union(super.getPropertyKeys(), PROP_KEYS);
     }
 }
