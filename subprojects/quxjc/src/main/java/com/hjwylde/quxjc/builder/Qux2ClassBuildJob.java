@@ -25,6 +25,7 @@ import org.objectweb.asm.util.CheckClassAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.Charset;
@@ -90,7 +91,7 @@ public final class Qux2ClassBuildJob extends BuildJob {
             byte[] bytecode = translate(node);
 
             // Write out the Java bytecode
-            write(bytecode);
+            write(node, bytecode);
 
             logger.debug("{}: building finished in {}", source, stopwatch);
         } catch (IOException | InvocationTargetException | NoSuchMethodException | InstantiationException | IllegalAccessException e) {
@@ -117,24 +118,17 @@ public final class Qux2ClassBuildJob extends BuildJob {
     }
 
     /**
-     * Generates a path based on the given output directory, name and extension.
+     * Generates a path based on the given output directory, id and extension. The id is treated as
+     * a {@code .} separated sequence of identifiers. It is first translated by replacing all the
+     * {@code .}s with {@code java.io.File#separator}s.
      *
      * @param outdir the output directory the path should be resolved from.
-     * @param name the name of the output file.
+     * @param id the id of the output file.
      * @param extension the extension of the output file.
      * @return the generated path.
      */
-    private static Path generatePath(Path outdir, String name, String extension) {
-        return outdir.resolve(name + "." + extension);
-    }
-
-    /**
-     * Gets the file name of the source file, excluding the extension.
-     *
-     * @return the file name, excluding the extension.
-     */
-    private String getFileNameWithoutExtension() {
-        return com.google.common.io.Files.getNameWithoutExtension(source.toString());
+    private static Path generatePath(Path outdir, String id, String extension) {
+        return outdir.resolve(id.replace(".", File.separator) + "." + extension);
     }
 
     /**
@@ -178,13 +172,12 @@ public final class Qux2ClassBuildJob extends BuildJob {
         return cw.toByteArray();
     }
 
-    private void write(byte[] bytecode) throws IOException {
+    private void write(QuxNode node, byte[] bytecode) throws IOException {
         logger.debug("{}: writing java bytecode out", source);
 
         Stopwatch stopwatch = Stopwatch.createStarted();
 
-        Path outpath = generatePath(context.getProject().getOutdir(), getFileNameWithoutExtension(),
-                "class");
+        Path outpath = generatePath(context.getProject().getOutdir(), node.getId(), "class");
 
         logger.debug("{}: writing to {}", source, outpath);
 

@@ -9,6 +9,7 @@ import com.hjwylde.qux.api.QuxVisitor;
 import com.hjwylde.qux.util.Attribute;
 import com.hjwylde.qux.util.Type;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 import java.util.ArrayList;
@@ -25,6 +26,8 @@ public final class QuxNode extends Node implements QuxVisitor {
     private int version;
     private String name;
 
+    private String pkg;
+
     private List<FunctionNode> functions = new ArrayList<>();
 
     public QuxNode(Attribute... attributes) {
@@ -38,6 +41,8 @@ public final class QuxNode extends Node implements QuxVisitor {
     public void accept(QuxVisitor qv) {
         qv.visit(version, name);
 
+        qv.visitPackage(pkg);
+
         for (FunctionNode function : functions) {
             function.accept(qv);
         }
@@ -47,6 +52,14 @@ public final class QuxNode extends Node implements QuxVisitor {
 
     public ImmutableList<FunctionNode> getFunctions() {
         return ImmutableList.copyOf(functions);
+    }
+
+    public String getId() {
+        return (pkg == null ? "" : pkg + ".") + name;
+    }
+
+    public Optional<String> getPackage() {
+        return Optional.fromNullable(pkg);
     }
 
     public String getName() {
@@ -70,6 +83,14 @@ public final class QuxNode extends Node implements QuxVisitor {
 
         this.version = version;
         this.name = checkNotNull(name, "name cannot be null");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void visitPackage(String pkg) {
+        this.pkg = pkg;
     }
 
     /**

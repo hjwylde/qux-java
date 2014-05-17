@@ -26,6 +26,14 @@ public abstract class QuxAdapter implements QuxVisitor {
      * {@inheritDoc}
      */
     @Override
+    public void visitPackage(String pkg) {
+        next.visitPackage(pkg);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void visit(int version, String name) {
         next.visit(version, name);
     }

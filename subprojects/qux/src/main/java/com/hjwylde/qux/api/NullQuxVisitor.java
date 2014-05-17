@@ -20,6 +20,12 @@ final class NullQuxVisitor implements QuxVisitor {
      * {@inheritDoc}
      */
     @Override
+    public void visitPackage(String pkg) {}
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void visitEnd() {}
 
     /**

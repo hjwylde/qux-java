@@ -95,7 +95,9 @@ public final class Qux2ClassTranslater extends QuxAdapter {
     private final String source;
 
     private final ClassVisitor cv;
+
     private String name;
+    private String pkg;
 
     public Qux2ClassTranslater(String source, ClassVisitor cv) {
         this.source = checkNotNull(source, "source cannot be null");
@@ -109,8 +111,19 @@ public final class Qux2ClassTranslater extends QuxAdapter {
     @Override
     public void visit(int version, String name) {
         this.name = name;
+    }
 
-        cv.visit(V1_7, ACC_PUBLIC | ACC_FINAL, name, null, Type.getInternalName(Obj.class),
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void visitPackage(String pkg) {
+        this.pkg = pkg;
+
+        String id = (pkg == null ? "" : pkg + ".") + name;
+        id = id.replace(".", "/");
+
+        cv.visit(V1_7, ACC_PUBLIC | ACC_FINAL, id, null, Type.getInternalName(Obj.class),
                 new String[0]);
 
         cv.visitSource(getFileName(), null);

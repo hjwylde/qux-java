@@ -13,6 +13,8 @@ public interface QuxVisitor {
 
     void visit(int version, String name);
 
+    void visitPackage(String pkg);
+
     void visitEnd();
 
     FunctionVisitor visitFunction(int flags, String name, Type.Function type);

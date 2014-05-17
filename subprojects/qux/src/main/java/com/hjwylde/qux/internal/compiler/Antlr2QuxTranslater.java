@@ -591,6 +591,25 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
      * {@inheritDoc}
      */
     @Override
+    public Object visitPkg(@NotNull QuxParser.PkgContext ctx) {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append(ctx.Identifier(0).getText());
+
+        for (int i = 1; i < ctx.Identifier().size(); i++) {
+            sb.append(".");
+            sb.append(ctx.Identifier(i));
+        }
+
+        qv.visitPackage(sb.toString());
+
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public Object visitFile(@NotNull QuxParser.FileContext ctx) {
         qv.visit(QUX0_2_0, Files.getNameWithoutExtension(source));
 

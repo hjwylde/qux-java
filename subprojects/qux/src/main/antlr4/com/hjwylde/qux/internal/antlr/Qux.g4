@@ -90,8 +90,13 @@ start : NEWLINE? file EOF
 
 // File
 
-file : decl*
+file : pkg? decl*
      ;
+
+// Package statement
+
+pkg : 'package' Identifier ('.' Identifier)* NEWLINE
+    ;
 
 // Declarations
 
@@ -343,6 +348,7 @@ IF      : 'if' ;
 INT     : 'int' ;
 LIST    : 'list' ;
 NULL    : 'null' ;
+PACKAGE : 'package' ;
 REAL    : 'real' ;
 RETURN  : 'return' ;
 SET     : 'set' ;
