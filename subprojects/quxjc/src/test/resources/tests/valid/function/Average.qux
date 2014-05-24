@@ -1,0 +1,13 @@
+int average([int] is):
+    total = 0
+    for i in is:
+        total += i
+
+    return total // |is|
+
+void main([str] args):
+    print average([0, 1, 2, 3])
+    print average([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    print average([5, 5, 10, 10, 10])
+    print average([7, 5, 3])
+

@@ -2,6 +2,7 @@ package com.hjwylde.qux.pipelines;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.hjwylde.qbs.builder.QuxContext;
 import com.hjwylde.qux.tree.QuxNode;
 
 /**
@@ -12,15 +13,15 @@ import com.hjwylde.qux.tree.QuxNode;
  */
 public abstract class Pipeline {
 
-    protected final QuxNode node;
+    protected final QuxContext context;
 
-    public Pipeline(QuxNode node) {
-        this.node = checkNotNull(node, "node cannot be null");
+    public Pipeline(QuxContext context) {
+        this.context = checkNotNull(context, "context cannot be null");
     }
 
-    public abstract void apply();
+    public abstract QuxNode apply(QuxNode node);
 
-    protected final QuxNode getNode() {
-        return node;
+    protected final QuxContext getContext() {
+        return context;
     }
 }

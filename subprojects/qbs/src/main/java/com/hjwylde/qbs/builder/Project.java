@@ -69,7 +69,7 @@ public class Project implements Serializable {
      *
      * @return the output directory.
      */
-    public Path getOutdir() {
+    public final Path getOutdir() {
         return outdir;
     }
 
@@ -78,7 +78,7 @@ public class Project implements Serializable {
      *
      * @return the root directory path.
      */
-    public Path getRoot() {
+    public final Path getRoot() {
         return root;
     }
 
@@ -132,7 +132,7 @@ public class Project implements Serializable {
          * Sets the output directory.
          *
          * @param outdir the output directory.
-         * @return the builder for chaining.
+         * @return this builder for chaining.
          */
         public final Builder setOutdir(Path outdir) {
             this.outdir = checkNotNull(outdir, "outdir cannot be null");
@@ -143,7 +143,7 @@ public class Project implements Serializable {
          * Sets the root directory.
          *
          * @param root the root directory.
-         * @return the builder for chaining.
+         * @return this builder for chaining.
          */
         public final Builder setRoot(Path root) {
             this.root = checkNotNull(root, "root cannot be null");

@@ -64,7 +64,7 @@ public class Meta extends Obj {
     @Override
     public qux.lang.Int _comp_(Obj obj) {
         if (!(obj instanceof Meta)) {
-            return qux.lang.Int.M_ONE;
+            return meta()._comp_(obj.meta());
         }
 
         return _desc_()._comp_(obj._desc_());

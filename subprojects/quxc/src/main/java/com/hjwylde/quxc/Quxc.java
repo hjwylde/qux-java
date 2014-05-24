@@ -9,10 +9,11 @@ import com.hjwylde.common.util.ExitCode;
 import com.hjwylde.common.util.LoggerUtils;
 import com.hjwylde.qbs.compiler.Compiler;
 import com.hjwylde.qbs.compiler.CompilerFactory;
-import com.hjwylde.qux.util.QuxProperties;
-import com.hjwylde.quxc.compiler.QuxCompileOptions;
-import com.hjwylde.quxc.compiler.QuxCompileSpec;
+import com.hjwylde.qbs.util.QuxProperties;
+import com.hjwylde.qux.util.Constants;
 import com.hjwylde.quxc.compiler.QuxCompilerFactory;
+import com.hjwylde.quxc.compiler.QuxcCompileOptions;
+import com.hjwylde.quxc.compiler.QuxcCompileSpec;
 import com.hjwylde.quxc.util.QuxcProperties;
 
 import com.google.common.base.CaseFormat;
@@ -36,24 +37,26 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Locale;
 
 /**
- * Class for the command line call of "quxc". Used for compiling qux source files into Java class
- * files.
+ * Class for the command line call of {@code quxc}. Used for compiling qux source files into a
+ * target file format.
  *
  * @author Henry J. Wylde
  */
 public final class Quxc {
 
-    public static final String OPT_CHARSET = "charset";
-    public static final String OPT_CLASSPATH = "classpath";
+    public static final String OPT_CHARSET = QuxProperties.PROP_CHARSET;
+    public static final String OPT_CLASSPATH = QuxProperties.PROP_CLASSPATH;
     public static final String OPT_HELP = "help";
-    public static final String OPT_OUTDIR = "outdir";
+    public static final String OPT_OUTDIR = QuxProperties.PROP_OUTDIR;
     public static final String OPT_PROPERTIES = "properties";
-    public static final String OPT_TIMEOUT = "timeout";
-    public static final String OPT_TIMEOUT_UNIT = "timeout-unit";
-    public static final String OPT_VERBOSE = "verbose";
+    public static final String OPT_TARGET = QuxcProperties.PROP_TARGET;
+    public static final String OPT_TIMEOUT = QuxProperties.PROP_TIMEOUT;
+    public static final String OPT_TIMEOUT_UNIT = QuxProperties.PROP_TIMEOUT_UNIT;
+    public static final String OPT_VERBOSE = QuxProperties.PROP_VERBOSE;
     public static final String OPT_VERSION = "version";
     public static final String OPT_VERSION_CODE = "version-code";
 
@@ -63,46 +66,48 @@ public final class Quxc {
 
     private static final Options OPTIONS = generateCommandLineOptions();
 
-    private final QuxCompileSpec spec;
-    private CompilerFactory<QuxCompileSpec, QuxCompileOptions> factory = new QuxCompilerFactory();
+    private final QuxcCompileSpec spec;
+    private CompilerFactory<? super QuxcCompileSpec, ? super QuxcCompileOptions> factory =
+            new QuxCompilerFactory();
 
     /**
-     * Creates a new Qux unit with the given compile specification.
+     * Creates a new Qux compilation unit with the given compile specification.
      *
      * @param spec the compile specification.
      */
-    public Quxc(QuxCompileSpec spec) {
+    public Quxc(QuxcCompileSpec spec) {
         this.spec = checkNotNull(spec, "spec cannot be null");
     }
 
     /**
-     * Generates a Qux compile specification from the given command line object.
+     * Generates a {@link com.hjwylde.quxc.compiler.QuxcCompileSpec} from the given command line
+     * object.
      *
      * @param cl the command line object.
-     * @return the generated Qux compile specification.
+     * @return the generated compile specification.
      * @throws NoSuchFileException if a source file argument cannot be found.
      * @throws IOException if a properties file is specified and cannot be loaded.
      * @throws IllegalCharsetNameException if the character set name is illegal.
      * @throws UnsupportedCharsetException if the character set is not supported.
      */
-    public static QuxCompileSpec generateCompileSpec(CommandLine cl)
+    public static QuxcCompileSpec generateCompileSpec(CommandLine cl)
             throws NoSuchFileException, IOException, IllegalCharsetNameException,
             UnsupportedCharsetException {
         return generateCompileSpec(generateProperties(cl), cl.getArgs());
     }
 
     /**
-     * Generates a Qux compile specification from the given {@link com.hjwylde.quxc.util.QuxcProperties}
-     * and source paths.
+     * Generates a {@link com.hjwylde.quxc.compiler.QuxcCompileSpec} from the given {@link
+     * com.hjwylde.quxc.util.QuxcProperties} and source paths.
      *
      * @param properties the properties.
      * @param source the source files.
-     * @return the generated Qux compile specification.
+     * @return the generated compile specification.
      * @throws NoSuchFileException if a source file argument cannot be found.
      * @throws IllegalCharsetNameException if the character set name is illegal.
      * @throws UnsupportedCharsetException if the character set is not supported.
      */
-    public static QuxCompileSpec generateCompileSpec(QuxcProperties properties, String... source)
+    public static QuxcCompileSpec generateCompileSpec(QuxcProperties properties, String... source)
             throws NoSuchFileException, IllegalCharsetNameException, UnsupportedCharsetException {
         Path[] paths = new Path[source.length];
         for (int i = 0; i < source.length; i++) {
@@ -113,27 +118,29 @@ public final class Quxc {
     }
 
     /**
-     * Generates a Qux compile specification from the given {@link com.hjwylde.quxc.util.QuxcProperties}
-     * and source paths.
+     * Generates a {@link com.hjwylde.quxc.compiler.QuxcCompileSpec} from the given {@link
+     * com.hjwylde.quxc.util.QuxcProperties} and source paths.
      *
      * @param properties the properties.
      * @param source the source files.
-     * @return the generated Qux compile specification.
+     * @return the generated compile specification.
      * @throws NoSuchFileException if a source file argument cannot be found.
      * @throws IllegalCharsetNameException if the character set name is illegal.
      * @throws UnsupportedCharsetException if the character set is not supported.
      */
-    public static QuxCompileSpec generateCompileSpec(QuxcProperties properties, Path... source)
+    public static QuxcCompileSpec generateCompileSpec(QuxcProperties properties, Path... source)
             throws NoSuchFileException, IllegalCharsetNameException, UnsupportedCharsetException {
-        QuxCompileSpec spec = new QuxCompileSpec();
+        QuxcCompileSpec spec = new QuxcCompileSpec();
 
         spec.setOutdir(Paths.get(properties.getOutdir()));
+        spec.setClasspath(new ArrayList<Path>());
         for (String path : properties.getClasspath().split(File.pathSeparator)) {
             spec.classpath(Paths.get(path));
         }
 
-        QuxCompileOptions.Builder optionsBuilder = QuxCompileOptions.builder();
+        QuxcCompileOptions.Builder optionsBuilder = QuxcCompileOptions.builder();
         optionsBuilder.setCharset(properties.getCharset());
+        optionsBuilder.setTarget(properties.getTarget());
         optionsBuilder.setTimeout(properties.getTimeout());
         optionsBuilder.setTimeoutUnit(properties.getTimeoutUnit());
         optionsBuilder.setVerbose(properties.getVerbose());
@@ -152,24 +159,26 @@ public final class Quxc {
     }
 
     /**
-     * Generates a Qux compile specification from the given command line arguments.
+     * Generates a {@link com.hjwylde.quxc.compiler.QuxcCompileSpec} from the given command line
+     * arguments.
      *
      * @param args the arguments.
-     * @return the generated Qux compile specification.
+     * @return the generated compile specification.
      * @throws ParseException if the arguments cannot be parsed.
      * @throws NoSuchFileException if a source file argument cannot be found.
      * @throws IOException if a properties file is specified and cannot be loaded.
      */
-    public static QuxCompileSpec generateCompileSpec(String[] args)
+    public static QuxcCompileSpec generateCompileSpec(String[] args)
             throws ParseException, NoSuchFileException, IOException {
         return generateCompileSpec(new PosixParser().parse(OPTIONS, args));
     }
 
     /**
-     * Generates a Qux properties from the given command line arguments.
+     * Generates a {@link com.hjwylde.quxc.util.QuxcProperties} from the given command line
+     * arguments.
      *
      * @param args the arguments.
-     * @return the generated Qux properties.
+     * @return the generated properties.
      * @throws ParseException if the arguments cannot be parsed.
      * @throws IOException if a properties file is specified and cannot be loaded.
      */
@@ -179,10 +188,10 @@ public final class Quxc {
     }
 
     /**
-     * Generates a Qux properties from the given command line object.
+     * Generates a {@link com.hjwylde.quxc.util.QuxcProperties} from the given command line object.
      *
      * @param cl the command line object.
-     * @return the generated Qux properties.
+     * @return the generated properties.
      * @throws IOException if a properties file is specified and cannot be loaded.
      */
     public static QuxcProperties generateProperties(CommandLine cl) throws IOException {
@@ -211,6 +220,9 @@ public final class Quxc {
         }
         if (cl.hasOption(OPT_OUTDIR)) {
             properties.setOutdir(cl.getOptionValue(OPT_OUTDIR));
+        }
+        if (cl.hasOption(OPT_TARGET)) {
+            properties.setTarget(cl.getOptionValue(OPT_TARGET));
         }
         if (cl.hasOption(OPT_TIMEOUT)) {
             properties.setTimeout(cl.getOptionValue(OPT_TIMEOUT));
@@ -296,16 +308,17 @@ public final class Quxc {
     }
 
     /**
-     * Runs this Qux unit. This command will create a {@code Compiler} for a {@code QuxCompileSpec}
-     * using the factory. It will then attempt to execute the compiler using the Qux compile
-     * specification provided to this object.
+     * Runs this Qux compilation unit. This command will create a {@link
+     * com.hjwylde.qbs.compiler.Compiler} for a {@link com.hjwylde.quxc.compiler.QuxcCompileSpec}
+     * using the factory. It will then attempt to execute the compiler using the {@link
+     * com.hjwylde.quxc.compiler.QuxcCompileSpec} provided to this object.
      * <p/>
      * See {@link com.hjwylde.common.util.ExitCode} for return value details.
      *
-     * @return the result of running this Qux unit, {@code 0} indicates success.
+     * @return the result of running this Qux compilation unit, {@code 0} indicates success.
      */
     public int run() {
-        Compiler<QuxCompileSpec> compiler = factory.buildCompiler(spec.getOptions());
+        Compiler<? super QuxcCompileSpec> compiler = factory.buildCompiler(spec.getOptions());
 
         try {
             compiler.execute(spec);
@@ -323,11 +336,12 @@ public final class Quxc {
     }
 
     /**
-     * Sets the compiler factory for use when running this Qux unit.
+     * Sets the compiler factory for use when running this Qux compilation unit.
      *
      * @param factory the new compiler factory.
      */
-    public void setCompilerFactory(CompilerFactory<QuxCompileSpec, QuxCompileOptions> factory) {
+    public void setCompilerFactory(
+            CompilerFactory<? super QuxcCompileSpec, ? super QuxcCompileOptions> factory) {
         this.factory = checkNotNull(factory, "factory cannot be null");
     }
 
@@ -350,10 +364,14 @@ public final class Quxc {
                 .create("cp");
 
         // Compile options
+        Option target = OptionBuilder.withLongOpt(OPT_TARGET).hasArg().withArgName("name")
+                .withDescription(
+                        "Sets the target for the build process, may set to one of {'jvm'}, defaults to 'jvm'")
+                .create("t");
         Option timeout = OptionBuilder.withLongOpt(OPT_TIMEOUT).hasArg().withArgName("long")
                 .withDescription(
                         "Sets the timeout for the build process, may set to '0' to disable, defaults to '10'")
-                .create("t");
+                .create("to");
         Option timeoutUnit = OptionBuilder.withLongOpt(OPT_TIMEOUT_UNIT).hasArg().withArgName(
                 "name").withDescription("Sets the timeout unit, defaults to 'seconds'").create(
                 "tu");
@@ -362,7 +380,6 @@ public final class Quxc {
                 .withDescription(
                         "Sets the character set to use to read the source files, defaults to 'utf8'")
                 .create("cs");
-
 
         // Properties
         Option properties = OptionBuilder.withLongOpt(OPT_PROPERTIES).hasArg().withArgName("file")
@@ -379,6 +396,7 @@ public final class Quxc {
         options.addOption(outdir);
         options.addOption(classpath);
 
+        options.addOption(target);
         options.addOption(timeout);
         options.addOption(timeoutUnit);
         options.addOption(verbose);
@@ -394,7 +412,7 @@ public final class Quxc {
     }
 
     /**
-     * Prints the help for how to call <code>Quxc</code>.
+     * Prints the help for how to call {@code quxc}.
      */
     private static void printHelp() {
         new HelpFormatter().printHelp(120, "quxc [options] file...", null, OPTIONS, null);
@@ -404,13 +422,13 @@ public final class Quxc {
      * Prints the version of the compiler.
      */
     private static void printVersion() {
-        logger.warn(QuxProperties.VERSION_NAME);
+        logger.warn(Constants.VERSION_NAME);
     }
 
     /**
      * Prints the version code of the compiler.
      */
     private static void printVersionCode() {
-        logger.warn(String.valueOf(QuxProperties.VERSION_CODE));
+        logger.warn(String.valueOf(Constants.VERSION_CODE));
     }
 }

@@ -90,8 +90,18 @@ start : NEWLINE? file EOF
 
 // File
 
-file : decl*
+file : pkg? imp* decl*
      ;
+
+// Package statement
+
+pkg : 'package' Identifier ('.' Identifier)* NEWLINE
+    ;
+
+// Import statement
+
+imp : 'import' Identifier ('.' Identifier)* ('$' Identifier)? NEWLINE
+    ;
 
 // Declarations
 
@@ -134,7 +144,9 @@ stmtReturn : 'return' expr? NEWLINE
 stmtWhile : 'while' expr block
           ;
 
-stmtExpr : exprFunction NEWLINE
+stmtExpr : exprDecrement NEWLINE
+         | exprExternal NEWLINE
+         | exprFunction NEWLINE
          | exprIncrement NEWLINE
          ;
 
@@ -149,7 +161,7 @@ expr : exprBinary ;
 exprBinary : exprBinary_1
            ;
 
-exprBinary_1 : exprBinary_2 ((BOP_IMPLIES) exprBinary_2)*
+exprBinary_1 : exprBinary_2 (BOP_IMP exprBinary_2)*
              ;
 
 exprBinary_2 : exprBinary_3 ((BOP_XOR | BOP_IFF) exprBinary_3)*
@@ -164,14 +176,20 @@ exprBinary_4 : exprBinary_5 ((BOP_EQ | BOP_NEQ) exprBinary_5)*
 exprBinary_5 : exprBinary_6 ((BOP_LT | BOP_LTE | BOP_GT | BOP_GTE) exprBinary_6)*
              ;
 
-exprBinary_6 : exprBinary_7 ((BOP_ADD | BOP_SUB) exprBinary_7)*
+exprBinary_6 : exprBinary_7 ((BOP_IN | BOP_NIN) exprBinary_7)*
              ;
 
-exprBinary_7 : exprRange ((BOP_MUL | BOP_DIV | BOP_REM) exprRange)*
+exprBinary_7 : exprBinary_8 ((BOP_ADD | BOP_SUB) exprBinary_8)*
              ;
 
-exprRange : exprUnary (BOP_RANGE exprUnary)?
-          ;
+exprBinary_8 : exprBinary_9 ((BOP_MUL | BOP_DIV | BOP_IDIV | BOP_REM) exprBinary_9)*
+             ;
+
+exprBinary_9 : exprBinary_10 (BOP_EXP exprBinary_10)*
+             ;
+
+exprBinary_10 : exprUnary (BOP_RNG exprUnary)?
+             ;
 
 exprUnary : UOP_NEG? exprAccess
           | UOP_NOT? exprAccess
@@ -205,6 +223,8 @@ exprAccess_1_5 : '[' ':' ']'
 
 exprTerm : exprBrace
          | exprBracket
+         | exprDecrement
+         | exprExternal
          | exprFunction
          | exprIncrement
          | exprParen
@@ -218,17 +238,27 @@ exprBrace : '{' (expr (',' expr)*)? '}'
 exprBracket : '[' (expr (',' expr)*)? ']'
             ;
 
-exprFunction : Identifier '(' (expr (',' expr)*) ')'
+exprDecrement : Identifier UOP_DEC
+              ;
+
+exprFunction : Identifier '(' ')'
+             | Identifier '(' expr (',' expr)* ')'
              ;
 
 exprIncrement : Identifier UOP_INC
               ;
+
+exprExternal : exprMeta '$' exprFunction
+             ;
 
 exprParen : '(' expr ')'
           ;
 
 exprVariable : Identifier
              ;
+
+exprMeta : Identifier ('.' Identifier)*
+         ;
 
 // Values
 
@@ -332,9 +362,11 @@ ELIF    : 'elif' ;
 ELSE    : 'else' ;
 FALSE   : 'false' ;
 IF      : 'if' ;
+IMPORT  : 'import' ;
 INT     : 'int' ;
 LIST    : 'list' ;
 NULL    : 'null' ;
+PACKAGE : 'package' ;
 REAL    : 'real' ;
 RETURN  : 'return' ;
 SET     : 'set' ;
@@ -350,9 +382,11 @@ LBRACKET    : '[' ;
 RPAREN      : ')' ;
 RBRACE      : '}' ;
 RBRACKET    : ']' ;
+DOT         : '.' ;
 COMMA       : ',' ;
 SEMI_COLON  : ';' ;
 COLON       : ':' ;
+DOLAR       : '$' ;
 
 // Binary operators
 
@@ -367,16 +401,19 @@ BOP_AND : 'and' ;
 BOP_OR : 'or' ;
 BOP_XOR : 'xor' ;
 BOP_IFF : 'iff' ;
-BOP_IMPLIES : 'implies' ;
+BOP_IMP : 'implies' ;
 
 BOP_IN : 'in' ;
+BOP_NIN : 'nin' ;
 
-BOP_RANGE : '..' ;
+BOP_RNG : '..' ;
+BOP_EXP : '**' ;
 
 BOP_ADD : '+' ;
 BOP_SUB : '-' ;
 BOP_MUL : '*' ;
 BOP_DIV : '/' ;
+BOP_IDIV : '//' ;
 BOP_REM : '%' ;
 
 // Unary operators
@@ -386,6 +423,7 @@ UOP_NOT : 'not' ;
 UOP_LEN: '|' ;
 
 UOP_NEG: '-' ;
+UOP_DEC: '--' ;
 UOP_INC: '++' ;
 
 // Assignment operators
@@ -399,7 +437,7 @@ AOP_REM : '%=' ;
 
 // Identifier
 
-Identifier : [a-zA-Z_$][a-zA-Z0-9_$]* ;
+Identifier : [a-zA-Z_][a-zA-Z0-9_]* ;
 
 // Miscellaneous
 

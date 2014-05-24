@@ -18,6 +18,7 @@ import java.util.List;
 public class CheckQuxAdapter extends QuxAdapter {
 
     private boolean visitedStart = false;
+    private boolean visitedPackage = false;
     private boolean visitedEnd = false;
 
     private List<CheckFunctionAdapter> cfas = new ArrayList<>();
@@ -32,6 +33,7 @@ public class CheckQuxAdapter extends QuxAdapter {
     @Override
     public void visit(int version, String name) {
         checkState(!visitedStart, "may only call visit(int, String) once");
+        checkState(!visitedPackage, "must call visit(int, String) before visitPackage(String)");
         checkState(!visitedEnd, "must call visit(int, String) before visitEnd()");
         checkArgument(SUPPORTED_VERSIONS.contains(version), "version %s not supported", version);
         checkNotNull(name, "name cannot be null");
@@ -45,8 +47,36 @@ public class CheckQuxAdapter extends QuxAdapter {
      * {@inheritDoc}
      */
     @Override
+    public void visitPackage(String pkg) {
+        checkState(visitedStart, "must call visit(int, String) before visitPackage(String)");
+        checkState(!visitedPackage, "may only call visitPackage(String) once");
+        checkState(!visitedEnd, "must call visitPackage(String) before visitEnd()");
+
+        visitedPackage = true;
+
+        super.visitPackage(pkg);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void visitImport(String id) {
+        checkState(visitedStart, "must call visit(int, String) before visitImport(String)");
+        checkState(visitedPackage, "must call visitPackage(String) before visitImport(String)");
+        checkState(!visitedEnd, "must call visitImport(String) before visitEnd()");
+        checkNotNull(id, "id cannot be null");
+
+        super.visitImport(id);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void visitEnd() {
         checkState(visitedStart, "must call visit(int, String) before visitEnd()");
+        checkState(visitedPackage, "must call visitPackage(String) before visitEnd()");
         checkState(!visitedEnd, "may only call visitEnd() once");
 
         for (CheckFunctionAdapter cfa : cfas) {
@@ -66,6 +96,8 @@ public class CheckQuxAdapter extends QuxAdapter {
     public FunctionVisitor visitFunction(int flags, String name, Type.Function type) {
         checkState(visitedStart,
                 "must call visit(int, String) before visitFunction(int, String, Type.Function)");
+        checkState(visitedPackage,
+                "must call visitPackage(String) before visitFunction(int, String, Type.Function)");
         checkState(!visitedEnd,
                 "must call visitFunction(int, String, Type.Function) before visitEnd()");
         checkNotNull(name, "name cannot be null");

@@ -41,7 +41,7 @@ public abstract class AbstractResource implements Resource.Single {
     }
 
     /**
-     * Gets the identifier for this resource. The identifier is a '/' delimited identifier.
+     * Gets the identifier for this resource. The identifier is a '.' delimited identifier.
      *
      * @return the identifier.
      */
@@ -54,5 +54,13 @@ public abstract class AbstractResource implements Resource.Single {
     @Override
     public int hashCode() {
         return getId().hashCode();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        return getId();
     }
 }

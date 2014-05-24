@@ -40,6 +40,8 @@ public abstract class ExprNode extends Node {
 
     /**
      * TODO: Documentation
+     * <p/>
+     * TODO: Consider turning this into a binary operation
      *
      * @author Henry J. Wylde
      * @since 0.1.3
@@ -175,6 +177,45 @@ public abstract class ExprNode extends Node {
      * TODO: Documentation
      *
      * @author Henry J. Wylde
+     * @since 0.2.1
+     */
+    public static final class External extends ExprNode {
+
+        private final Meta meta;
+        private final Function function;
+
+        public External(Meta meta, Function function, Attribute... attributes) {
+            this(meta, function, Arrays.asList(attributes));
+        }
+
+        public External(Meta meta, Function function, Collection<? extends Attribute> attributes) {
+            super(attributes);
+
+            this.meta = checkNotNull(meta, "meta cannot be null");
+            this.function = checkNotNull(function, "function cannot be null");
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void accept(ExprVisitor ev) {
+            ev.visitExprExternal(this);
+        }
+
+        public Function getFunction() {
+            return function;
+        }
+
+        public Meta getMeta() {
+            return meta;
+        }
+    }
+
+    /**
+     * TODO: Documentation
+     *
+     * @author Henry J. Wylde
      */
     public static final class Function extends ExprNode {
 
@@ -239,6 +280,39 @@ public abstract class ExprNode extends Node {
 
         public ImmutableList<ExprNode> getValues() {
             return values;
+        }
+    }
+
+    /**
+     * TODO: Documentation
+     *
+     * @author Henry J. Wylde
+     * @since 0.2.1
+     */
+    public static final class Meta extends ExprNode {
+
+        private final String id;
+
+        public Meta(String id, Attribute... attributes) {
+            this(id, Arrays.asList(attributes));
+        }
+
+        public Meta(String id, Collection<? extends Attribute> attributes) {
+            super(attributes);
+
+            this.id = checkNotNull(id, "id cannot be null");
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void accept(ExprVisitor ev) {
+            ev.visitExprMeta(this);
+        }
+
+        public String getId() {
+            return id;
         }
     }
 

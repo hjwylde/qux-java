@@ -323,7 +323,7 @@ public final class List extends Obj implements Access, Assign, Iterable, Len, Sl
             index++;
         }
 
-        return -index;
+        return -index - 1;
     }
 
     Bool isEmpty() {

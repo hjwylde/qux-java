@@ -1,0 +1,29 @@
+[any] sort([any] data):
+    return quicksort(data)
+
+[any] quicksort([any] data):
+    if |data| <= 1:
+        return data
+
+    mid = |data| // 2
+    pivot = data[mid]
+
+    lhs = []
+    rhs = []
+    pivots = []
+    for datum in data:
+        if datum < pivot:
+            lhs = lhs + [datum]
+        elif datum > pivot:
+            rhs = rhs + [datum]
+        else:
+            pivots = pivots + [datum]
+
+    return sort(lhs) + pivots + sort(rhs)
+
+void main([str] args):
+    print sort([])
+    print sort([4, 3, 6, 1, -5, null])
+    print sort([9000, 12, 5, 12, 50, 43, -5])
+    print sort([9, 8, 7, 6, 5, 4, 3, 2, 1, 0])
+

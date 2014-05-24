@@ -1,10 +1,11 @@
 package com.hjwylde.qux.pipelines;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.hjwylde.qux.pipelines.TypePropagator.getType;
-import static com.hjwylde.qux.pipelines.TypePropagator.initialiseFunctions;
 import static com.hjwylde.qux.util.Type.TYPE_BOOL;
 import static com.hjwylde.qux.util.Type.TYPE_INT;
 import static com.hjwylde.qux.util.Type.TYPE_ITERABLE;
+import static com.hjwylde.qux.util.Type.TYPE_META;
 import static com.hjwylde.qux.util.Type.TYPE_REAL;
 import static com.hjwylde.qux.util.Type.getInnerType;
 import static com.hjwylde.qux.util.Types.isEquivalent;
@@ -12,6 +13,7 @@ import static com.hjwylde.qux.util.Types.isSubtype;
 
 import com.hjwylde.common.error.CompilerErrors;
 import com.hjwylde.common.error.MethodNotImplementedError;
+import com.hjwylde.qbs.builder.QuxContext;
 import com.hjwylde.qux.api.ExprVisitor;
 import com.hjwylde.qux.api.StmtVisitor;
 import com.hjwylde.qux.builder.AbstractControlFlowGraphListener;
@@ -26,7 +28,6 @@ import com.hjwylde.qux.util.Attributes;
 import com.hjwylde.qux.util.Type;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableMap;
 
 /**
  * TODO: Documentation
@@ -35,22 +36,20 @@ import com.google.common.collect.ImmutableMap;
  */
 public final class TypeChecker extends Pipeline {
 
-    private final ImmutableMap<String, Type> functions;
-
-    public TypeChecker(QuxNode node) {
-        super(node);
-
-        functions = initialiseFunctions(node);
+    public TypeChecker(QuxContext context) {
+        super(context);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void apply() {
+    public QuxNode apply(QuxNode node) {
         for (FunctionNode function : node.getFunctions()) {
             apply(function);
         }
+
+        return node;
     }
 
     private void apply(FunctionNode function) {
@@ -121,31 +120,33 @@ public final class TypeChecker extends Pipeline {
             // TODO: Properly type check using references to methods that exist
             switch (expr.getOp()) {
                 case ADD:
-                case SUB:
-                case MUL:
                 case DIV:
+                case MUL:
                 case REM:
+                case SUB:
                     checkEquivalent(expr.getLhs(), getType(expr.getRhs()));
+                    break;
+                case EXP:
+                case IDIV:
+                case RNG:
+                    checkEquivalent(expr.getLhs(), TYPE_INT);
+                    checkEquivalent(expr.getRhs(), TYPE_INT);
                     break;
                 case IN:
                     checkSubtype(expr.getRhs(), TYPE_ITERABLE);
                     checkSubtype(expr.getLhs(), getInnerType(getType(expr.getRhs())));
                 case EQ:
-                case NEQ:
                 case GT:
                 case GTE:
                 case LT:
                 case LTE:
-                    break;
-                case RANGE:
-                    checkEquivalent(expr.getLhs(), TYPE_INT);
-                    checkEquivalent(expr.getRhs(), TYPE_INT);
+                case NEQ:
                     break;
                 case AND:
+                case IFF:
+                case IMP:
                 case OR:
                 case XOR:
-                case IFF:
-                case IMPLIES:
                     checkSubtype(expr.getLhs(), TYPE_BOOL);
                     checkSubtype(expr.getRhs(), TYPE_BOOL);
                     break;
@@ -185,6 +186,23 @@ public final class TypeChecker extends Pipeline {
          * {@inheritDoc}
          */
         @Override
+        public void visitExprMeta(ExprNode.Meta expr) {
+            checkEquivalent(expr, TYPE_META);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void visitExprExternal(ExprNode.External expr) {
+            visitExpr(expr.getMeta());
+            visitExpr(expr.getFunction());
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
         public void visitExprSet(ExprNode.Set expr) {
             for (ExprNode value : expr.getValues()) {
                 visitExpr(value);
@@ -218,6 +236,7 @@ public final class TypeChecker extends Pipeline {
             visitExpr(expr.getTarget());
 
             switch (expr.getOp()) {
+                case DEC:
                 case INC:
                     checkSubtype(expr.getTarget(), TYPE_INT);
                     break;
@@ -298,7 +317,7 @@ public final class TypeChecker extends Pipeline {
         @Override
         public void visitStmtReturn(StmtNode.Return stmt) {
             if (stmt.getExpr().isPresent()) {
-                Type returnType = functions.get(function.getName());
+                Type returnType = function.getReturnType();
                 checkSubtype(stmt.getExpr().get(), returnType);
             }
         }

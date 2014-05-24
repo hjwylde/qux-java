@@ -91,6 +91,10 @@ public final class FunctionNode extends Node implements FunctionVisitor {
         return ImmutableList.copyOf(stmts);
     }
 
+    public Type.Function getType() {
+        return type;
+    }
+
     /**
      * {@inheritDoc}
      */

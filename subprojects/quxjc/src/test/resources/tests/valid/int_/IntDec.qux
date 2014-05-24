@@ -1,0 +1,10 @@
+void main([str] args):
+    i = 0
+
+    print i
+    print i--
+    print i
+    i--
+    print i
+    print i-- + 1
+

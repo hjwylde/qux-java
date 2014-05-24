@@ -1,0 +1,11 @@
+dependencies {
+    compile libraries.asm
+    compile libraries.commons_cli
+
+    compile project(':qbs')
+    compile project(':qjrt')
+    compile project(':qux')
+}
+
+test.dependsOn ':quxc:installApp'
+

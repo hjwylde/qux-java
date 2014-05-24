@@ -4,6 +4,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.hjwylde.qux.util.Type;
 
+import javax.annotation.Nullable;
+
 /**
  * TODO: Documentation.
  *
@@ -44,5 +46,21 @@ public abstract class QuxAdapter implements QuxVisitor {
     @Override
     public FunctionVisitor visitFunction(int flags, String name, Type.Function type) {
         return next.visitFunction(flags, name, type);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void visitImport(String id) {
+        next.visitImport(id);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void visitPackage(@Nullable String pkg) {
+        next.visitPackage(pkg);
     }
 }

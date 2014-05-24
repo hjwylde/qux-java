@@ -42,7 +42,7 @@ public class Context {
      *
      * @param resources the resources.
      */
-    public void addResources(Collection<? extends Resource> resources) {
+    public final void addResources(Collection<? extends Resource> resources) {
         this.resources.add(new ResourceSet(resources));
     }
 
@@ -51,7 +51,7 @@ public class Context {
      *
      * @param resources the resources to add.
      */
-    public void addResources(Resource... resources) {
+    public final void addResources(Resource... resources) {
         this.resources.add(new ResourceSet(resources));
     }
 
@@ -63,7 +63,7 @@ public class Context {
         if (this == obj) {
             return true;
         }
-        if (!(obj instanceof Context)) {
+        if (obj == null || obj.getClass() != getClass()) {
             return false;
         }
 
@@ -88,7 +88,7 @@ public class Context {
      * @param id the resource identifier.
      * @return the resource with the given identifier or null.
      */
-    public Optional<Resource.Single> getResourceById(String id) {
+    public final Optional<Resource.Single> getResourceById(String id) {
         for (Resource resource : resources) {
             if (resource.containsId(id)) {
                 return resource.getById(id);
@@ -103,7 +103,7 @@ public class Context {
      *
      * @return an immutable view of the resources.
      */
-    public Set<Resource> getResources() {
+    public final Set<Resource> getResources() {
         return Collections.unmodifiableSet(resources);
     }
 

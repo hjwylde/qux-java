@@ -16,6 +16,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 /**
  * TODO: Documentation.
  *
@@ -139,6 +141,13 @@ public abstract class StmtNode extends Node {
             this.expr = checkNotNull(expr, "expr cannot be null");
 
             switch (type) {
+                case DECREMENT:
+                    checkArgument(expr instanceof ExprNode.Unary);
+                    checkArgument(((ExprNode.Unary) expr).getOp() == Op.Unary.DEC);
+                    break;
+                case EXTERNAL:
+                    checkArgument(expr instanceof ExprNode.External);
+                    break;
                 case FUNCTION:
                     checkArgument(expr instanceof ExprNode.Function);
                     break;
@@ -174,7 +183,7 @@ public abstract class StmtNode extends Node {
          * @since 0.1.3
          */
         public static enum Type {
-            FUNCTION, INCREMENT;
+            DECREMENT, EXTERNAL, FUNCTION, INCREMENT;
         }
     }
 
@@ -313,29 +322,21 @@ public abstract class StmtNode extends Node {
         private final Optional<ExprNode> expr;
 
         public Return(Attribute... attributes) {
-            this(Optional.<ExprNode>absent(), Arrays.asList(attributes));
+            this(null, Arrays.asList(attributes));
         }
 
-        public Return(Optional<ExprNode> expr, Attribute... attributes) {
-            this(expr, Arrays.asList(attributes));
-        }
-
-        public Return(ExprNode expr, Attribute... attributes) {
+        public Return(@Nullable ExprNode expr, Attribute... attributes) {
             this(expr, Arrays.asList(attributes));
         }
 
         public Return(Collection<? extends Attribute> attributes) {
-            this(Optional.<ExprNode>absent(), attributes);
+            this(null, attributes);
         }
 
-        public Return(Optional<ExprNode> expr, Collection<? extends Attribute> attributes) {
+        public Return(@Nullable ExprNode expr, Collection<? extends Attribute> attributes) {
             super(attributes);
 
-            this.expr = checkNotNull(expr, "expr cannot be null");
-        }
-
-        public Return(ExprNode expr, Collection<? extends Attribute> attributes) {
-            this(Optional.fromNullable(expr), attributes);
+            this.expr = Optional.fromNullable(expr);
         }
 
         /**

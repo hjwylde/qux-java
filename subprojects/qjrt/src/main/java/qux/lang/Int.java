@@ -12,8 +12,6 @@ import com.google.common.cache.LoadingCache;
 
 import java.math.BigInteger;
 
-import qux.errors.InternalError;
-
 /**
  * TODO: Documentation
  *
@@ -72,12 +70,12 @@ public final class Int extends Obj {
         return Str.valueOf(value.toString());
     }
 
-    public Int _div_(Int t) {
+    public Real _div_(Int t) {
         if (t.equals(Int.ZERO)) {
             throw new InternalError("attempted division by zero");
         }
 
-        return valueOf(value.divide(t.value));
+        return Real.valueOf(value)._div_(Real.valueOf(t.value));
     }
 
     /**
@@ -100,6 +98,13 @@ public final class Int extends Obj {
         return value.equals(((Int) obj).value) ? TRUE : FALSE;
     }
 
+    public Int _exp_(Int t) {
+        checkArgument(t.value.bitLength() < 32,
+                "exponents of size larger than 32 bits is unsupported");
+
+        return valueOf(value.pow(t.value.intValue()));
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -118,7 +123,7 @@ public final class Int extends Obj {
     @Override
     public Bool _gte_(Obj t) {
         if (!(t instanceof Int)) {
-            return super._gt_(t);
+            return super._gte_(t);
         }
 
         return value.compareTo(((Int) t).value) >= 0 ? TRUE : FALSE;
@@ -132,13 +137,21 @@ public final class Int extends Obj {
         return valueOf(value.hashCode());
     }
 
+    public Int _idiv_(Int t) {
+        if (t.equals(Int.ZERO)) {
+            throw new InternalError("attempted division by zero");
+        }
+
+        return valueOf(value.divide(t.value));
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
     public Bool _lt_(Obj t) {
         if (!(t instanceof Int)) {
-            return super._gt_(t);
+            return super._lt_(t);
         }
 
         return value.compareTo(((Int) t).value) < 0 ? TRUE : FALSE;
@@ -150,7 +163,7 @@ public final class Int extends Obj {
     @Override
     public Bool _lte_(Obj t) {
         if (!(t instanceof Int)) {
-            return super._gt_(t);
+            return super._lte_(t);
         }
 
         return value.compareTo(((Int) t).value) <= 0 ? TRUE : FALSE;
@@ -164,7 +177,11 @@ public final class Int extends Obj {
         return valueOf(value.negate());
     }
 
-    public List _range_(Int to) {
+    public Int _rem_(Int t) {
+        return valueOf(value.remainder(t.value));
+    }
+
+    public List _rng_(Int to) {
         checkArgument(_lte_(to) == TRUE,
                 "this must be less than or equal to high (this=%s, high=%s)", this, to);
 
@@ -177,10 +194,6 @@ public final class Int extends Obj {
         }
 
         return range;
-    }
-
-    public Int _rem_(Int t) {
-        return valueOf(value.remainder(t.value));
     }
 
     public Int _sub_(Int t) {

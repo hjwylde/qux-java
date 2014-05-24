@@ -1,6 +1,7 @@
 package com.hjwylde.qux.pipelines;
 
 import com.hjwylde.common.error.CompilerErrors;
+import com.hjwylde.qbs.builder.QuxContext;
 import com.hjwylde.qux.builder.AbstractControlFlowGraphListener;
 import com.hjwylde.qux.builder.ControlFlowGraph;
 import com.hjwylde.qux.builder.ControlFlowGraphIterator;
@@ -23,18 +24,20 @@ import org.jgrapht.event.VertexTraversalEvent;
  */
 public final class DeadCodeChecker extends Pipeline {
 
-    public DeadCodeChecker(QuxNode node) {
-        super(node);
+    public DeadCodeChecker(QuxContext context) {
+        super(context);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void apply() {
+    public QuxNode apply(QuxNode node) {
         for (FunctionNode function : node.getFunctions()) {
             apply(function);
         }
+
+        return node;
     }
 
     private void apply(FunctionNode function) {

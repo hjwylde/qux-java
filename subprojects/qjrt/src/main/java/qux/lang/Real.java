@@ -8,8 +8,6 @@ import static qux.lang.Meta.META_REAL;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
-import qux.errors.InternalError;
-
 /**
  * TODO: Documentation
  *
@@ -39,8 +37,8 @@ public final class Real extends Obj {
 
         // Normalise the values
         Int gcd = num.gcd(den);
-        num = num._div_(gcd);
-        den = den._div_(gcd);
+        num = num._idiv_(gcd);
+        den = den._idiv_(gcd);
 
         // Normalise the signs
         if (den._lt_(Int.ZERO) == TRUE) {

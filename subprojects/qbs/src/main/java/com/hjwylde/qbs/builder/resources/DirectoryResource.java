@@ -1,7 +1,5 @@
 package com.hjwylde.qbs.builder.resources;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import com.google.common.io.Files;
 
 import org.slf4j.Logger;
@@ -45,7 +43,7 @@ public class DirectoryResource extends AbstractResourceCollection {
      * @param root the root directory.
      */
     public DirectoryResource(Path root) {
-        this.root = checkNotNull(root, "root cannot be null").toAbsolutePath().normalize();
+        this.root = root.toAbsolutePath().normalize();
     }
 
     /**
@@ -53,6 +51,9 @@ public class DirectoryResource extends AbstractResourceCollection {
      */
     @Override
     public boolean equals(@Nullable Object obj) {
+        if (this == obj) {
+            return true;
+        }
         if (obj == null || obj.getClass() != getClass()) {
             return false;
         }
@@ -89,14 +90,15 @@ public class DirectoryResource extends AbstractResourceCollection {
 
             @Override
             public FileVisitResult visitFile(final Path file, BasicFileAttributes attrs) {
-                // TODO: Verify what id returns here, is it just the name or the whole path without
-                // the extension
-                String id = Files.getNameWithoutExtension(root.relativize(file).toString());
+                String id = root.relativize(file).toString();
+                if (file.getFileName().toString().contains(".")) {
+                    id = id.substring(0, id.lastIndexOf("."));
+                }
+                id = id.replace("/", ".");
                 String extension = Files.getFileExtension(file.toString());
 
                 if (ResourceManager.getSupportedExtensions().contains(new Resource.Extension(
                         extension))) {
-
                     resources.add(new LazilyInitialisedResource(id) {
 
                         @Override
@@ -111,7 +113,7 @@ public class DirectoryResource extends AbstractResourceCollection {
 
             @Override
             public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
-                logger.warn("i/o exception when trying to read file: " + file, exc);
+                logger.warn("i/o exception when trying to read resource path: " + file, exc);
 
                 return FileVisitResult.CONTINUE;
             }
@@ -120,7 +122,7 @@ public class DirectoryResource extends AbstractResourceCollection {
         try {
             java.nio.file.Files.walkFileTree(root, visitor);
         } catch (IOException e) {
-            logger.warn("i/o exception when trying to read directory: " + root, e);
+            logger.warn("i/o exception when trying to read resource directory: " + root, e);
         }
 
         return resources.iterator();

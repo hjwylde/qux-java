@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
+import javax.annotation.Nullable;
+
 /**
  * TODO: Documentation.
  *
@@ -22,43 +24,58 @@ import java.util.Collection;
 public abstract class Type {
 
     /**
-     * String representation of the <code>any</code> type.
+     * String representation of the {@code any} type.
      */
     public static final String ANY = "A";
     public static final Type.Any TYPE_ANY = new Type.Any();
+
     public static final Type.List TYPE_LIST_ANY = Type.forList(TYPE_ANY);
     public static final Type.Set TYPE_SET_ANY = Type.forSet(TYPE_ANY);
+
     /**
-     * String representation of the <code>bool</code> type.
+     * String representation of the {@code bool} type.
      */
     public static final String BOOL = "B";
     public static final Type.Bool TYPE_BOOL = new Type.Bool();
-    /**
-     * String representation of the <code>int</code> type.
-     */
-    public static final String INT = "Z";
-    public static final Type.Int TYPE_INT = new Type.Int();
+
     /**
      * String representation of the {@code int} type.
      */
+    public static final String INT = "Z";
+    public static final Type.Int TYPE_INT = new Type.Int();
+
+    /**
+     * String representation of the {@code meta} type.
+     */
+    public static final String META = "M";
+    public static final Type.Meta TYPE_META = new Type.Meta();
+
+    /**
+     * String representation of the {@code null} type.
+     */
     public static final String NULL = "N";
     public static final Type.Null TYPE_NULL = new Type.Null();
+
     /**
-     * String representation of the <code>real</code> type.
+     * String representation of the {@code real} type.
      */
     public static final String REAL = "R";
     public static final Type.Real TYPE_REAL = new Type.Real();
+
     /**
-     * String representation of the <code>str</code> type.
+     * String representation of the {@code str} type.
      */
     public static final String STR = "S";
     public static final Type.Str TYPE_STR = new Type.Str();
+
     public static final Type TYPE_ITERABLE = Type.forUnion(TYPE_LIST_ANY, TYPE_SET_ANY, TYPE_STR);
+
     /**
-     * String representation of the <code>void</code> type.
+     * String representation of the {@code void} type.
      */
     public static final String VOID = "V";
     public static final Type.Void TYPE_VOID = new Type.Void();
+
     static final String FUNCTION_START = "(";
     static final String FUNCTION_PARAM_END = ")";
 
@@ -78,7 +95,10 @@ public abstract class Type {
      * {@inheritDoc}
      */
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(@Nullable Object obj) {
+        if (this == obj) {
+            return true;
+        }
         if (obj == null || getClass() != obj.getClass()) {
             return false;
         }
@@ -161,7 +181,7 @@ public abstract class Type {
                 java.util.List<Type> parameterTypes = new ArrayList<>();
                 int index = 1;
                 while (index < desc.length()) {
-                    if (desc.substring(index, index + 1).equals(FUNCTION_PARAM_END)) {
+                    if (desc.substring(index).startsWith(FUNCTION_PARAM_END)) {
                         break;
                     }
 
@@ -170,7 +190,7 @@ public abstract class Type {
                     index += parameterTypes.get(parameterTypes.size() - 1).getDescriptor().length();
                 }
 
-                checkArgument(desc.substring(index, index + 1).equals(FUNCTION_PARAM_END),
+                checkArgument(desc.substring(index).startsWith(FUNCTION_PARAM_END),
                         "desc is invalid: %s", desc);
 
                 Type returnType = forDescriptor(desc.substring(index + 1), match);
@@ -192,6 +212,9 @@ public abstract class Type {
             case REAL:
                 checkArgument(!match || desc.length() == 1, "desc is invalid: %s", desc);
                 return TYPE_REAL;
+            case SET_START:
+                checkArgument(desc.length() > 1, "desc is invalid: %s", desc);
+                return forSet(forDescriptor(desc.substring(1), match));
             case STR:
                 checkArgument(!match || desc.length() == 1, "desc is invalid: %s", desc);
                 return TYPE_STR;
@@ -199,7 +222,7 @@ public abstract class Type {
                 java.util.List<Type> types = new ArrayList<>();
                 index = 1;
                 while (index < desc.length()) {
-                    if (desc.substring(index, index + 1).equals(UNION_END)) {
+                    if (desc.substring(index).startsWith(UNION_END)) {
                         break;
                     }
 
@@ -208,7 +231,7 @@ public abstract class Type {
                     index += types.get(types.size() - 1).getDescriptor().length();
                 }
 
-                checkArgument(desc.substring(index, index + 1).equals(UNION_END),
+                checkArgument(desc.substring(index).startsWith(UNION_END),
                         "desc is invalid: %s", desc);
                 checkArgument(!match || desc.length() == index + 1, "desc is invalid: %s", desc);
 
@@ -321,7 +344,7 @@ public abstract class Type {
          * {@inheritDoc}
          */
         @Override
-        public boolean equals(Object obj) {
+        public boolean equals(@Nullable Object obj) {
             if (!super.equals(obj)) {
                 return false;
             }
@@ -430,7 +453,7 @@ public abstract class Type {
          * {@inheritDoc}
          */
         @Override
-        public boolean equals(Object obj) {
+        public boolean equals(@Nullable Object obj) {
             if (!super.equals(obj)) {
                 return false;
             }
@@ -464,6 +487,44 @@ public abstract class Type {
         @Override
         public String toString() {
             return "[" + innerType + "]";
+        }
+    }
+
+    /**
+     * TODO: Documentation
+     *
+     * @author Henry J. Wylde
+     * @since 0.2.1
+     */
+    public static final class Meta extends Type {
+
+        /**
+         * This class is a singleton.
+         */
+        private Meta() {}
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getDescriptor() {
+            return META;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int hashCode() {
+            return 11;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String toString() {
+            return "meta";
         }
     }
 
@@ -561,7 +622,7 @@ public abstract class Type {
          * {@inheritDoc}
          */
         @Override
-        public boolean equals(Object obj) {
+        public boolean equals(@Nullable Object obj) {
             if (!super.equals(obj)) {
                 return false;
             }
@@ -660,7 +721,7 @@ public abstract class Type {
          * {@inheritDoc}
          */
         @Override
-        public boolean equals(Object obj) {
+        public boolean equals(@Nullable Object obj) {
             if (!super.equals(obj)) {
                 return false;
             }
