@@ -1,0 +1,7 @@
+void main([str] args):
+    print '0' nin '000'
+    print '0' nin 'fewab'
+    print 'null' nin 'baz'
+    print 'null' nin ''
+    print '' nin ''
+

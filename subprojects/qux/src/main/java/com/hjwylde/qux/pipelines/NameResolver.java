@@ -411,7 +411,26 @@ public final class NameResolver extends Pipeline {
             visitExpr(stmt.getExpr());
             ExprNode expr = current;
 
-            return new StmtNode.Expr(stmt.getType(), expr, stmt.getAttributes());
+            StmtNode.Expr.Type type = null;
+            if (expr instanceof ExprNode.External) {
+                type = StmtNode.Expr.Type.EXTERNAL;
+            } else if (expr instanceof ExprNode.Function) {
+                type = StmtNode.Expr.Type.FUNCTION;
+            } else if (expr instanceof ExprNode.Unary) {
+                switch (((ExprNode.Unary) expr).getOp()) {
+                    case DEC:
+                        type = StmtNode.Expr.Type.DECREMENT;
+                        break;
+                    case INC:
+                        type = StmtNode.Expr.Type.INCREMENT;
+                }
+            }
+
+            if (type == null) {
+                throw new MethodNotImplementedError(expr.getClass().toString());
+            }
+
+            return new StmtNode.Expr(type, expr, stmt.getAttributes());
         }
 
         private StmtNode.For resolveStmtFor(StmtNode.For stmt) {
@@ -436,7 +455,7 @@ public final class NameResolver extends Pipeline {
             }
 
             List<StmtNode> falseBlock = new ArrayList<>();
-            for (StmtNode inner : stmt.getTrueBlock()) {
+            for (StmtNode inner : stmt.getFalseBlock()) {
                 falseBlock.add(resolveStmt(inner));
             }
 

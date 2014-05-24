@@ -1,0 +1,6 @@
+void main([str] args):
+    print 0 nin [0]
+    print 0 nin [-1, 4, 0.0, 0.0]
+    print null nin [null]
+    print null nin []
+
