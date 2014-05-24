@@ -5,6 +5,7 @@ import static com.hjwylde.qux.util.Type.TYPE_BOOL;
 import static com.hjwylde.qux.util.Type.TYPE_INT;
 import static com.hjwylde.qux.util.Type.TYPE_ITERABLE;
 import static com.hjwylde.qux.util.Type.TYPE_LIST_ANY;
+import static com.hjwylde.qux.util.Type.TYPE_META;
 import static com.hjwylde.qux.util.Type.TYPE_NULL;
 import static com.hjwylde.qux.util.Type.TYPE_REAL;
 import static com.hjwylde.qux.util.Type.TYPE_SET_ANY;
@@ -12,7 +13,11 @@ import static com.hjwylde.qux.util.Type.TYPE_STR;
 import static com.hjwylde.qux.util.Type.getInnerType;
 import static com.hjwylde.qux.util.Types.isSubtype;
 
+import com.hjwylde.common.error.CompilerErrors;
 import com.hjwylde.common.error.MethodNotImplementedError;
+import com.hjwylde.qbs.builder.Context;
+import com.hjwylde.qbs.builder.QuxContext;
+import com.hjwylde.qbs.builder.resources.Resource;
 import com.hjwylde.qux.api.ExprVisitor;
 import com.hjwylde.qux.api.StmtVisitor;
 import com.hjwylde.qux.builder.AbstractControlFlowGraphListener;
@@ -30,7 +35,6 @@ import com.hjwylde.qux.util.Attributes;
 import com.hjwylde.qux.util.Type;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableMap;
 
 import org.jgrapht.event.VertexTraversalEvent;
 
@@ -50,37 +54,67 @@ import java.util.Set;
  */
 public final class TypePropagator extends Pipeline {
 
-    // TODO: Need a utility class that defines how a function is to be uniquely identified
-    private final ImmutableMap<String, Type> functions;
+    private QuxNode node;
 
-    public TypePropagator(QuxNode node) {
-        super(node);
-
-        functions = initialiseFunctions(node);
+    public TypePropagator(QuxContext context) {
+        super(context);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void apply() {
+    public QuxNode apply(QuxNode node) {
+        this.node = node;
+
         for (FunctionNode function : node.getFunctions()) {
             apply(function);
+        }
+
+        return node;
+    }
+
+    static Type.Function getFunctionType(Context context, String owner, ExprNode.Function function,
+            Node node) {
+        Resource.Single resource = getResource(context, owner, node);
+
+        Optional<String> type = resource.getFunctionType(function.getName());
+        if (type.isPresent()) {
+            return (Type.Function) Type.forDescriptor(type.get());
+        }
+
+        Optional<Attribute.Source> opt = Attributes.getAttribute(node, Attribute.Source.class);
+
+        if (opt.isPresent()) {
+            Attribute.Source source = opt.get();
+
+            throw CompilerErrors.noFunctionFound(owner, function.getName(), source.getSource(),
+                    source.getLine(), source.getCol(), source.getLength());
+        } else {
+            throw CompilerErrors.noFunctionFound(owner, function.getName());
+        }
+    }
+
+    static Resource.Single getResource(Context context, String id, Node node) {
+        Optional<Resource.Single> resource = context.getResourceById(id);
+        if (resource.isPresent()) {
+            return resource.get();
+        }
+
+        Optional<Attribute.Source> opt = Attributes.getAttribute(node, Attribute.Source.class);
+
+        if (opt.isPresent()) {
+            Attribute.Source source = opt.get();
+
+            throw CompilerErrors.noClassFound(id, source.getSource(), source.getLine(),
+                    source.getCol(), source.getLength());
+        } else {
+            throw CompilerErrors.noClassFound(id);
         }
     }
 
     static Type getType(Node node) {
         return Attributes.getAttributeUnchecked(node, Attribute.Type.class).getType();
-    }
-
-    static ImmutableMap<String, Type> initialiseFunctions(QuxNode node) {
-        ImmutableMap.Builder<String, Type> builder = ImmutableMap.builder();
-
-        for (FunctionNode function : node.getFunctions()) {
-            builder.put(function.getName(), function.getReturnType());
-        }
-
-        return builder.build();
     }
 
     static Environment<String, Type> mergeEnvironments(List<Environment<String, Type>> envs) {
@@ -278,12 +312,27 @@ public final class TypePropagator extends Pipeline {
          * {@inheritDoc}
          */
         @Override
+        public void visitExprExternal(ExprNode.External expr) {
+            visitExpr(expr.getMeta());
+            visitExprFunction(expr.getMeta().getId(), expr.getFunction(), expr);
+
+            setType(expr, getType(expr.getFunction()));
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
         public void visitExprFunction(ExprNode.Function expr) {
+            visitExprFunction(node.getId(), expr, expr);
+        }
+
+        public void visitExprFunction(String owner, ExprNode.Function expr, Node node) {
             for (ExprNode argument : expr.getArguments()) {
                 visitExpr(argument);
             }
 
-            setType(expr, functions.get(expr.getName()));
+            setType(expr, getFunctionType(getContext(), owner, expr, node).getReturnType());
         }
 
         /**
@@ -303,6 +352,14 @@ public final class TypePropagator extends Pipeline {
             } else {
                 setType(expr, Type.forList(Type.forUnion(types)));
             }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void visitExprMeta(ExprNode.Meta expr) {
+            setType(expr, TYPE_META);
         }
 
         /**

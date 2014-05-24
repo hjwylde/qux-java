@@ -2,6 +2,8 @@ package com.hjwylde.qbs.builder.resources;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.google.common.base.Optional;
+
 /**
  * A lazily initialised resource will attempt to provide as many default method implementations as
  * possible without having to read the delegate resource. The delegate resource will only be loaded
@@ -12,6 +14,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public abstract class LazilyInitialisedResource extends AbstractResource {
 
     private final String id;
+
     private Resource.Single delegate;
 
     /**
@@ -27,20 +30,20 @@ public abstract class LazilyInitialisedResource extends AbstractResource {
      * {@inheritDoc}
      */
     @Override
-    public final String getId() {
-        return id;
+    public Optional<String> getFunctionType(String name) {
+        if (delegate == null) {
+            delegate = loadDelegate();
+        }
+
+        return delegate.getFunctionType(name);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public boolean isClassVisible(String id) {
-        if (delegate == null) {
-            delegate = loadDelegate();
-        }
-
-        return delegate.isClassVisible(id);
+    public final String getId() {
+        return id;
     }
 
     /**

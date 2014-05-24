@@ -4,9 +4,10 @@ import java.io.InputStream;
 import java.nio.file.Path;
 
 /**
- * A reader for reading a local directory resource. This reader only supports reading from a {@code
- * Path} and not an {@code InputStream}. This is due to the inability to encode a directory as an
- * input stream without the assistance of another program such as {@code tar}.
+ * A reader for reading a local directory resource. This reader only supports reading from a {@link
+ * java.nio.file.Path} and not an {@link java.io.InputStream}. This is due to the inability to
+ * encode a directory as an input stream without the assistance of another program such as {@code
+ * tar}.
  *
  * @author Henry J. Wylde
  */
@@ -37,7 +38,7 @@ public final class LocalDirectoryResourceReader implements Resource.Reader<Direc
     }
 
     /**
-     * Unsupported. Always throws an {@link UnsupportedOperationException}.
+     * Unsupported. Always throws an {@link java.lang.UnsupportedOperationException}.
      *
      * @param in the input stream.
      * @return n/a.

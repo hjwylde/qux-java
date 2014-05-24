@@ -4,15 +4,19 @@ import com.hjwylde.common.util.LoggerUtils;
 import com.hjwylde.qbs.builder.BuildResult;
 import com.hjwylde.qbs.builder.QuxContext;
 import com.hjwylde.qbs.builder.QuxProject;
+import com.hjwylde.qbs.builder.resources.Resource;
+import com.hjwylde.qbs.builder.resources.ResourceManager;
 import com.hjwylde.qbs.compiler.Compiler;
 import com.hjwylde.qbs.compiler.QuxCompileSpec;
 import com.hjwylde.qux.pipelines.ControlFlowGraphPropagator;
 import com.hjwylde.qux.pipelines.DeadCodeChecker;
+import com.hjwylde.qux.pipelines.NameResolver;
 import com.hjwylde.qux.pipelines.Pipeline;
 import com.hjwylde.qux.pipelines.TypeChecker;
 import com.hjwylde.qux.pipelines.TypePropagator;
 import com.hjwylde.quxjc.builder.Qux2ClassBuilder;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 import org.slf4j.Logger;
@@ -34,8 +38,9 @@ public final class Qux2ClassCompiler<T extends QuxCompileSpec> implements Compil
     private static final Logger logger = LoggerFactory.getLogger(Qux2ClassCompiler.class);
 
     private static final ImmutableList<Class<? extends Pipeline>> DEFAULT_PIPELINES =
-            ImmutableList.<Class<? extends Pipeline>>of(ControlFlowGraphPropagator.class,
-                    //                    DefiniteAssignmentChecker.class,
+            ImmutableList.<Class<? extends Pipeline>>of(NameResolver.class,
+                    ControlFlowGraphPropagator.class,
+                    // DefiniteAssignmentChecker.class,
                     DeadCodeChecker.class, TypePropagator.class, TypeChecker.class);
 
     /**
@@ -46,7 +51,7 @@ public final class Qux2ClassCompiler<T extends QuxCompileSpec> implements Compil
         setLogLevel(spec.getOptions().isVerbose());
 
         QuxProject project = QuxProject.builder(spec).build();
-        QuxContext context = new QuxContext(project);
+        QuxContext context = initialiseContext(project);
         Qux2ClassBuilder builder = new Qux2ClassBuilder(context, DEFAULT_PIPELINES);
 
         Map<Path, BuildResult> results = builder.build(spec.getSource());
@@ -70,6 +75,22 @@ public final class Qux2ClassCompiler<T extends QuxCompileSpec> implements Compil
         } catch (IOException e) {
             LoggerUtils.logError(result.getCause());
         }
+    }
+
+    private QuxContext initialiseContext(QuxProject project) {
+        QuxContext context = new QuxContext(project);
+
+        for (Path path : project.getClasspath()) {
+            Optional<Resource> resource = ResourceManager.loadResource(path);
+
+            if (resource.isPresent()) {
+                context.addResources(resource.get());
+            } else {
+                logger.warn("classpath entry '{}' unable to be loaded", path);
+            }
+        }
+
+        return context;
     }
 
     private static void setLogLevel(boolean verbose) {

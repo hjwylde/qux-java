@@ -95,12 +95,18 @@ public final class Qux2ClassTranslater extends QuxAdapter {
     private final String source;
 
     private final ClassVisitor cv;
+
     private String name;
+    private String pkg;
 
     public Qux2ClassTranslater(String source, ClassVisitor cv) {
         this.source = checkNotNull(source, "source cannot be null");
 
         this.cv = checkNotNull(cv, "cv cannot be null");
+    }
+
+    public String getId() {
+        return ((pkg == null ? "" : pkg + ".") + name).replace(".", "/");
     }
 
     /**
@@ -109,11 +115,6 @@ public final class Qux2ClassTranslater extends QuxAdapter {
     @Override
     public void visit(int version, String name) {
         this.name = name;
-
-        cv.visit(V1_7, ACC_PUBLIC | ACC_FINAL, name, null, Type.getInternalName(Obj.class),
-                new String[0]);
-
-        cv.visitSource(getFileName(), null);
     }
 
     /**
@@ -138,6 +139,19 @@ public final class Qux2ClassTranslater extends QuxAdapter {
         }
 
         return new Function2ClassTranslater(mv, flags, name, type);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void visitPackage(String pkg) {
+        this.pkg = pkg;
+
+        cv.visit(V1_7, ACC_PUBLIC | ACC_FINAL, getId(), null, Type.getInternalName(Obj.class),
+                new String[0]);
+
+        cv.visitSource(getFileName(), null);
     }
 
     static Class<?> getClass(Node node) {
@@ -482,7 +496,11 @@ public final class Qux2ClassTranslater extends QuxAdapter {
          * {@inheritDoc}
          */
         @Override
-        public void visitExprFunction(ExprNode.Function expr) {
+        public void visitExprExternal(ExprNode.External expr) {
+            visitExprFunction(expr.getMeta().getId(), expr.getFunction());
+        }
+
+        public void visitExprFunction(String owner, ExprNode.Function expr) {
             Type returnType = getType(expr);
             java.util.List<Type> argumentTypes = new ArrayList<>();
 
@@ -501,8 +519,16 @@ public final class Qux2ClassTranslater extends QuxAdapter {
 
             Type type = Type.getMethodType(returnType, argumentTypes.toArray(new Type[0]));
 
-            mv.visitMethodInsn(INVOKESTATIC, Qux2ClassTranslater.this.name, expr.getName(),
+            mv.visitMethodInsn(INVOKESTATIC, owner.replace(".", "/"), expr.getName(),
                     type.getDescriptor(), false);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void visitExprFunction(ExprNode.Function expr) {
+            visitExprFunction(getId(), expr);
         }
 
         /**
@@ -523,6 +549,12 @@ public final class Qux2ClassTranslater extends QuxAdapter {
             mv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(List.class), "valueOf",
                     getMethodDescriptor(List.class, "valueOf", Obj[].class), false);
         }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void visitExprMeta(ExprNode.Meta expr) {}
 
         /**
          * {@inheritDoc}

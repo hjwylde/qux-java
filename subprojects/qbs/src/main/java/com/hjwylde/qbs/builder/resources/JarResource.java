@@ -3,7 +3,8 @@ package com.hjwylde.qbs.builder.resources;
 import java.util.zip.ZipFile;
 
 /**
- * A jar resource is simply a {@link ZipResource} and may be used equivalently.
+ * A jar resource is simply a {@link com.hjwylde.qbs.builder.resources.ZipResource} and may be used
+ * equivalently.
  *
  * @author Henry J. Wylde
  */

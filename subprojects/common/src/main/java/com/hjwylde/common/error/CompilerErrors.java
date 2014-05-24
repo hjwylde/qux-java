@@ -37,6 +37,41 @@ public final class CompilerErrors {
     }
 
     /**
+     * Creates a new {@link com.hjwylde.common.error.CompilerError} representing an invalid
+     * instance.
+     *
+     * @param received the received instance.
+     * @param expected the expected instance.
+     * @return the created {@link com.hjwylde.common.error.CompilerError}.
+     */
+    public static CompilerError invalidInstance(String received, String expected) {
+        String message = String.format("invalid instance, received '%s' but expected '%s'",
+                received, expected);
+
+        return new CompilerError(message);
+    }
+
+    /**
+     * Creates a new {@link com.hjwylde.common.error.SourceCompilerError} representing an invalid
+     * instance with the provided source information.
+     *
+     * @param received the received instance.
+     * @param expected the expected instance.
+     * @param source the source file name.
+     * @param line the line number.
+     * @param col the column number.
+     * @param length the length.
+     * @return the created {@link com.hjwylde.common.error.SourceCompilerError}.
+     */
+    public static SourceCompilerError invalidInstance(String received, String expected,
+            String source, int line, int col, int length) {
+        String message = String.format("invalid instance, received '%s' but expected '%s'",
+                received, expected);
+
+        return new SourceCompilerError(message, source, line, col, length);
+    }
+
+    /**
      * Creates a new {@link com.hjwylde.common.error.CompilerError} representing an invalid type.
      *
      * @param received the received type.
@@ -66,6 +101,70 @@ public final class CompilerErrors {
             int line, int col, int length) {
         String message = String.format("invalid type, received '%s' but expected '%s'", received,
                 expected);
+
+        return new SourceCompilerError(message, source, line, col, length);
+    }
+
+    /**
+     * Creates a new {@link com.hjwylde.common.error.CompilerError} representing a no class
+     * definition found.
+     *
+     * @param id the class id.
+     * @return the created {@link com.hjwylde.common.error.CompilerError}.
+     */
+    public static CompilerError noClassFound(String id) {
+        String message = String.format("no class definition found for '%s'", id);
+
+        return new CompilerError(message);
+    }
+
+    /**
+     * Creates a new {@link com.hjwylde.common.error.SourceCompilerError} representing a no class
+     * definition found with the provided source information.
+     *
+     * @param id the class id.
+     * @param source the source file name.
+     * @param line the line number.
+     * @param col the column number.
+     * @param length the length.
+     * @return the created {@link com.hjwylde.common.error.SourceCompilerError}.
+     */
+    public static SourceCompilerError noClassFound(String id, String source, int line, int col,
+            int length) {
+        String message = String.format("no class definition found for '%s'", id);
+
+        return new SourceCompilerError(message, source, line, col, length);
+    }
+
+    /**
+     * Creates a new {@link com.hjwylde.common.error.CompilerError} representing a no function
+     * definition found.
+     *
+     * @param owner the owner of the function.
+     * @param name the name of the function.
+     * @return the created {@link com.hjwylde.common.error.CompilerError}.
+     */
+    public static CompilerError noFunctionFound(String owner, String name) {
+        String message = String.format("no function definition found for '%s$%s'", owner, name);
+
+        return new CompilerError(message);
+    }
+
+    /**
+     * Creates a new {@link com.hjwylde.common.error.SourceCompilerError} representing a no function
+     * definition found type with the provided source information.
+     *
+     * @param owner the owner of the function.
+     * @param name the name of the function.
+     * @param source the source file name.
+     * @param line the line number.
+     * @param col the column number.
+     * @param length the length.
+     * @return the created {@link com.hjwylde.common.error.SourceCompilerError}.
+     */
+    public static SourceCompilerError noFunctionFound(String owner, String name, String source,
+            int line, int col, int length) {
+        String message = String.format("no function definition found for '%s$%s'", owner, name);
 
         return new SourceCompilerError(message, source, line, col, length);
     }

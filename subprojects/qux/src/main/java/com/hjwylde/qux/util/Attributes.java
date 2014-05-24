@@ -107,7 +107,6 @@ public final class Attributes {
         ImmutableList.Builder<T> builder = ImmutableList.builder();
         for (Attribute attribute : attributes) {
             if (clazz.isInstance(attribute)) {
-
                 builder.add((T) attribute);
             }
         }

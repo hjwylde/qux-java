@@ -1,6 +1,7 @@
 package com.hjwylde.qux.pipelines;
 
 import com.hjwylde.common.error.MethodNotImplementedError;
+import com.hjwylde.qbs.builder.QuxContext;
 import com.hjwylde.qux.tree.QuxNode;
 
 /**
@@ -10,15 +11,15 @@ import com.hjwylde.qux.tree.QuxNode;
  */
 public final class DefiniteAssignmentChecker extends Pipeline {
 
-    public DefiniteAssignmentChecker(QuxNode node) {
-        super(node);
+    public DefiniteAssignmentChecker(QuxContext context) {
+        super(context);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void apply() {
+    public QuxNode apply(QuxNode node) {
         throw new MethodNotImplementedError();
     }
 }

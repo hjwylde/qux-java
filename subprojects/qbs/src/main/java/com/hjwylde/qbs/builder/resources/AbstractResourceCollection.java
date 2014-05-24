@@ -1,6 +1,7 @@
 package com.hjwylde.qbs.builder.resources;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.Iterables;
 
 /**
  * Represents a collection of resources. A collection of resources can be iterated over in order to
@@ -28,6 +29,21 @@ public abstract class AbstractResourceCollection implements Resource.Collection 
      * {@inheritDoc}
      */
     @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (obj == null || obj.getClass() != getClass()) {
+            return false;
+        }
+
+        return Iterables.elementsEqual(this, (AbstractResourceCollection) obj);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public Optional<Resource.Single> getById(String id) {
         for (Resource resource : this) {
             if (resource.containsId(id)) {
@@ -36,5 +52,26 @@ public abstract class AbstractResourceCollection implements Resource.Collection 
         }
 
         return Optional.absent();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        int hash = 0;
+        for (Resource resource : this) {
+            hash += resource.hashCode();
+        }
+
+        return hash;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        return Iterables.toString(this);
     }
 }

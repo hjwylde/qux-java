@@ -502,6 +502,17 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
      * {@inheritDoc}
      */
     @Override
+    public ExprNode visitExprExternal(@NotNull QuxParser.ExprExternalContext ctx) {
+        ExprNode.Meta meta = visitExprMeta(ctx.exprMeta());
+        ExprNode.Function function = visitExprFunction(ctx.exprFunction());
+
+        return new ExprNode.External(meta, function, generateAttributeSource(ctx));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public ExprNode.Function visitExprFunction(@NotNull QuxParser.ExprFunctionContext ctx) {
         String name = ctx.Identifier().getText();
 
@@ -528,6 +539,22 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
      * {@inheritDoc}
      */
     @Override
+    public ExprNode.Meta visitExprMeta(@NotNull QuxParser.ExprMetaContext ctx) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(ctx.Identifier(0).getText());
+
+        for (int i = 1; i < ctx.Identifier().size(); i++) {
+            sb.append(".");
+            sb.append(ctx.Identifier(i).getText());
+        }
+
+        return new ExprNode.Meta(sb.toString(), generateAttributeSource(ctx));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public ExprNode visitExprParen(@NotNull QuxParser.ExprParenContext ctx) {
         return visitExpr(ctx.expr());
     }
@@ -545,6 +572,8 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
             return visitExprBracket(ctx.exprBracket());
         } else if (ctx.exprDecrement() != null) {
             return visitExprDecrement(ctx.exprDecrement());
+        } else if (ctx.exprExternal() != null) {
+            return visitExprExternal(ctx.exprExternal());
         } else if (ctx.exprFunction() != null) {
             return visitExprFunction(ctx.exprFunction());
         } else if (ctx.exprIncrement() != null) {
@@ -597,6 +626,42 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         super.visitFile(ctx);
 
         qv.visitEnd();
+
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Object visitImp(@NotNull QuxParser.ImpContext ctx) {
+        Token start = ctx.Identifier(0).getSymbol();
+        Token stop = ctx.Identifier(ctx.Identifier().size() - 1).getSymbol();
+
+        String id = ctx.getText();
+        id = id.substring(start.getCharPositionInLine() - 1,
+                stop.getCharPositionInLine() + stop.getText().length() - 1);
+
+        qv.visitImport(id);
+
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Object visitPkg(@NotNull QuxParser.PkgContext ctx) {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append(ctx.Identifier(0).getText());
+
+        for (int i = 1; i < ctx.Identifier().size(); i++) {
+            sb.append(".");
+            sb.append(ctx.Identifier(i));
+        }
+
+        qv.visitPackage(sb.toString());
 
         return null;
     }
@@ -677,6 +742,9 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         if (ctx.exprDecrement() != null) {
             return new StmtNode.Expr(StmtNode.Expr.Type.DECREMENT, visitExprDecrement(
                     ctx.exprDecrement()), generateAttributeSource(ctx));
+        } else if (ctx.exprExternal() != null) {
+            return new StmtNode.Expr(StmtNode.Expr.Type.EXTERNAL, visitExprExternal(
+                    ctx.exprExternal()), generateAttributeSource(ctx));
         } else if (ctx.exprFunction() != null) {
             return new StmtNode.Expr(StmtNode.Expr.Type.FUNCTION, visitExprFunction(
                     ctx.exprFunction()), generateAttributeSource(ctx));
