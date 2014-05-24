@@ -494,7 +494,7 @@ public abstract class Type {
      * TODO: Documentation
      *
      * @author Henry J. Wylde
-     * @since TODO: SINCE
+     * @since 0.2.1
      */
     public static final class Meta extends Type {
 

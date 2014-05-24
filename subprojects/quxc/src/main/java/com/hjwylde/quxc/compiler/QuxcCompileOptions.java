@@ -13,7 +13,7 @@ import java.util.Locale;
  * TODO: Documentation.
  *
  * @author Henry J. Wylde
- * @since TODO: SINCE
+ * @since 0.2.1
  */
 public class QuxcCompileOptions extends QuxCompileOptions {
 
@@ -56,7 +56,7 @@ public class QuxcCompileOptions extends QuxCompileOptions {
      * TODO: Documentation.
      *
      * @author Henry J. Wylde
-     * @since TODO: SINCE
+     * @since 0.2.1
      */
     public static class Builder extends QuxCompileOptions.Builder {
 

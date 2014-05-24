@@ -16,7 +16,7 @@ import java.nio.file.Path;
  * TODO: Documentation.
  *
  * @author Henry J. Wylde
- * @since TODO: SINCE
+ * @since 0.2.1
  */
 public final class LocalQuxResourceReader implements Resource.Reader<QuxResource> {
 
