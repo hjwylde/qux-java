@@ -28,7 +28,7 @@ import java.util.Map;
  * TODO: Documentation.
  *
  * @author Henry J. Wylde
- * @since TODO: SINCE
+ * @since 0.2.1
  */
 public final class NameResolver extends Pipeline {
 
@@ -106,7 +106,7 @@ public final class NameResolver extends Pipeline {
      * TODO: Documentation.
      *
      * @author Henry J. Wylde
-     * @since TODO: SINCE
+     * @since 0.2.1
      */
     private final class FunctionNameResolver extends FunctionAdapter implements ExprVisitor {
 
@@ -496,7 +496,7 @@ public final class NameResolver extends Pipeline {
      * TODO: Documentation.
      *
      * @author Henry J. Wylde
-     * @since TODO: SINCE
+     * @since 0.2.1
      */
     private final class QuxNameResolver extends QuxAdapter {
 

@@ -28,7 +28,7 @@ import java.util.Set;
  * </dd></dl>
  *
  * @author Henry J. Wylde
- * @since TODO: SINCE
+ * @since 0.2.1
  */
 public final class QuxcProperties extends QuxProperties {
 

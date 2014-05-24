@@ -2,7 +2,7 @@ package com.hjwylde.qux.internal.compiler;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Verify.verify;
-import static com.hjwylde.qux.util.Constants.QUX0_2_0;
+import static com.hjwylde.qux.util.Constants.QUX0_2_1;
 import static com.hjwylde.qux.util.Op.ACC_PUBLIC;
 import static com.hjwylde.qux.util.Op.ACC_STATIC;
 
@@ -659,7 +659,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
      */
     @Override
     public Object visitFile(@NotNull QuxParser.FileContext ctx) {
-        qv.visit(QUX0_2_0, Files.getNameWithoutExtension(source));
+        qv.visit(QUX0_2_1, Files.getNameWithoutExtension(source));
 
         super.visitFile(ctx);
 

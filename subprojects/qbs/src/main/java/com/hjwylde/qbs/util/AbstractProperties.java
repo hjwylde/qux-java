@@ -15,7 +15,7 @@ import java.util.Set;
  * properties may then be loaded in and used instantly.
  *
  * @author Henry J. Wylde
- * @since TODO: SINCE
+ * @since 0.2.1
  */
 public abstract class AbstractProperties {
 

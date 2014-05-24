@@ -13,7 +13,7 @@ import com.google.common.base.Optional;
  * TODO: Documentation.
  *
  * @author Henry J. Wylde
- * @since TODO: SINCE
+ * @since 0.2.1
  */
 public final class QuxResource extends AbstractResource {
 

@@ -12,7 +12,7 @@ import com.hjwylde.qbs.compiler.QuxCompileSpec;
  * The default contains the default Quxc compile options.
  *
  * @author Henry J. Wylde
- * @since TODO: SINCE
+ * @since 0.2.1
  */
 public class QuxcCompileSpec extends QuxCompileSpec {
 
