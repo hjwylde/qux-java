@@ -63,7 +63,7 @@ public class Context {
         if (this == obj) {
             return true;
         }
-        if (!(obj instanceof Context)) {
+        if (obj == null || obj.getClass() != getClass()) {
             return false;
         }
 

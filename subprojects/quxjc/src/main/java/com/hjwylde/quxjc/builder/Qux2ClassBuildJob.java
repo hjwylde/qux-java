@@ -10,8 +10,6 @@ import com.hjwylde.qbs.builder.BuildJob;
 import com.hjwylde.qbs.builder.BuildResult;
 import com.hjwylde.qbs.builder.QuxContext;
 import com.hjwylde.qux.api.CheckQuxAdapter;
-import com.hjwylde.qux.api.QuxReader;
-import com.hjwylde.qux.api.QuxVisitor;
 import com.hjwylde.qux.pipelines.Pipeline;
 import com.hjwylde.qux.tree.QuxNode;
 import com.hjwylde.quxjc.compiler.MainFunctionInjector;
@@ -28,7 +26,6 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -48,6 +45,8 @@ public final class Qux2ClassBuildJob extends BuildJob {
 
     private final ImmutableList<Class<? extends Pipeline>> pipelines;
 
+    private QuxNode node;
+
     /**
      * Creates a new {@code Qux2ClassBuildJob} with the given path, context and pipelines. The
      * pipelines are the different stages that the compilation goes through before the final
@@ -66,6 +65,10 @@ public final class Qux2ClassBuildJob extends BuildJob {
         this.pipelines = ImmutableList.copyOf(pipelines);
     }
 
+    public void setQuxNode(QuxNode node) {
+        this.node = checkNotNull(node, "node cannot be null");
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -76,15 +79,9 @@ public final class Qux2ClassBuildJob extends BuildJob {
         try {
             Stopwatch stopwatch = Stopwatch.createStarted();
 
-            QuxNode node = new QuxNode();
-
-            // Check that the input is a valid representation of the qux grammar and read it into
-            // the node
-            parse(node);
-
             // Apply the pipelines
             for (Class<? extends Pipeline> clazz : pipelines) {
-                apply(clazz, node);
+                node = apply(clazz, node);
             }
 
             // Translate the file to the java bytecode format
@@ -101,20 +98,23 @@ public final class Qux2ClassBuildJob extends BuildJob {
         return BuildResult.success();
     }
 
-    private void apply(Class<? extends Pipeline> clazz, QuxNode node)
+    private QuxNode apply(Class<? extends Pipeline> clazz, QuxNode node)
             throws NoSuchMethodException, IllegalAccessException, InvocationTargetException,
             InstantiationException {
-        logger.debug("{}: applying pipeline '{}'", source, clazz.getName());
+        logger.debug("{}: applying pipeline '{}'", source, clazz.getSimpleName());
 
         Stopwatch stopwatch = Stopwatch.createStarted();
 
-        Pipeline pipeline = clazz.getConstructor(QuxNode.class).newInstance(node);
+        Pipeline pipeline = clazz.getConstructor(QuxContext.class).newInstance(context);
 
-        pipeline.apply();
+        // Apply the pipeline and update the node
+        node = pipeline.apply(node);
 
         stopwatch.stop();
 
         logger.debug("{}: application finished in {}", source, stopwatch);
+
+        return node;
     }
 
     /**
@@ -129,25 +129,6 @@ public final class Qux2ClassBuildJob extends BuildJob {
      */
     private static Path generatePath(Path outdir, String id, String extension) {
         return outdir.resolve(id.replace(".", File.separator) + "." + extension);
-    }
-
-    /**
-     * Parses the source file using the given {@link com.hjwylde.qux.api.QuxVisitor}.
-     *
-     * @param qv the visitor to read the source file.
-     * @throws IOException if the source file cannot be read.
-     */
-    private void parse(QuxVisitor qv) throws IOException {
-        logger.debug("{}: parsing", source);
-
-        Stopwatch stopwatch = Stopwatch.createStarted();
-
-        Charset charset = context.getProject().getOptions().getCharset();
-        new QuxReader(source, charset).accept(qv);
-
-        stopwatch.stop();
-
-        logger.debug("{}: parsing finished in {}", source, stopwatch);
     }
 
     private byte[] translate(QuxNode node) {

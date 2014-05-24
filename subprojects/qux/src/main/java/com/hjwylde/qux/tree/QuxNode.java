@@ -14,7 +14,10 @@ import com.google.common.collect.ImmutableList;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+
+import javax.annotation.Nullable;
 
 /**
  * TODO: Documentation
@@ -27,6 +30,8 @@ public final class QuxNode extends Node implements QuxVisitor {
     private String name;
 
     private String pkg;
+
+    private List<String> imports = new ArrayList<>();
 
     private List<FunctionNode> functions = new ArrayList<>();
 
@@ -43,6 +48,10 @@ public final class QuxNode extends Node implements QuxVisitor {
 
         qv.visitPackage(pkg);
 
+        for (String id : imports) {
+            qv.visitImport(id);
+        }
+
         for (FunctionNode function : functions) {
             function.accept(qv);
         }
@@ -58,14 +67,18 @@ public final class QuxNode extends Node implements QuxVisitor {
         return (pkg == null ? "" : pkg + ".") + name;
     }
 
-    public Optional<String> getPackage() {
-        return Optional.fromNullable(pkg);
+    public List<String> getImports() {
+        return Collections.unmodifiableList(imports);
     }
 
     public String getName() {
         checkState(name != null, "name has not been set");
 
         return name;
+    }
+
+    public Optional<String> getPackage() {
+        return Optional.fromNullable(pkg);
     }
 
     public int getVersion() {
@@ -89,14 +102,6 @@ public final class QuxNode extends Node implements QuxVisitor {
      * {@inheritDoc}
      */
     @Override
-    public void visitPackage(String pkg) {
-        this.pkg = pkg;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public void visitEnd() {}
 
     /**
@@ -109,6 +114,22 @@ public final class QuxNode extends Node implements QuxVisitor {
         functions.add(fn);
 
         return fn;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void visitImport(String id) {
+        imports.add(checkNotNull(id, "id cannot be null"));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void visitPackage(@Nullable String pkg) {
+        this.pkg = pkg;
     }
 }
 

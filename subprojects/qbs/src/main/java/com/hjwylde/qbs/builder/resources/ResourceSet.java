@@ -22,28 +22,8 @@ public class ResourceSet extends AbstractResourceCollection {
         this(Arrays.asList(resources));
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == null || obj.getClass() != getClass()) {
-            return false;
-        }
-
-        return resources.equals(((ResourceSet) obj).resources);
-    }
-
     public final ImmutableSet<Resource> getResources() {
         return resources;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int hashCode() {
-        return resources.hashCode();
     }
 
     /**

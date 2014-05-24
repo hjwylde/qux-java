@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import javax.annotation.Nullable;
+
 /**
  * TODO: Documentation.
  *
@@ -36,7 +38,10 @@ public class ZipResource extends AbstractResourceCollection {
      * {@inheritDoc}
      */
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(@Nullable Object obj) {
+        if (this == obj) {
+            return true;
+        }
         if (obj == null || obj.getClass() != getClass()) {
             return false;
         }
@@ -70,7 +75,7 @@ public class ZipResource extends AbstractResourceCollection {
 
             // TODO: Verify what id returns here, is it just the name or the whole path without the
             // extension
-            final String id = Files.getNameWithoutExtension(entry.getName());
+            final String id = Files.getNameWithoutExtension(entry.getName()).replace("/", ".");
             String extension = Files.getFileExtension(entry.getName());
             if (!ResourceManager.getSupportedExtensions().contains(extension)) {
                 continue;
@@ -81,8 +86,10 @@ public class ZipResource extends AbstractResourceCollection {
                 @Override
                 protected Resource.Single loadDelegate() {
                     try {
-                        return ResourceManager.getResourceSingle(Files.getNameWithoutExtension(
-                                entry.getName()), file.getInputStream(entry));
+                        Resource.Extension extension = new Resource.Extension(
+                                Files.getFileExtension(entry.getName()));
+                        return ResourceManager.getResourceSingle(file.getInputStream(entry),
+                                extension);
                     } catch (IOException e) {
                         logger.error("i/o exception on loading resource: " + id, e);
                         throw new InternalError(e.getMessage());

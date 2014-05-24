@@ -2,6 +2,8 @@ package com.hjwylde.qux.api;
 
 import com.hjwylde.qux.util.Type;
 
+import javax.annotation.Nullable;
+
 /**
  * TODO: Documentation.
  *
@@ -13,9 +15,11 @@ public interface QuxVisitor {
 
     void visit(int version, String name);
 
-    void visitPackage(String pkg);
-
     void visitEnd();
 
     FunctionVisitor visitFunction(int flags, String name, Type.Function type);
+
+    void visitImport(String id);
+
+    void visitPackage(@Nullable String pkg);
 }

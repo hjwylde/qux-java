@@ -21,8 +21,6 @@ import static org.objectweb.asm.Opcodes.INVOKESTATIC;
 import static org.objectweb.asm.Opcodes.ISTORE;
 import static org.objectweb.asm.Opcodes.RETURN;
 
-import com.google.common.io.Files;
-
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
@@ -53,6 +51,7 @@ public class MainFunctionInjector extends ClassVisitor {
                     com.hjwylde.qux.util.Type.forList(com.hjwylde.qux.util.Type.TYPE_STR));
 
     private final String source;
+    private String id;
 
     /**
      * Creates a new {@code MainFunctionInjector} with the given next {@link
@@ -65,6 +64,17 @@ public class MainFunctionInjector extends ClassVisitor {
         super(ASM5, cv);
 
         this.source = checkNotNull(source, "source cannot be null");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void visit(int version, int access, String name, String signature, String superName,
+            String[] interfaces) {
+        this.id = name;
+
+        super.visit(version, access, name, signature, superName, interfaces);
     }
 
     /**
@@ -148,8 +158,8 @@ public class MainFunctionInjector extends ClassVisitor {
         mv.visitVarInsn(ALOAD, strs);
         mv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(List.class), "valueOf",
                 getMethodDescriptor(List.class, "valueOf", Obj[].class), false);
-        mv.visitMethodInsn(INVOKESTATIC, Files.getNameWithoutExtension(source), FUNCTION_MAIN_NAME,
-                getType(FUNCTION_MAIN_TYPE).getDescriptor(), false);
+        mv.visitMethodInsn(INVOKESTATIC, id, FUNCTION_MAIN_NAME, getType(FUNCTION_MAIN_TYPE)
+                .getDescriptor(), false);
         mv.visitInsn(RETURN);
 
         // These values are ignored so long as ClassWriter.COMPUTE_MAXS is set

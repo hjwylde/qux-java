@@ -37,6 +37,7 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Locale;
 
 /**
@@ -132,6 +133,7 @@ public final class Quxc {
         QuxcCompileSpec spec = new QuxcCompileSpec();
 
         spec.setOutdir(Paths.get(properties.getOutdir()));
+        spec.setClasspath(new ArrayList<Path>());
         for (String path : properties.getClasspath().split(File.pathSeparator)) {
             spec.classpath(Paths.get(path));
         }

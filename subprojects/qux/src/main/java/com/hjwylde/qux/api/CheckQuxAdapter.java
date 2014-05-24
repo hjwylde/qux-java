@@ -61,6 +61,19 @@ public class CheckQuxAdapter extends QuxAdapter {
      * {@inheritDoc}
      */
     @Override
+    public void visitImport(String id) {
+        checkState(visitedStart, "must call visit(int, String) before visitImport(String)");
+        checkState(visitedPackage, "must call visitPackage(String) before visitImport(String)");
+        checkState(!visitedEnd, "must call visitImport(String) before visitEnd()");
+        checkNotNull(id, "id cannot be null");
+
+        super.visitImport(id);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void visitEnd() {
         checkState(visitedStart, "must call visit(int, String) before visitEnd()");
         checkState(visitedPackage, "must call visitPackage(String) before visitEnd()");

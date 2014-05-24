@@ -16,9 +16,13 @@ public interface ExprVisitor {
 
     void visitExprConstant(ExprNode.Constant expr);
 
+    void visitExprExternal(ExprNode.External expr);
+
     void visitExprFunction(ExprNode.Function expr);
 
     void visitExprList(ExprNode.List expr);
+
+    void visitExprMeta(ExprNode.Meta expr);
 
     void visitExprSet(ExprNode.Set expr);
 

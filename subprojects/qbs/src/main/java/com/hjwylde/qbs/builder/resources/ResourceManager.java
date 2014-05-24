@@ -8,7 +8,6 @@ import com.google.common.base.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -44,16 +43,16 @@ public final class ResourceManager {
         return loadResource(path).get();
     }
 
-    public static Resource getResource(String name, InputStream in) {
-        return loadResource(name, in).get();
+    public static Resource getResource(InputStream in, Resource.Extension extension) {
+        return loadResource(in, extension).get();
     }
 
     public static Resource.Single getResourceSingle(Path path) {
         return loadResourceSingle(path).get();
     }
 
-    public static Resource.Single getResourceSingle(String name, InputStream in) {
-        return loadResourceSingle(name, in).get();
+    public static Resource.Single getResourceSingle(InputStream in, Resource.Extension extension) {
+        return loadResourceSingle(in, extension).get();
     }
 
     public static Set<Resource.Extension> getSupportedExtensions() {
@@ -61,8 +60,6 @@ public final class ResourceManager {
     }
 
     public static Optional<Resource> loadResource(Path path) {
-        checkNotNull(path, "path cannot be null");
-
         String name = path.getFileName().toString();
 
         try {
@@ -75,97 +72,53 @@ public final class ResourceManager {
                         name));
             }
 
-            return Optional.<Resource>of(getReader(extension).read(path));
+            return Optional.of(getReader(extension).read(path));
         } catch (IOException e) {
             logger.warn("i/o exception when attempting to load resource: " + path, e);
             return Optional.absent();
         }
     }
 
-    public static Optional<Resource> loadResource(String file, InputStream in) {
-        checkNotNull(file, "file cannot be null");
-
-        String fileExtension = com.google.common.io.Files.getFileExtension(file);
-
+    public static Optional<Resource> loadResource(InputStream in, Resource.Extension extension) {
         try {
-            Resource.Extension extension = null;
-
-            if (fileExtension.isEmpty() || file.endsWith(File.separator)) {
-                extension = DirectoryResource.EXTENSION;
-            } else {
-                extension = new Resource.Extension(fileExtension);
-            }
-
-            return Optional.<Resource>of(getReader(extension).read(in));
+            return Optional.of(getReader(extension).read(in));
         } catch (IOException e) {
-            logger.warn("i/o exception when attempting to load resource: " + file, e);
+            logger.warn("i/o exception when attempting to load resource", e);
             return Optional.absent();
         }
     }
 
     public static Optional<Resource.Single> loadResourceSingle(Path path) {
-        checkNotNull(path, "path cannot be null");
+        Optional<Resource> opt = loadResource(path);
 
-        String name = path.getFileName().toString();
-
-        try {
-            Resource.Extension extension = null;
-
-            if (Files.isDirectory(path) || !name.contains(".")) {
-                extension = DirectoryResource.EXTENSION;
-            } else {
-                extension = new Resource.Extension(com.google.common.io.Files.getFileExtension(
-                        name));
-            }
-
-            Resource resource = getReader(extension).read(path);
-
-            if (resource instanceof Resource.Single) {
-                return Optional.of((Resource.Single) resource);
-            }
-
-            return Optional.absent();
-        } catch (IOException e) {
-            logger.warn("i/o exception when attempting to load resource: " + path, e);
+        if (!opt.isPresent() || !(opt.get() instanceof Resource.Single)) {
             return Optional.absent();
         }
+
+        return Optional.of((Resource.Single) opt.get());
     }
 
-    public static Optional<Resource.Single> loadResourceSingle(String file, InputStream in) {
-        checkNotNull(file, "file cannot be null");
+    public static Optional<Resource.Single> loadResourceSingle(InputStream in,
+            Resource.Extension extension) {
+        Optional<Resource> opt = loadResource(in, extension);
 
-        String fileExtension = com.google.common.io.Files.getFileExtension(file);
-
-        try {
-            Resource.Extension extension = null;
-
-            if (fileExtension.isEmpty() || file.endsWith(File.separator)) {
-                extension = DirectoryResource.EXTENSION;
-            } else {
-                extension = new Resource.Extension(fileExtension);
-            }
-
-            Resource resource = getReader(extension).read(in);
-
-            if (resource instanceof Resource.Single) {
-                return Optional.of((Resource.Single) resource);
-            }
-
-            return Optional.absent();
-        } catch (IOException e) {
-            logger.warn("i/o exception when attempting to load resource: " + file, e);
+        if (!opt.isPresent() || !(opt.get() instanceof Resource.Single)) {
             return Optional.absent();
         }
+
+        return Optional.of((Resource.Single) opt.get());
     }
 
     public static void register(Resource.Extension extension, Resource.Reader<?> reader) {
-        readers.put(checkNotNull(extension, "extension cannot be null"), checkNotNull(reader,
-                "reader cannot be null"));
+        checkNotNull(extension, "extension cannot be null");
+        checkNotNull(reader, "reader cannot be null");
+
+        readers.put(extension, reader);
     }
 
     private static Resource.Reader<?> getReader(Resource.Extension extension) {
-        checkArgument(readers.containsKey(extension),
-                "no resource reader mapped to extension: " + extension);
+        checkArgument(readers.containsKey(extension), "no resource reader mapped to extension '%s'",
+                extension);
 
         return readers.get(extension);
     }
