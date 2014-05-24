@@ -181,7 +181,7 @@ public abstract class Type {
                 java.util.List<Type> parameterTypes = new ArrayList<>();
                 int index = 1;
                 while (index < desc.length()) {
-                    if (desc.substring(index, index + 1).equals(FUNCTION_PARAM_END)) {
+                    if (desc.substring(index).startsWith(FUNCTION_PARAM_END)) {
                         break;
                     }
 
@@ -190,7 +190,7 @@ public abstract class Type {
                     index += parameterTypes.get(parameterTypes.size() - 1).getDescriptor().length();
                 }
 
-                checkArgument(desc.substring(index, index + 1).equals(FUNCTION_PARAM_END),
+                checkArgument(desc.substring(index).startsWith(FUNCTION_PARAM_END),
                         "desc is invalid: %s", desc);
 
                 Type returnType = forDescriptor(desc.substring(index + 1), match);
@@ -212,6 +212,9 @@ public abstract class Type {
             case REAL:
                 checkArgument(!match || desc.length() == 1, "desc is invalid: %s", desc);
                 return TYPE_REAL;
+            case SET_START:
+                checkArgument(desc.length() > 1, "desc is invalid: %s", desc);
+                return forSet(forDescriptor(desc.substring(1), match));
             case STR:
                 checkArgument(!match || desc.length() == 1, "desc is invalid: %s", desc);
                 return TYPE_STR;
@@ -219,7 +222,7 @@ public abstract class Type {
                 java.util.List<Type> types = new ArrayList<>();
                 index = 1;
                 while (index < desc.length()) {
-                    if (desc.substring(index, index + 1).equals(UNION_END)) {
+                    if (desc.substring(index).startsWith(UNION_END)) {
                         break;
                     }
 
@@ -228,7 +231,7 @@ public abstract class Type {
                     index += types.get(types.size() - 1).getDescriptor().length();
                 }
 
-                checkArgument(desc.substring(index, index + 1).equals(UNION_END),
+                checkArgument(desc.substring(index).startsWith(UNION_END),
                         "desc is invalid: %s", desc);
                 checkArgument(!match || desc.length() == index + 1, "desc is invalid: %s", desc);
 

@@ -123,7 +123,7 @@ public final class Int extends Obj {
     @Override
     public Bool _gte_(Obj t) {
         if (!(t instanceof Int)) {
-            return super._gt_(t);
+            return super._gte_(t);
         }
 
         return value.compareTo(((Int) t).value) >= 0 ? TRUE : FALSE;
@@ -151,7 +151,7 @@ public final class Int extends Obj {
     @Override
     public Bool _lt_(Obj t) {
         if (!(t instanceof Int)) {
-            return super._gt_(t);
+            return super._lt_(t);
         }
 
         return value.compareTo(((Int) t).value) < 0 ? TRUE : FALSE;
@@ -163,7 +163,7 @@ public final class Int extends Obj {
     @Override
     public Bool _lte_(Obj t) {
         if (!(t instanceof Int)) {
-            return super._gt_(t);
+            return super._lte_(t);
         }
 
         return value.compareTo(((Int) t).value) <= 0 ? TRUE : FALSE;

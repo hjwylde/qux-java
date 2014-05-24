@@ -21,14 +21,6 @@ public abstract class Obj implements Desc, Dup, Eq, Neq, Hash, Comp {
      * {@inheritDoc}
      */
     @Override
-    public Str _desc_() {
-        return Str.valueOf("_desc_() not implemented");
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Bool _eq_(Obj obj) {
         if (this == obj) {
             return TRUE;

@@ -1,0 +1,7 @@
+void main([str] args):
+    print '0' in '000'
+    print '0' in 'fewab'
+    print 'null' in 'baz'
+    print 'null' in ''
+    print '' in ''
+

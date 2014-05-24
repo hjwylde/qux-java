@@ -33,6 +33,7 @@ import static org.objectweb.asm.Opcodes.NEWARRAY;
 import static org.objectweb.asm.Opcodes.POP;
 import static org.objectweb.asm.Opcodes.RETURN;
 import static org.objectweb.asm.Opcodes.SIPUSH;
+import static org.objectweb.asm.Opcodes.SWAP;
 import static org.objectweb.asm.Opcodes.T_BYTE;
 import static org.objectweb.asm.Opcodes.V1_7;
 
@@ -384,8 +385,9 @@ public final class Qux2ClassTranslater extends QuxAdapter {
                             getMethodDescriptor(Bool.class, "_imp_", Bool.class), false);
                     break;
                 case IN:
-                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(lhsClass), "_contains_",
-                            getMethodDescriptor(lhsClass, "_contains_", rhsClass), false);
+                    mv.visitInsn(SWAP);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(rhsClass), "_contains_",
+                            getMethodDescriptor(rhsClass, "_contains_", Obj.class), false);
                     break;
                 case LT:
                     mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(Obj.class), "_lt_",

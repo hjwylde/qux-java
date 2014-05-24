@@ -202,6 +202,22 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
      * {@inheritDoc}
      */
     @Override
+    public ExprNode visitExprBinary_10(@NotNull QuxParser.ExprBinary_10Context ctx) {
+        ExprNode lhs = visitExprUnary(ctx.exprUnary(0));
+
+        if (ctx.exprUnary().size() == 1) {
+            return lhs;
+        }
+
+        ExprNode rhs = visitExprUnary(ctx.exprUnary(1));
+
+        return new ExprNode.Binary(Op.Binary.RNG, lhs, rhs, generateAttributeSource(ctx));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public ExprNode visitExprBinary_2(@NotNull QuxParser.ExprBinary_2Context ctx) {
         ParserRuleContext start = ctx.exprBinary_3(0);
         QuxParser.ExprBinary_3Context end;
@@ -355,11 +371,11 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
 
             Op.Binary op;
             switch (node.getSymbol().getType()) {
-                case QuxParser.BOP_ADD:
-                    op = Op.Binary.ADD;
+                case QuxParser.BOP_IN:
+                    op = Op.Binary.IN;
                     break;
-                case QuxParser.BOP_SUB:
-                    op = Op.Binary.SUB;
+                case QuxParser.BOP_NIN:
+                    op = null;
                     break;
                 default:
                     throw new MethodNotImplementedError(node.getText());
@@ -367,8 +383,12 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
 
             end = ctx.exprBinary_7((i + 1) / 2);
 
-            expr = new ExprNode.Binary(op, expr, visitExprBinary_7(end), generateAttributeSource(
-                    start, end));
+            expr = new ExprNode.Binary(Op.Binary.IN, expr, visitExprBinary_7(end),
+                    generateAttributeSource(start, end));
+
+            if (op == null) {
+                expr = new ExprNode.Unary(Op.Unary.NOT, expr, generateAttributeSource(start, end));
+            }
         }
 
         return expr;
@@ -389,17 +409,11 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
 
             Op.Binary op;
             switch (node.getSymbol().getType()) {
-                case QuxParser.BOP_DIV:
-                    op = Op.Binary.DIV;
+                case QuxParser.BOP_ADD:
+                    op = Op.Binary.ADD;
                     break;
-                case QuxParser.BOP_IDIV:
-                    op = Op.Binary.IDIV;
-                    break;
-                case QuxParser.BOP_MUL:
-                    op = Op.Binary.MUL;
-                    break;
-                case QuxParser.BOP_REM:
-                    op = Op.Binary.REM;
+                case QuxParser.BOP_SUB:
+                    op = Op.Binary.SUB;
                     break;
                 default:
                     throw new MethodNotImplementedError(node.getText());
@@ -429,8 +443,17 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
 
             Op.Binary op;
             switch (node.getSymbol().getType()) {
-                case QuxParser.BOP_EXP:
-                    op = Op.Binary.EXP;
+                case QuxParser.BOP_DIV:
+                    op = Op.Binary.DIV;
+                    break;
+                case QuxParser.BOP_IDIV:
+                    op = Op.Binary.IDIV;
+                    break;
+                case QuxParser.BOP_MUL:
+                    op = Op.Binary.MUL;
+                    break;
+                case QuxParser.BOP_REM:
+                    op = Op.Binary.REM;
                     break;
                 default:
                     throw new MethodNotImplementedError(node.getText());
@@ -450,15 +473,30 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
      */
     @Override
     public ExprNode visitExprBinary_9(@NotNull QuxParser.ExprBinary_9Context ctx) {
-        ExprNode lhs = visitExprUnary(ctx.exprUnary(0));
+        ParserRuleContext start = ctx.exprBinary_10(0);
+        QuxParser.ExprBinary_10Context end;
 
-        if (ctx.exprUnary().size() == 1) {
-            return lhs;
+        ExprNode expr = visitExprBinary_10(ctx.exprBinary_10(0));
+
+        for (int i = 1; i < ctx.getChildCount(); i += 2) {
+            TerminalNode node = (TerminalNode) ctx.getChild(i);
+
+            Op.Binary op;
+            switch (node.getSymbol().getType()) {
+                case QuxParser.BOP_EXP:
+                    op = Op.Binary.EXP;
+                    break;
+                default:
+                    throw new MethodNotImplementedError(node.getText());
+            }
+
+            end = ctx.exprBinary_10((i + 1) / 2);
+
+            expr = new ExprNode.Binary(op, expr, visitExprBinary_10(end), generateAttributeSource(
+                    start, end));
         }
 
-        ExprNode rhs = visitExprUnary(ctx.exprUnary(1));
-
-        return new ExprNode.Binary(Op.Binary.RNG, lhs, rhs, generateAttributeSource(ctx));
+        return expr;
     }
 
     /**

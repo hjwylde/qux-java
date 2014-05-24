@@ -67,6 +67,14 @@ public final class Str extends Obj implements Access, Assign, Len, Slice {
         return Int.valueOf(value.compareTo(((Str) obj).value));
     }
 
+    public Bool _contains_(Obj obj) {
+        if (!(obj instanceof Str)) {
+            return FALSE;
+        }
+
+        return value.contains(((Str) obj).value) ? TRUE : FALSE;
+    }
+
     /**
      * {@inheritDoc}
      */
