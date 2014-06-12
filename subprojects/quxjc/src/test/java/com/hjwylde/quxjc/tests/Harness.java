@@ -35,13 +35,13 @@ public abstract class Harness {
 
     private static final Logger logger = LoggerFactory.getLogger(Harness.class);
 
-    private static final String QUXC_EXECUTABLE = "../quxc/build/install/quxc/bin/quxc";
+    private static final String QUXJC_EXECUTABLE = "build/install/quxjc/bin/quxjc";
     private static final String JAVA_EXECUTABLE = "java";
 
     private static final String QUX_EXT = "qux";
     private static final String OUT_EXT = "out";
 
-    private static final String QUXC_CLASSPATH;
+    private static final String QUXJC_CLASSPATH;
     private static final String JAVA_CLASSPATH;
 
     private final Path root;
@@ -62,7 +62,7 @@ public abstract class Harness {
             }
         };
 
-        Path libsPath = Paths.get("../quxc/build/install/quxc/lib/");
+        Path libsPath = Paths.get("build/install/quxjc/lib/");
 
         try {
             Files.walkFileTree(libsPath, sfv);
@@ -78,7 +78,7 @@ public abstract class Harness {
 
         logger.debug("setting test classpath to '{}'", sb);
 
-        QUXC_CLASSPATH = ".";
+        QUXJC_CLASSPATH = ".";
         JAVA_CLASSPATH = sb.toString();
     }
 
@@ -92,7 +92,7 @@ public abstract class Harness {
 
     protected final void compile(final String id) throws IOException {
         String[] args =
-                new String[] {QUXC_EXECUTABLE, "-cp", QUXC_CLASSPATH, "-od", root.toString(),
+                new String[] {QUXJC_EXECUTABLE, "-cp", QUXJC_CLASSPATH, "-od", root.toString(),
                         getTestPath(id, QUX_EXT).toString()};
 
         ProcessBuilder pb = new ProcessBuilder(args);

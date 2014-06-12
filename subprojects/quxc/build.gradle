@@ -1,8 +1,0 @@
-apply plugin: 'application'
-
-dependencies {
-    compile project(':quxjc')
-}
-
-mainClassName = 'com.hjwylde.quxc.Quxc' 
-
