@@ -1,0 +1,6 @@
+void main([str] args):
+    print obj == obj
+
+    a = obj
+    print a == a
+

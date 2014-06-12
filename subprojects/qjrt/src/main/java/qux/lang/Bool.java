@@ -7,7 +7,7 @@ import static qux.lang.Meta.META_BOOL;
  *
  * @author Henry J. Wylde
  */
-public final class Bool extends Obj {
+public final class Bool extends AbstractObj {
 
     public static final Bool TRUE = new Bool(true);
     public static final Bool FALSE = new Bool(false);
@@ -26,7 +26,7 @@ public final class Bool extends Obj {
      * {@inheritDoc}
      */
     @Override
-    public Int _comp_(Obj obj) {
+    public Int _comp_(AbstractObj obj) {
         if (!(obj instanceof Bool)) {
             return meta()._comp_(obj.meta());
         }
@@ -60,7 +60,7 @@ public final class Bool extends Obj {
      * {@inheritDoc}
      */
     @Override
-    public Bool _eq_(Obj obj) {
+    public Bool _eq_(AbstractObj obj) {
         if (super._eq_(obj) == FALSE) {
             return FALSE;
         }

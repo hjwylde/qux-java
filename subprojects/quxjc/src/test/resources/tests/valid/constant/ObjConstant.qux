@@ -1,0 +1,21 @@
+obj A is obj
+obj B is obj
+
+obj f(obj a):
+    if a == A:
+        return B
+
+    return A
+
+void main([str] args):
+    print A
+    print B
+    print A == A
+    print B == B
+    print A == B
+    print B == obj
+    print f(B)
+    print f(B) == B
+    print f(obj) == B
+    print f(B) == A
+

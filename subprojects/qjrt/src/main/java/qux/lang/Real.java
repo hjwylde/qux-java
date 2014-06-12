@@ -13,7 +13,7 @@ import java.math.BigInteger;
  *
  * @author Henry J. Wylde
  */
-public final class Real extends Obj {
+public final class Real extends AbstractObj {
 
     // TODO: Add this back in once tuples are implemented
     /*private static final LoadingCache<Tuple, Real> cache =
@@ -61,7 +61,7 @@ public final class Real extends Obj {
      * {@inheritDoc}
      */
     @Override
-    public Int _comp_(Obj obj) {
+    public Int _comp_(AbstractObj obj) {
         if (!(obj instanceof Real)) {
             return meta()._comp_(obj.meta());
         }
@@ -105,7 +105,7 @@ public final class Real extends Obj {
      * {@inheritDoc}
      */
     @Override
-    public Bool _eq_(Obj obj) {
+    public Bool _eq_(AbstractObj obj) {
         if (super._eq_(obj) == FALSE) {
             return FALSE;
         }

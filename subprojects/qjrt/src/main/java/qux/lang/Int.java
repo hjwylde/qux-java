@@ -17,7 +17,7 @@ import java.math.BigInteger;
  *
  * @author Henry J. Wylde
  */
-public final class Int extends Obj {
+public final class Int extends AbstractObj {
 
     public static final Int M_ONE;
     public static final Int ZERO;
@@ -54,7 +54,7 @@ public final class Int extends Obj {
      * {@inheritDoc}
      */
     @Override
-    public Int _comp_(Obj obj) {
+    public Int _comp_(AbstractObj obj) {
         if (!(obj instanceof Int)) {
             return meta()._comp_(obj.meta());
         }
@@ -90,7 +90,7 @@ public final class Int extends Obj {
      * {@inheritDoc}
      */
     @Override
-    public Bool _eq_(Obj obj) {
+    public Bool _eq_(AbstractObj obj) {
         if (super._eq_(obj) == FALSE) {
             return FALSE;
         }
@@ -109,7 +109,7 @@ public final class Int extends Obj {
      * {@inheritDoc}
      */
     @Override
-    public Bool _gt_(Obj t) {
+    public Bool _gt_(AbstractObj t) {
         if (!(t instanceof Int)) {
             return super._gt_(t);
         }
@@ -121,7 +121,7 @@ public final class Int extends Obj {
      * {@inheritDoc}
      */
     @Override
-    public Bool _gte_(Obj t) {
+    public Bool _gte_(AbstractObj t) {
         if (!(t instanceof Int)) {
             return super._gte_(t);
         }
@@ -149,7 +149,7 @@ public final class Int extends Obj {
      * {@inheritDoc}
      */
     @Override
-    public Bool _lt_(Obj t) {
+    public Bool _lt_(AbstractObj t) {
         if (!(t instanceof Int)) {
             return super._lt_(t);
         }
@@ -161,7 +161,7 @@ public final class Int extends Obj {
      * {@inheritDoc}
      */
     @Override
-    public Bool _lte_(Obj t) {
+    public Bool _lte_(AbstractObj t) {
         if (!(t instanceof Int)) {
             return super._lte_(t);
         }
