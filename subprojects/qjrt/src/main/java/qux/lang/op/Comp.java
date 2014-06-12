@@ -1,7 +1,7 @@
 package qux.lang.op;
 
+import qux.lang.AbstractObj;
 import qux.lang.Int;
-import qux.lang.Obj;
 
 /**
  * TODO: Documentation.
@@ -11,5 +11,5 @@ import qux.lang.Obj;
  */
 public interface Comp {
 
-    public Int _comp_(Obj obj);
+    public Int _comp_(AbstractObj obj);
 }

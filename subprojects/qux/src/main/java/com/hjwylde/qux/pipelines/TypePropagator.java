@@ -8,6 +8,7 @@ import static com.hjwylde.qux.util.Type.TYPE_ITERABLE;
 import static com.hjwylde.qux.util.Type.TYPE_LIST_ANY;
 import static com.hjwylde.qux.util.Type.TYPE_META;
 import static com.hjwylde.qux.util.Type.TYPE_NULL;
+import static com.hjwylde.qux.util.Type.TYPE_OBJ;
 import static com.hjwylde.qux.util.Type.TYPE_REAL;
 import static com.hjwylde.qux.util.Type.TYPE_SET_ANY;
 import static com.hjwylde.qux.util.Type.TYPE_STR;
@@ -336,6 +337,9 @@ public final class TypePropagator extends Pipeline {
                     break;
                 case NULL:
                     setType(expr, TYPE_NULL);
+                    break;
+                case OBJ:
+                    setType(expr, TYPE_OBJ);
                     break;
                 case REAL:
                     setType(expr, TYPE_REAL);

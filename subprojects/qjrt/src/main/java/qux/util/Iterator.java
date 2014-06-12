@@ -1,7 +1,7 @@
 package qux.util;
 
+import qux.lang.AbstractObj;
 import qux.lang.Bool;
-import qux.lang.Obj;
 
 /**
  * TODO: Documentation.
@@ -13,5 +13,5 @@ public interface Iterator {
 
     Bool hasNext();
 
-    Obj next();
+    AbstractObj next();
 }

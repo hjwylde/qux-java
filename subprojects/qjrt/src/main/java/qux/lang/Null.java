@@ -9,7 +9,7 @@ import static qux.lang.Meta.META_NULL;
  *
  * @author Henry J. Wylde
  */
-public final class Null extends Obj {
+public final class Null extends AbstractObj {
 
     public static final Null INSTANCE = new Null();
 
@@ -19,7 +19,7 @@ public final class Null extends Obj {
      * {@inheritDoc}
      */
     @Override
-    public Int _comp_(Obj obj) {
+    public Int _comp_(AbstractObj obj) {
         return meta()._comp_(obj.meta());
     }
 
@@ -43,7 +43,7 @@ public final class Null extends Obj {
      * {@inheritDoc}
      */
     @Override
-    public Bool _eq_(Obj obj) {
+    public Bool _eq_(AbstractObj obj) {
         if (super._eq_(obj) == FALSE) {
             return FALSE;
         }

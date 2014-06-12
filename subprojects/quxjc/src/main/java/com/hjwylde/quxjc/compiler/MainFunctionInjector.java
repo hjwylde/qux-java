@@ -28,8 +28,8 @@ import org.objectweb.asm.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import qux.lang.AbstractObj;
 import qux.lang.List;
-import qux.lang.Obj;
 import qux.lang.Str;
 
 /**
@@ -157,7 +157,7 @@ public class MainFunctionInjector extends ClassVisitor {
         // Call the Qux main function
         mv.visitVarInsn(ALOAD, strs);
         mv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(List.class), "valueOf",
-                getMethodDescriptor(List.class, "valueOf", Obj[].class), false);
+                getMethodDescriptor(List.class, "valueOf", AbstractObj[].class), false);
         mv.visitMethodInsn(INVOKESTATIC, id, FUNCTION_MAIN_NAME, getType(FUNCTION_MAIN_TYPE)
                 .getDescriptor(), false);
         mv.visitInsn(RETURN);

@@ -274,6 +274,7 @@ value : valueKeyword
 
 valueKeyword : FALSE
              | NULL
+             | OBJ
              | TRUE
              ;
 
@@ -297,6 +298,7 @@ typeKeyword : ANY
             | BOOL
             | INT
             | NULL
+            | OBJ
             | REAL
             | STR
             ;
@@ -371,6 +373,7 @@ INT     : 'int' ;
 IS      : 'is' ;
 LIST    : 'list' ;
 NULL    : 'null' ;
+OBJ     : 'obj' ;
 PACKAGE : 'package' ;
 REAL    : 'real' ;
 RETURN  : 'return' ;

@@ -43,6 +43,8 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
 
     private final QuxVisitor qv;
 
+    private int objCounter = 0;
+
     /**
      * Creates a new {@code Antlr2QuxTranslater} with the given source file name and visitor. The
      * source file name should include the extension (if applicable).
@@ -995,6 +997,9 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         } else if (ctx.TRUE() != null) {
             type = ExprNode.Constant.Type.BOOL;
             value = true;
+        } else if (ctx.OBJ() != null) {
+            type = ExprNode.Constant.Type.OBJ;
+            value = generateObjId();
         }
 
         if (type != null) {
@@ -1029,6 +1034,10 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         return generateAttributeSource(token, token);
     }
 
+    private String generateObjId() {
+        return source + "$obj" + objCounter++;
+    }
+
     private static Type getType(String type) {
         switch (type) {
             case "any":
@@ -1039,6 +1048,8 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
                 return Type.TYPE_INT;
             case "null":
                 return Type.TYPE_NULL;
+            case "obj":
+                return Type.TYPE_OBJ;
             case "real":
                 return Type.TYPE_REAL;
             case "str":

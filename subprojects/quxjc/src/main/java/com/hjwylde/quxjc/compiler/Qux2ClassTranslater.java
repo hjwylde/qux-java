@@ -68,6 +68,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import qux.lang.AbstractObj;
 import qux.lang.Bool;
 import qux.lang.Int;
 import qux.lang.List;
@@ -172,8 +173,8 @@ public final class Qux2ClassTranslater extends QuxAdapter {
     public void visitPackage(String pkg) {
         this.pkg = pkg;
 
-        cv.visit(V1_7, ACC_PUBLIC | ACC_FINAL, getId(), null, Type.getInternalName(Obj.class),
-                new String[0]);
+        cv.visit(V1_7, ACC_PUBLIC | ACC_FINAL, getId(), null, Type.getInternalName(
+                AbstractObj.class), new String[0]);
 
         cv.visitSource(getFileName(), null);
 
@@ -215,7 +216,7 @@ public final class Qux2ClassTranslater extends QuxAdapter {
 
     static Type getType(com.hjwylde.qux.util.Type type) {
         if (type instanceof com.hjwylde.qux.util.Type.Any) {
-            return Type.getType(Obj.class);
+            return Type.getType(AbstractObj.class);
         } else if (type instanceof com.hjwylde.qux.util.Type.Bool) {
             return Type.getType(Bool.class);
         } else if (type instanceof com.hjwylde.qux.util.Type.Function) {
@@ -234,6 +235,8 @@ public final class Qux2ClassTranslater extends QuxAdapter {
             return Type.getType(List.class);
         } else if (type instanceof com.hjwylde.qux.util.Type.Null) {
             return Type.getType(Null.class);
+        } else if (type instanceof com.hjwylde.qux.util.Type.Obj) {
+            return Type.getType(Obj.class);
         } else if (type instanceof com.hjwylde.qux.util.Type.Real) {
             return Type.getType(Real.class);
         } else if (type instanceof com.hjwylde.qux.util.Type.Set) {
@@ -241,7 +244,7 @@ public final class Qux2ClassTranslater extends QuxAdapter {
         } else if (type instanceof com.hjwylde.qux.util.Type.Str) {
             return Type.getType(Str.class);
         } else if (type instanceof com.hjwylde.qux.util.Type.Union) {
-            return Type.getType(Obj.class);
+            return Type.getType(AbstractObj.class);
         } else if (type instanceof com.hjwylde.qux.util.Type.Void) {
             return Type.VOID_TYPE;
         }
@@ -384,19 +387,21 @@ public final class Qux2ClassTranslater extends QuxAdapter {
                     break;
                 case EQ:
                     mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Eq.class), "_eq_",
-                            getMethodDescriptor(Eq.class, "_eq_", Obj.class), true);
+                            getMethodDescriptor(Eq.class, "_eq_", AbstractObj.class), true);
                     break;
                 case EXP:
                     mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(Int.class), "_exp_",
                             getMethodDescriptor(Int.class, "_exp_", Int.class), false);
                     break;
                 case GT:
-                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(Obj.class), "_gt_",
-                            getMethodDescriptor(Obj.class, "_gt_", Obj.class), false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(AbstractObj.class),
+                            "_gt_", getMethodDescriptor(AbstractObj.class, "_gt_",
+                                    AbstractObj.class), false);
                     break;
                 case GTE:
-                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(Obj.class), "_gte_",
-                            getMethodDescriptor(Obj.class, "_gte_", Obj.class), false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(AbstractObj.class),
+                            "_gte_", getMethodDescriptor(AbstractObj.class, "_gte_",
+                                    AbstractObj.class), false);
                     break;
                 case IDIV:
                     mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(Int.class), "_idiv_",
@@ -413,15 +418,17 @@ public final class Qux2ClassTranslater extends QuxAdapter {
                 case IN:
                     mv.visitInsn(SWAP);
                     mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(rhsClass), "_contains_",
-                            getMethodDescriptor(rhsClass, "_contains_", Obj.class), false);
+                            getMethodDescriptor(rhsClass, "_contains_", AbstractObj.class), false);
                     break;
                 case LT:
-                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(Obj.class), "_lt_",
-                            getMethodDescriptor(Obj.class, "_lt_", Obj.class), false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(AbstractObj.class),
+                            "_lt_", getMethodDescriptor(AbstractObj.class, "_lt_",
+                                    AbstractObj.class), false);
                     break;
                 case LTE:
-                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(Obj.class), "_lte_",
-                            getMethodDescriptor(Obj.class, "_lte_", Obj.class), false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(AbstractObj.class),
+                            "_lte_", getMethodDescriptor(AbstractObj.class, "_lte_",
+                                    AbstractObj.class), false);
                     break;
                 case MUL:
                     mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(lhsClass), "_mul_",
@@ -429,7 +436,7 @@ public final class Qux2ClassTranslater extends QuxAdapter {
                     break;
                 case NEQ:
                     mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Neq.class), "_neq_",
-                            getMethodDescriptor(Neq.class, "_neq_", Obj.class), true);
+                            getMethodDescriptor(Neq.class, "_neq_", AbstractObj.class), true);
                     break;
                 case OR:
                     mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(Bool.class), "_or_",
@@ -499,6 +506,13 @@ public final class Qux2ClassTranslater extends QuxAdapter {
                 case NULL:
                     mv.visitFieldInsn(GETSTATIC, Type.getInternalName(Null.class), "INSTANCE",
                             Type.getDescriptor(Null.class));
+                    break;
+                case OBJ:
+                    value = expr.getValue();
+
+                    mv.visitLdcInsn(value);
+                    mv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(Obj.class), "valueOf",
+                            getMethodDescriptor(Obj.class, "valueOf", String.class), false);
                     break;
                 case REAL:
                     value = expr.getValue();
@@ -571,7 +585,7 @@ public final class Qux2ClassTranslater extends QuxAdapter {
         @Override
         public void visitExprList(ExprNode.List expr) {
             visitValue(expr.getValues().size());
-            mv.visitTypeInsn(ANEWARRAY, Type.getInternalName(Obj.class));
+            mv.visitTypeInsn(ANEWARRAY, Type.getInternalName(AbstractObj.class));
 
             for (int i = 0; i < expr.getValues().size(); i++) {
                 mv.visitInsn(DUP);
@@ -581,7 +595,7 @@ public final class Qux2ClassTranslater extends QuxAdapter {
             }
 
             mv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(List.class), "valueOf",
-                    getMethodDescriptor(List.class, "valueOf", Obj[].class), false);
+                    getMethodDescriptor(List.class, "valueOf", AbstractObj[].class), false);
         }
 
         /**
@@ -596,7 +610,7 @@ public final class Qux2ClassTranslater extends QuxAdapter {
         @Override
         public void visitExprSet(ExprNode.Set expr) {
             visitValue(expr.getValues().size());
-            mv.visitTypeInsn(ANEWARRAY, Type.getInternalName(Obj.class));
+            mv.visitTypeInsn(ANEWARRAY, Type.getInternalName(AbstractObj.class));
 
             for (int i = 0; i < expr.getValues().size(); i++) {
                 mv.visitInsn(DUP);
@@ -606,7 +620,7 @@ public final class Qux2ClassTranslater extends QuxAdapter {
             }
 
             mv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(Set.class), "valueOf",
-                    getMethodDescriptor(Set.class, "valueOf", Obj[].class), false);
+                    getMethodDescriptor(Set.class, "valueOf", AbstractObj[].class), false);
         }
 
         /**
@@ -904,7 +918,8 @@ public final class Qux2ClassTranslater extends QuxAdapter {
             visitExpr(stmt.getExpr());
 
             mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Assign.class), "_assign_",
-                    getMethodDescriptor(Assign.class, "_assign_", Int.class, Obj.class), true);
+                    getMethodDescriptor(Assign.class, "_assign_", Int.class, AbstractObj.class),
+                    true);
         }
 
         /**

@@ -1,6 +1,6 @@
 package qux.lang.op;
 
-import qux.lang.Obj;
+import qux.lang.AbstractObj;
 
 /**
  * TODO: Documentation.
@@ -10,5 +10,5 @@ import qux.lang.Obj;
  */
 public interface Dup {
 
-    Obj _dup_();
+    AbstractObj _dup_();
 }

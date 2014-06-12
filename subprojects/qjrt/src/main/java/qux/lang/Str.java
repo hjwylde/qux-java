@@ -22,7 +22,7 @@ import qux.lang.op.Slice;
  *
  * @author Henry J. Wylde
  */
-public final class Str extends Obj implements Access, Assign, Len, Slice {
+public final class Str extends AbstractObj implements Access, Assign, Len, Slice {
 
     private String value;
 
@@ -51,7 +51,7 @@ public final class Str extends Obj implements Access, Assign, Len, Slice {
      * {@inheritDoc}
      */
     @Override
-    public void _assign_(Int index, Obj value) {
+    public void _assign_(Int index, AbstractObj value) {
         set(index, value);
     }
 
@@ -59,7 +59,7 @@ public final class Str extends Obj implements Access, Assign, Len, Slice {
      * {@inheritDoc}
      */
     @Override
-    public Int _comp_(Obj obj) {
+    public Int _comp_(AbstractObj obj) {
         if (!(obj instanceof Str)) {
             return meta()._comp_(obj.meta());
         }
@@ -67,7 +67,7 @@ public final class Str extends Obj implements Access, Assign, Len, Slice {
         return Int.valueOf(value.compareTo(((Str) obj).value));
     }
 
-    public Bool _contains_(Obj obj) {
+    public Bool _contains_(AbstractObj obj) {
         if (!(obj instanceof Str)) {
             return FALSE;
         }
@@ -95,7 +95,7 @@ public final class Str extends Obj implements Access, Assign, Len, Slice {
      * {@inheritDoc}
      */
     @Override
-    public Bool _eq_(Obj obj) {
+    public Bool _eq_(AbstractObj obj) {
         if (super._eq_(obj) == FALSE) {
             return FALSE;
         }
@@ -180,18 +180,18 @@ public final class Str extends Obj implements Access, Assign, Len, Slice {
         return META_STR;
     }
 
-    public void set(Int index, Obj value) {
+    public void set(Int index, AbstractObj value) {
         set(index._value_(), value);
     }
 
-    public synchronized void set(int index, Obj value) {
+    public synchronized void set(int index, AbstractObj value) {
         checkElementIndex(index, this.value.length());
 
         this.value = this.value.substring(0, index) + value.toString() + this.value.substring(
                 index + 1);
     }
 
-    public void set(BigInteger index, Obj value) {
+    public void set(BigInteger index, AbstractObj value) {
         checkArgument(index.bitLength() < 32, "lists of size larger than 32 bits is unsupported");
 
         set(index.intValue(), value);
