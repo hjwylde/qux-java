@@ -36,6 +36,14 @@ public abstract class QuxAdapter implements QuxVisitor {
      * {@inheritDoc}
      */
     @Override
+    public ConstantVisitor visitConstant(int flags, String name, Type type) {
+        return next.visitConstant(flags, name, type);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void visitEnd() {
         next.visitEnd();
     }

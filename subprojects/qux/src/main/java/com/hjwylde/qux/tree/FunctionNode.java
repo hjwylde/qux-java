@@ -131,7 +131,7 @@ public final class FunctionNode extends Node implements FunctionVisitor {
      */
     @Override
     public void visitStmtAccessAssign(StmtNode.AccessAssign stmt) {
-        stmts.add(stmt);
+        stmts.add(checkNotNull(stmt, "stmt cannot be null"));
     }
 
     /**
@@ -139,7 +139,7 @@ public final class FunctionNode extends Node implements FunctionVisitor {
      */
     @Override
     public void visitStmtAssign(StmtNode.Assign stmt) {
-        stmts.add(stmt);
+        stmts.add(checkNotNull(stmt, "stmt cannot be null"));
     }
 
     /**
@@ -147,7 +147,7 @@ public final class FunctionNode extends Node implements FunctionVisitor {
      */
     @Override
     public void visitStmtExpr(StmtNode.Expr stmt) {
-        stmts.add(stmt);
+        stmts.add(checkNotNull(stmt, "stmt cannot be null"));
     }
 
     /**
@@ -155,7 +155,7 @@ public final class FunctionNode extends Node implements FunctionVisitor {
      */
     @Override
     public void visitStmtFor(StmtNode.For stmt) {
-        stmts.add(stmt);
+        stmts.add(checkNotNull(stmt, "stmt cannot be null"));
     }
 
     /**
@@ -163,7 +163,7 @@ public final class FunctionNode extends Node implements FunctionVisitor {
      */
     @Override
     public void visitStmtIf(StmtNode.If stmt) {
-        stmts.add(stmt);
+        stmts.add(checkNotNull(stmt, "stmt cannot be null"));
     }
 
     /**
@@ -171,7 +171,7 @@ public final class FunctionNode extends Node implements FunctionVisitor {
      */
     @Override
     public void visitStmtPrint(StmtNode.Print stmt) {
-        stmts.add(stmt);
+        stmts.add(checkNotNull(stmt, "stmt cannot be null"));
     }
 
     /**
@@ -179,7 +179,7 @@ public final class FunctionNode extends Node implements FunctionVisitor {
      */
     @Override
     public void visitStmtReturn(StmtNode.Return stmt) {
-        stmts.add(stmt);
+        stmts.add(checkNotNull(stmt, "stmt cannot be null"));
     }
 
     /**
@@ -187,6 +187,6 @@ public final class FunctionNode extends Node implements FunctionVisitor {
      */
     @Override
     public void visitStmtWhile(StmtNode.While stmt) {
-        stmts.add(stmt);
+        stmts.add(checkNotNull(stmt, "stmt cannot be null"));
     }
 }

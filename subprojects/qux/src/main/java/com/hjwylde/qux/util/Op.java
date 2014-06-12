@@ -15,6 +15,10 @@ public interface Op {
      * Static access modifier flag.
      */
     int ACC_STATIC = 0x8;
+    /**
+     * Final access modifier flag.
+     */
+    int ACC_FINAL = 0x10;
 
     /**
      * Binary operators.

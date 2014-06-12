@@ -3,14 +3,16 @@ package com.hjwylde.qux.pipelines;
 import com.hjwylde.common.error.CompilerErrors;
 import com.hjwylde.common.error.MethodNotImplementedError;
 import com.hjwylde.qbs.builder.QuxContext;
+import com.hjwylde.qux.api.ConstantAdapter;
+import com.hjwylde.qux.api.ConstantVisitor;
 import com.hjwylde.qux.api.ExprVisitor;
 import com.hjwylde.qux.api.FunctionAdapter;
 import com.hjwylde.qux.api.FunctionVisitor;
 import com.hjwylde.qux.api.QuxAdapter;
 import com.hjwylde.qux.api.QuxVisitor;
+import com.hjwylde.qux.tree.ConstantNode;
 import com.hjwylde.qux.tree.ExprNode;
 import com.hjwylde.qux.tree.FunctionNode;
-import com.hjwylde.qux.tree.Node;
 import com.hjwylde.qux.tree.QuxNode;
 import com.hjwylde.qux.tree.StmtNode;
 import com.hjwylde.qux.util.Attribute;
@@ -30,11 +32,13 @@ import java.util.Map;
  * @author Henry J. Wylde
  * @since 0.2.1
  */
-public final class NameResolver extends Pipeline {
+public final class NamePropagator extends Pipeline {
+
+    private final Map<String, String> namespace = new HashMap<>();
 
     private QuxNode node;
 
-    public NameResolver(QuxContext context) {
+    public NamePropagator(QuxContext context) {
         super(context);
     }
 
@@ -44,86 +48,102 @@ public final class NameResolver extends Pipeline {
     @Override
     public QuxNode apply(QuxNode node) {
         this.node = node;
+        namespace.clear();
 
         QuxNode resolved = new QuxNode();
-        QuxVisitor qv = new QuxNameResolver(resolved);
+        QuxVisitor qv = new QuxNamePropagator(resolved);
 
         node.accept(qv);
 
         return resolved;
     }
 
-    static void checkInstance(ExprNode expr, Class<? extends Node> clazz) {
-        if (clazz.isInstance(expr)) {
-            return;
-        }
+    private ExprNode propagate(ExprNode expr) {
+        ExprNamePropagator enp = new ExprNamePropagator();
 
-        Optional<Attribute.Source> opt = Attributes.getAttribute(expr, Attribute.Source.class);
+        expr.accept(enp);
 
-        if (opt.isPresent()) {
-            Attribute.Source source = opt.get();
-
-            throw CompilerErrors.invalidInstance(expr.getClass().getSimpleName(),
-                    clazz.getSimpleName(), source.getSource(), source.getLine(), source.getCol(),
-                    source.getLength());
-        } else {
-            throw CompilerErrors.invalidInstance(expr.getClass().getSimpleName(),
-                    clazz.getSimpleName());
-        }
+        return enp.getResult();
     }
 
     private String resolveClass(String name) {
-        if (name.contains(".")) {
-            return name;
-        }
-
-        for (String id : node.getImports()) {
-            if (id.endsWith("." + name)) {
-                return id;
+        if (!namespace.containsKey(name)) {
+            if (name.contains(".")) {
+                namespace.put(name, name);
+            } else {
+                throw CompilerErrors.noClassFound(name);
             }
         }
 
-        throw CompilerErrors.noClassFound(name);
+        return namespace.get(name);
+    }
+
+    private Optional<String> resolveConstant(String name) {
+        String key = "$" + name;
+
+        if (!namespace.containsKey(key)) {
+            for (ConstantNode constant : node.getConstants()) {
+                if (constant.getName().equals(name)) {
+                    namespace.put(key, node.getId() + key);
+                    break;
+                }
+            }
+        }
+
+        return Optional.fromNullable(namespace.get(key));
     }
 
     private String resolveFunction(String name) {
-        for (FunctionNode function : node.getFunctions()) {
-            if (name.equals(function.getName())) {
-                return node.getId() + "$" + name;
+        String key = "$" + name;
+
+        CHECK:
+        if (!namespace.containsKey(key)) {
+            for (FunctionNode function : node.getFunctions()) {
+                if (function.getName().equals(name)) {
+                    namespace.put(key, node.getId() + key);
+                    break CHECK;
+                }
             }
+
+            throw CompilerErrors.noFunctionFound(node.getId(), name);
         }
 
-        for (String id : node.getImports()) {
-            if (id.endsWith("$" + name)) {
-                return id;
-            }
-        }
-
-        throw CompilerErrors.noFunctionFound(node.getId(), name);
+        return namespace.get(key);
     }
 
     /**
      * TODO: Documentation.
      *
      * @author Henry J. Wylde
-     * @since 0.2.1
+     * @since TODO: SINCE
      */
-    private final class FunctionNameResolver extends FunctionAdapter implements ExprVisitor {
+    private final class ConstantNamePropagator extends ConstantAdapter {
 
-        private final Map<String, String> namespace = new HashMap<>();
-
-        private ExprNode current;
-
-        private FunctionNameResolver(FunctionVisitor next) {
+        private ConstantNamePropagator(ConstantVisitor next) {
             super(next);
         }
 
         /**
-         * {@inheritDoc
+         * {@inheritDoc}
          */
         @Override
-        public void visitCode() {
-            namespace.clear();
+        public void visitExpr(ExprNode expr) {
+            super.visitExpr(propagate(expr));
+        }
+    }
+
+    /**
+     * TODO: Documentation.
+     *
+     * @author Henry J. Wylde
+     * @since TODO: SINCE
+     */
+    private final class ExprNamePropagator implements ExprVisitor {
+
+        private ExprNode result;
+
+        public ExprNode getResult() {
+            return result;
         }
 
         public void visitExpr(ExprNode expr) {
@@ -136,11 +156,11 @@ public final class NameResolver extends Pipeline {
         @Override
         public void visitExprAccess(ExprNode.Access expr) {
             visitExpr(expr.getTarget());
-            ExprNode target = current;
+            ExprNode target = result;
             visitExpr(expr.getIndex());
-            ExprNode index = current;
+            ExprNode index = result;
 
-            current = new ExprNode.Access(target, index, expr.getAttributes());
+            result = new ExprNode.Access(target, index, expr.getAttributes());
         }
 
         /**
@@ -149,11 +169,11 @@ public final class NameResolver extends Pipeline {
         @Override
         public void visitExprBinary(ExprNode.Binary expr) {
             visitExpr(expr.getLhs());
-            ExprNode lhs = current;
+            ExprNode lhs = result;
             visitExpr(expr.getRhs());
-            ExprNode rhs = current;
+            ExprNode rhs = result;
 
-            current = new ExprNode.Binary(expr.getOp(), lhs, rhs, expr.getAttributes());
+            result = new ExprNode.Binary(expr.getOp(), lhs, rhs, expr.getAttributes());
         }
 
         /**
@@ -161,7 +181,7 @@ public final class NameResolver extends Pipeline {
          */
         @Override
         public void visitExprConstant(ExprNode.Constant expr) {
-            current = expr;
+            result = expr;
         }
 
         /**
@@ -170,18 +190,26 @@ public final class NameResolver extends Pipeline {
         @Override
         public void visitExprExternal(ExprNode.External expr) {
             visitExpr(expr.getMeta());
-            ExprNode.Meta meta = (ExprNode.Meta) current;
+            ExprNode.Meta meta = (ExprNode.Meta) result;
 
-            List<ExprNode> arguments = new ArrayList<>();
-            for (ExprNode argument : expr.getFunction().getArguments()) {
-                visitExpr(argument);
-                arguments.add(current);
+            if (expr.getExpr() instanceof ExprNode.Function) {
+                ExprNode.Function function = (ExprNode.Function) expr.getExpr();
+
+                List<ExprNode> arguments = new ArrayList<>();
+                for (ExprNode argument : function.getArguments()) {
+                    visitExpr(argument);
+                    arguments.add(result);
+                }
+
+                result = new ExprNode.Function(function.getName(), arguments, expr.getAttributes());
+            } else if (expr.getExpr() instanceof ExprNode.Variable) {
+                result = expr.getExpr();
+            } else {
+                throw new MethodNotImplementedError(expr.getExpr().getClass().toString());
             }
 
-            ExprNode.Function function = new ExprNode.Function(expr.getFunction().getName(),
-                    arguments, expr.getAttributes());
-
-            current = new ExprNode.External(meta, function, expr.getAttributes());
+            result = new ExprNode.External(meta, result, Attributes.getAttributes(expr,
+                    Attribute.Source.class));
         }
 
         /**
@@ -197,13 +225,13 @@ public final class NameResolver extends Pipeline {
             List<ExprNode> arguments = new ArrayList<>();
             for (ExprNode argument : expr.getArguments()) {
                 visitExpr(argument);
-                arguments.add(current);
+                arguments.add(result);
             }
 
             ExprNode.Function function = new ExprNode.Function(expr.getName(), arguments,
                     expr.getAttributes());
 
-            current = new ExprNode.External(meta, function, Attributes.getAttributes(expr,
+            result = new ExprNode.External(meta, function, Attributes.getAttributes(expr,
                     Attribute.Source.class));
         }
 
@@ -215,10 +243,10 @@ public final class NameResolver extends Pipeline {
             List<ExprNode> values = new ArrayList<>();
             for (ExprNode value : expr.getValues()) {
                 visitExpr(value);
-                values.add(current);
+                values.add(result);
             }
 
-            current = new ExprNode.List(values, expr.getAttributes());
+            result = new ExprNode.List(values, expr.getAttributes());
         }
 
         /**
@@ -228,7 +256,7 @@ public final class NameResolver extends Pipeline {
         public void visitExprMeta(ExprNode.Meta expr) {
             String id = resolveClass(expr.getId());
 
-            current = new ExprNode.Meta(id, expr.getAttributes());
+            result = new ExprNode.Meta(id, expr.getAttributes());
         }
 
         /**
@@ -239,10 +267,10 @@ public final class NameResolver extends Pipeline {
             List<ExprNode> values = new ArrayList<>();
             for (ExprNode value : expr.getValues()) {
                 visitExpr(value);
-                values.add(current);
+                values.add(result);
             }
 
-            current = new ExprNode.Set(values, expr.getAttributes());
+            result = new ExprNode.Set(values, expr.getAttributes());
         }
 
         /**
@@ -251,21 +279,21 @@ public final class NameResolver extends Pipeline {
         @Override
         public void visitExprSlice(ExprNode.Slice expr) {
             visitExpr(expr.getTarget());
-            ExprNode target = current;
+            ExprNode target = result;
 
             ExprNode from = null;
             if (expr.getFrom().isPresent()) {
                 visitExpr(expr.getFrom().get());
-                from = current;
+                from = result;
             }
 
             ExprNode to = null;
             if (expr.getTo().isPresent()) {
                 visitExpr(expr.getTo().get());
-                to = current;
+                to = result;
             }
 
-            current = new ExprNode.Slice(target, from, to, expr.getAttributes());
+            result = new ExprNode.Slice(target, from, to, expr.getAttributes());
         }
 
         /**
@@ -274,9 +302,9 @@ public final class NameResolver extends Pipeline {
         @Override
         public void visitExprUnary(ExprNode.Unary expr) {
             visitExpr(expr.getTarget());
-            ExprNode target = current;
+            ExprNode target = result;
 
-            current = new ExprNode.Unary(expr.getOp(), target, expr.getAttributes());
+            result = new ExprNode.Unary(expr.getOp(), target, expr.getAttributes());
         }
 
         /**
@@ -284,7 +312,31 @@ public final class NameResolver extends Pipeline {
          */
         @Override
         public void visitExprVariable(ExprNode.Variable expr) {
-            current = expr;
+            Optional<String> id = resolveConstant(expr.getName());
+            if (!id.isPresent()) {
+                result = expr;
+                return;
+            }
+
+            String owner = id.get().substring(0, id.get().lastIndexOf("$"));
+            ExprNode.Meta meta = new ExprNode.Meta(owner, Attributes.getAttributes(expr,
+                    Attribute.Source.class));
+
+            result = new ExprNode.External(meta, expr, Attributes.getAttributes(expr,
+                    Attribute.Source.class));
+        }
+    }
+
+    /**
+     * TODO: Documentation.
+     *
+     * @author Henry J. Wylde
+     * @since 0.2.1
+     */
+    private final class FunctionNamePropagator extends FunctionAdapter {
+
+        private FunctionNamePropagator(FunctionVisitor next) {
+            super(next);
         }
 
         /**
@@ -351,24 +403,6 @@ public final class NameResolver extends Pipeline {
             super.visitStmtWhile(resolveStmtWhile(stmt));
         }
 
-        private String resolveClass(String id) {
-            if (!namespace.containsKey(id)) {
-                namespace.put(id, NameResolver.this.resolveClass(id));
-            }
-
-            return namespace.get(id);
-        }
-
-        private String resolveFunction(String name) {
-            String id = "$" + name;
-
-            if (!namespace.containsKey(id)) {
-                namespace.put(id, NameResolver.this.resolveFunction(name));
-            }
-
-            return namespace.get(id);
-        }
-
         private StmtNode resolveStmt(StmtNode stmt) {
             if (stmt instanceof StmtNode.AccessAssign) {
                 return resolveStmtAccessAssign((StmtNode.AccessAssign) stmt);
@@ -392,24 +426,20 @@ public final class NameResolver extends Pipeline {
         }
 
         private StmtNode.AccessAssign resolveStmtAccessAssign(StmtNode.AccessAssign stmt) {
-            visitExpr(stmt.getAccess());
-            ExprNode.Access access = (ExprNode.Access) current;
-            visitExpr(stmt.getExpr());
-            ExprNode expr = current;
+            ExprNode.Access access = (ExprNode.Access) propagate(stmt.getAccess());
+            ExprNode expr = propagate(stmt.getExpr());
 
             return new StmtNode.AccessAssign(access, expr, stmt.getAttributes());
         }
 
         private StmtNode.Assign resolveStmtAssign(StmtNode.Assign stmt) {
-            visitExpr(stmt.getExpr());
-            ExprNode expr = current;
+            ExprNode expr = propagate(stmt.getExpr());
 
             return new StmtNode.Assign(stmt.getVar(), expr, stmt.getAttributes());
         }
 
         private StmtNode.Expr resolveStmtExpr(StmtNode.Expr stmt) {
-            visitExpr(stmt.getExpr());
-            ExprNode expr = current;
+            ExprNode expr = propagate(stmt.getExpr());
 
             StmtNode.Expr.Type type = null;
             if (expr instanceof ExprNode.External) {
@@ -434,8 +464,7 @@ public final class NameResolver extends Pipeline {
         }
 
         private StmtNode.For resolveStmtFor(StmtNode.For stmt) {
-            visitExpr(stmt.getExpr());
-            ExprNode expr = current;
+            ExprNode expr = propagate(stmt.getExpr());
 
             List<StmtNode> body = new ArrayList<>();
             for (StmtNode inner : stmt.getBody()) {
@@ -446,8 +475,7 @@ public final class NameResolver extends Pipeline {
         }
 
         private StmtNode.If resolveStmtIf(StmtNode.If stmt) {
-            visitExpr(stmt.getCondition());
-            ExprNode condition = current;
+            ExprNode condition = propagate(stmt.getCondition());
 
             List<StmtNode> trueBlock = new ArrayList<>();
             for (StmtNode inner : stmt.getTrueBlock()) {
@@ -463,8 +491,7 @@ public final class NameResolver extends Pipeline {
         }
 
         private StmtNode.Print resolveStmtPrint(StmtNode.Print stmt) {
-            visitExpr(stmt.getExpr());
-            ExprNode expr = current;
+            ExprNode expr = propagate(stmt.getExpr());
 
             return new StmtNode.Print(expr, stmt.getAttributes());
         }
@@ -472,16 +499,14 @@ public final class NameResolver extends Pipeline {
         private StmtNode.Return resolveStmtReturn(StmtNode.Return stmt) {
             ExprNode expr = null;
             if (stmt.getExpr().isPresent()) {
-                visitExpr(stmt.getExpr().get());
-                expr = current;
+                expr = propagate(stmt.getExpr().get());
             }
 
             return new StmtNode.Return(expr, stmt.getAttributes());
         }
 
         private StmtNode.While resolveStmtWhile(StmtNode.While stmt) {
-            visitExpr(stmt.getCondition());
-            ExprNode condition = current;
+            ExprNode condition = propagate(stmt.getCondition());
 
             List<StmtNode> body = new ArrayList<>();
             for (StmtNode inner : stmt.getBody()) {
@@ -498,9 +523,9 @@ public final class NameResolver extends Pipeline {
      * @author Henry J. Wylde
      * @since 0.2.1
      */
-    private final class QuxNameResolver extends QuxAdapter {
+    private final class QuxNamePropagator extends QuxAdapter {
 
-        private QuxNameResolver(QuxVisitor next) {
+        private QuxNamePropagator(QuxVisitor next) {
             super(next);
         }
 
@@ -508,8 +533,16 @@ public final class NameResolver extends Pipeline {
          * {@inheritDoc}
          */
         @Override
+        public ConstantVisitor visitConstant(int flags, String name, Type type) {
+            return new ConstantNamePropagator(super.visitConstant(flags, name, type));
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
         public FunctionVisitor visitFunction(int flags, String name, Type.Function type) {
-            return new FunctionNameResolver(super.visitFunction(flags, name, type));
+            return new FunctionNamePropagator(super.visitFunction(flags, name, type));
         }
 
         /**
@@ -517,6 +550,14 @@ public final class NameResolver extends Pipeline {
          */
         @Override
         public void visitImport(String id) {
+            if (id.contains("$")) {
+                namespace.put(id.substring(id.lastIndexOf("$")), id);
+            } else if (id.contains(".")) {
+                namespace.put(id.substring(id.lastIndexOf(".") + 1), id);
+            } else {
+                throw new InternalError("cannot import file from root package");
+            }
+
             super.visitImport(id);
         }
     }

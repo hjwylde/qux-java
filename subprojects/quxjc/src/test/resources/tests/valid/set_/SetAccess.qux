@@ -1,13 +1,13 @@
-{int} f({int} is):
-    is = {3, 4, 5}
+{int} f({int} ts):
+    ts = {3, 4, 5}
 
-    return is
+    return ts
 
 void main([str] args):
-    is = {0, 1, 2}
-    print is[0]
-    print is[1]
-    print is[2]
-    print f(is)[0]
-    print is[0]
+    ts = {0, 1, 2}
+    print ts[0]
+    print ts[1]
+    print ts[2]
+    print f(ts)[0]
+    print ts[0]
 

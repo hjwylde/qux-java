@@ -1,0 +1,21 @@
+str A is 'foo'
+str B is 'foo'
+str C is 'bar'
+
+str f(str a):
+    return a + A
+
+str g(str a):
+    return a
+
+
+void main([str] args):
+    print A
+    print B
+    print C
+    print A == B
+    print A == C
+    print B == C
+    print f(C)
+    print g(C)
+

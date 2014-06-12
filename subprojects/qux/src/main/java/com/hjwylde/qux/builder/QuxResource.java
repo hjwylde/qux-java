@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.hjwylde.qbs.builder.resources.AbstractResource;
 import com.hjwylde.qbs.builder.resources.Resource;
+import com.hjwylde.qux.tree.ConstantNode;
 import com.hjwylde.qux.tree.FunctionNode;
 import com.hjwylde.qux.tree.QuxNode;
 
@@ -23,6 +24,20 @@ public final class QuxResource extends AbstractResource {
 
     public QuxResource(QuxNode node) {
         this.node = checkNotNull(node, "node cannot be null");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Optional<String> getConstantType(String name) {
+        for (ConstantNode constant : node.getConstants()) {
+            if (constant.getName().equals(name)) {
+                return Optional.of(constant.getType().getDescriptor());
+            }
+        }
+
+        return Optional.absent();
     }
 
     /**

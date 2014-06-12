@@ -1,0 +1,21 @@
+bool A is true
+bool B is true
+bool C is false
+
+bool f(bool a):
+    return a and A
+
+bool g(bool A):
+    return A
+
+
+void main([str] args):
+    print A
+    print B
+    print C
+    print A == B
+    print A == C
+    print B == C
+    print f(C)
+    print g(C)
+

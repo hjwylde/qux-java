@@ -15,6 +15,8 @@ public interface QuxVisitor {
 
     void visit(int version, String name);
 
+    ConstantVisitor visitConstant(int flags, String name, Type type);
+
     void visitEnd();
 
     FunctionVisitor visitFunction(int flags, String name, Type.Function type);

@@ -30,6 +30,18 @@ public abstract class LazilyInitialisedResource extends AbstractResource {
      * {@inheritDoc}
      */
     @Override
+    public Optional<String> getConstantType(String name) {
+        if (delegate == null) {
+            delegate = loadDelegate();
+        }
+
+        return delegate.getConstantType(name);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public Optional<String> getFunctionType(String name) {
         if (delegate == null) {
             delegate = loadDelegate();

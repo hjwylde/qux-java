@@ -22,6 +22,14 @@ final class NullQuxVisitor implements QuxVisitor {
      * {@inheritDoc}
      */
     @Override
+    public ConstantVisitor visitConstant(int flags, String name, Type type) {
+        return ConstantVisitor.NULL_INSTANCE;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void visitEnd() {}
 
     /**

@@ -1,13 +1,13 @@
-[int] f([int] is):
-    is = [3, 4, 5]
+[int] f([int] xs):
+    xs = [3, 4, 5]
 
-    return is
+    return xs
 
 void main([str] args):
-    is = [0, 1, 2]
-    print is[0]
-    print is[1]
-    print is[2]
-    print f(is)[0]
-    print is[0]
+    xs = [0, 1, 2]
+    print xs[0]
+    print xs[1]
+    print xs[2]
+    print f(xs)[0]
+    print xs[0]
 
