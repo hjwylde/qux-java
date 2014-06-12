@@ -9,7 +9,7 @@ import static qux.lang.Meta.META_OBJ;
  * TODO: Documentation
  *
  * @author Henry J. Wylde
- * @TODO: SINCE
+ * @since 0.2.2
  */
 public final class Obj extends AbstractObj {
 

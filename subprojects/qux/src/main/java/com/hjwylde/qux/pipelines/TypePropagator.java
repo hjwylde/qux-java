@@ -227,7 +227,7 @@ public final class TypePropagator extends Pipeline {
      * TODO: Documentation.
      *
      * @author Henry J. Wylde
-     * @since TODO: SINCE
+     * @since 0.2.2
      */
     private final class ConstantTypePropagator extends ConstantAdapter {
 
@@ -244,7 +244,7 @@ public final class TypePropagator extends Pipeline {
      * TODO: Documentation.
      *
      * @author Henry J. Wylde
-     * @since TODO: SINCE
+     * @since 0.2.2
      */
     private final class ExprTypePropagator implements ExprVisitor {
 

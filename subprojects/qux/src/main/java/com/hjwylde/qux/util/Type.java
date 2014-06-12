@@ -579,7 +579,7 @@ public abstract class Type {
      * TODO: Documentation
      *
      * @author Henry J. Wylde
-     * @since TODO: SINCE
+     * @since 0.2.2
      */
     public static final class Obj extends Type {
 

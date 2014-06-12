@@ -21,7 +21,7 @@ import java.util.List;
  * Valid {@code obj} tests.
  *
  * @author Henry J. Wylde
- * @since TODO: SINCE
+ * @since 0.2.2
  */
 @RunWith(Parameterized.class)
 public final class ValidObjTests extends Harness {
