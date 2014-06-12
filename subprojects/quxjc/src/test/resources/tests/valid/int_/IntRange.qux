@@ -1,5 +1,5 @@
-void f([int] is):
-    for i in is:
+void f([int] xs):
+    for i in xs:
         print i
 
 void main([str] args):

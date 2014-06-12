@@ -1,0 +1,17 @@
+null A is null
+int B is 5
+
+null f(int a):
+    return A
+
+null g(null b):
+    return b
+
+
+void main([str] args):
+    print A
+    print B
+    print A == B
+    print f(B)
+    print g(null)
+

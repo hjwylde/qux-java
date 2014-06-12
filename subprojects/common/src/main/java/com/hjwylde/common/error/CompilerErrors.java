@@ -137,6 +137,39 @@ public final class CompilerErrors {
     }
 
     /**
+     * Creates a new {@link com.hjwylde.common.error.CompilerError} representing a no constant
+     * definition found.
+     *
+     * @param owner the owner of the constant.
+     * @param name the name of the constant.
+     * @return the created {@link com.hjwylde.common.error.CompilerError}.
+     */
+    public static CompilerError noConstantFound(String owner, String name) {
+        String message = String.format("no constant definition found for '%s$%s'", owner, name);
+
+        return new CompilerError(message);
+    }
+
+    /**
+     * Creates a new {@link com.hjwylde.common.error.SourceCompilerError} representing a no constant
+     * definition found type with the provided source information.
+     *
+     * @param owner the owner of the constant.
+     * @param name the name of the constant.
+     * @param source the source file name.
+     * @param line the line number.
+     * @param col the column number.
+     * @param length the length.
+     * @return the created {@link com.hjwylde.common.error.SourceCompilerError}.
+     */
+    public static SourceCompilerError noConstantFound(String owner, String name, String source,
+            int line, int col, int length) {
+        String message = String.format("no constant definition found for '%s$%s'", owner, name);
+
+        return new SourceCompilerError(message, source, line, col, length);
+    }
+
+    /**
      * Creates a new {@link com.hjwylde.common.error.CompilerError} representing a no function
      * definition found.
      *

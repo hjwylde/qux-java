@@ -78,7 +78,7 @@ public abstract class Harness {
 
         logger.debug("setting test classpath to '{}'", sb);
 
-        QUXC_CLASSPATH = "";
+        QUXC_CLASSPATH = ".";
         JAVA_CLASSPATH = sb.toString();
     }
 
@@ -107,6 +107,9 @@ public abstract class Harness {
             output.addAll(CharStreams.readLines(new InputStreamReader(quxc.getErrorStream(),
                     StandardCharsets.UTF_8)));
 
+            if (result != 0) {
+                fail("qux compilation exited with non-zero exit status '" + result + "'");
+            }
             if (!output.isEmpty()) {
                 fail(Joiner.on("\n").join(output));
             }
@@ -131,6 +134,9 @@ public abstract class Harness {
             List<String> err = CharStreams.readLines(new InputStreamReader(java.getErrorStream(),
                     StandardCharsets.UTF_8));
 
+            if (result != 0) {
+                fail("java execution exited with non-zero exit status '" + result + "'");
+            }
             if (!err.isEmpty()) {
                 fail(Joiner.on("\n").join(err));
             }

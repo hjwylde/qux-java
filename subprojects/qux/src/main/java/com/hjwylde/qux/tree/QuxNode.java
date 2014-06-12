@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.hjwylde.qux.api.ConstantVisitor;
 import com.hjwylde.qux.api.FunctionVisitor;
 import com.hjwylde.qux.api.QuxVisitor;
 import com.hjwylde.qux.util.Attribute;
@@ -33,6 +34,7 @@ public final class QuxNode extends Node implements QuxVisitor {
 
     private List<String> imports = new ArrayList<>();
 
+    private List<ConstantNode> constants = new ArrayList<>();
     private List<FunctionNode> functions = new ArrayList<>();
 
     public QuxNode(Attribute... attributes) {
@@ -52,11 +54,19 @@ public final class QuxNode extends Node implements QuxVisitor {
             qv.visitImport(id);
         }
 
+        for (ConstantNode constant : constants) {
+            constant.accept(qv);
+        }
+
         for (FunctionNode function : functions) {
             function.accept(qv);
         }
 
         qv.visitEnd();
+    }
+
+    public ImmutableList<ConstantNode> getConstants() {
+        return ImmutableList.copyOf(constants);
     }
 
     public ImmutableList<FunctionNode> getFunctions() {
@@ -96,6 +106,18 @@ public final class QuxNode extends Node implements QuxVisitor {
 
         this.version = version;
         this.name = checkNotNull(name, "name cannot be null");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ConstantVisitor visitConstant(int flags, String name, Type type) {
+        ConstantNode cn = new ConstantNode(flags, name, type);
+
+        constants.add(cn);
+
+        return cn;
     }
 
     /**
