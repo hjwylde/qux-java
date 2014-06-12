@@ -7,6 +7,9 @@ obj f(obj a):
 
     return A
 
+obj g(obj A):
+    return A
+
 void main([str] args):
     print A
     print B
@@ -18,4 +21,5 @@ void main([str] args):
     print f(B) == B
     print f(obj) == B
     print f(B) == A
+    print g(B) == A
 
