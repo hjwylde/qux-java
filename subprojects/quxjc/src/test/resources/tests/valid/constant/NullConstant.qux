@@ -4,8 +4,8 @@ int B is 5
 null f(int a):
     return A
 
-null g(null b):
-    return b
+null g(null A):
+    return A
 
 
 void main([str] args):
