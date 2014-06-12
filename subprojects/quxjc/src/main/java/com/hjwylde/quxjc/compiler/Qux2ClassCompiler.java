@@ -8,12 +8,7 @@ import com.hjwylde.qbs.builder.resources.Resource;
 import com.hjwylde.qbs.builder.resources.ResourceManager;
 import com.hjwylde.qbs.compiler.Compiler;
 import com.hjwylde.qbs.compiler.QuxCompileSpec;
-import com.hjwylde.qux.pipelines.ControlFlowGraphPropagator;
-import com.hjwylde.qux.pipelines.DeadCodeChecker;
-import com.hjwylde.qux.pipelines.NameResolver;
 import com.hjwylde.qux.pipelines.Pipeline;
-import com.hjwylde.qux.pipelines.TypeChecker;
-import com.hjwylde.qux.pipelines.TypePropagator;
 import com.hjwylde.quxjc.builder.Qux2ClassBuilder;
 
 import com.google.common.base.Optional;
@@ -38,10 +33,7 @@ public final class Qux2ClassCompiler<T extends QuxCompileSpec> implements Compil
     private static final Logger logger = LoggerFactory.getLogger(Qux2ClassCompiler.class);
 
     private static final ImmutableList<Class<? extends Pipeline>> DEFAULT_PIPELINES =
-            ImmutableList.<Class<? extends Pipeline>>of(NameResolver.class,
-                    ControlFlowGraphPropagator.class,
-                    // DefiniteAssignmentChecker.class,
-                    DeadCodeChecker.class, TypePropagator.class, TypeChecker.class);
+            Pipeline.DEFAULT_PIPELINES;
 
     /**
      * {@inheritDoc}

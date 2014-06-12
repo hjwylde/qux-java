@@ -2,11 +2,13 @@ package com.hjwylde.qux.internal.compiler;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Verify.verify;
-import static com.hjwylde.qux.util.Constants.QUX0_2_1;
+import static com.hjwylde.qux.util.Constants.QUX0_2_2;
+import static com.hjwylde.qux.util.Op.ACC_FINAL;
 import static com.hjwylde.qux.util.Op.ACC_PUBLIC;
 import static com.hjwylde.qux.util.Op.ACC_STATIC;
 
 import com.hjwylde.common.error.MethodNotImplementedError;
+import com.hjwylde.qux.api.ConstantVisitor;
 import com.hjwylde.qux.api.FunctionVisitor;
 import com.hjwylde.qux.api.QuxVisitor;
 import com.hjwylde.qux.internal.antlr.QuxBaseVisitor;
@@ -40,7 +42,8 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
     private final String source;
 
     private final QuxVisitor qv;
-    private FunctionVisitor fv;
+
+    private int objCounter = 0;
 
     /**
      * Creates a new {@code Antlr2QuxTranslater} with the given source file name and visitor. The
@@ -72,7 +75,25 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
      * {@inheritDoc}
      */
     @Override
-    public Object visitDeclFunction(@NotNull QuxParser.DeclFunctionContext ctx) {
+    public Void visitDeclConstant(@NotNull QuxParser.DeclConstantContext ctx) {
+        Type type = visitType(ctx.type());
+
+        String name = ctx.Identifier().getText();
+
+        ConstantVisitor cv = qv.visitConstant(ACC_PUBLIC | ACC_STATIC | ACC_FINAL, name, type);
+
+        cv.visitExpr(visitExpr(ctx.expr()));
+
+        cv.visitEnd();
+
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Void visitDeclFunction(@NotNull QuxParser.DeclFunctionContext ctx) {
         String name = ctx.Identifier(0).getText();
 
         List<String> parameterNames = new ArrayList<>();
@@ -90,7 +111,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         Type.Function functionType = Type.forFunction(returnType, parameterTypes.toArray(
                 new Type[0]));
 
-        fv = qv.visitFunction(ACC_PUBLIC | ACC_STATIC, name, functionType);
+        FunctionVisitor fv = qv.visitFunction(ACC_PUBLIC | ACC_STATIC, name, functionType);
 
         for (int i = 0; i < parameterNames.size(); i++) {
             fv.visitParameter(parameterNames.get(i), parameterTypes.get(i));
@@ -103,7 +124,6 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         }
 
         fv.visitEnd();
-        fv = null;
 
         return null;
     }
@@ -658,8 +678,8 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
      * {@inheritDoc}
      */
     @Override
-    public Object visitFile(@NotNull QuxParser.FileContext ctx) {
-        qv.visit(QUX0_2_1, Files.getNameWithoutExtension(source));
+    public Void visitFile(@NotNull QuxParser.FileContext ctx) {
+        qv.visit(QUX0_2_2, Files.getNameWithoutExtension(source));
 
         super.visitFile(ctx);
 
@@ -672,7 +692,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
      * {@inheritDoc}
      */
     @Override
-    public Object visitImp(@NotNull QuxParser.ImpContext ctx) {
+    public Void visitImp(@NotNull QuxParser.ImpContext ctx) {
         Token start = ctx.Identifier(0).getSymbol();
         Token stop = ctx.Identifier(ctx.Identifier().size() - 1).getSymbol();
 
@@ -689,7 +709,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
      * {@inheritDoc}
      */
     @Override
-    public Object visitPkg(@NotNull QuxParser.PkgContext ctx) {
+    public Void visitPkg(@NotNull QuxParser.PkgContext ctx) {
         StringBuilder sb = new StringBuilder();
 
         sb.append(ctx.Identifier(0).getText());
@@ -977,6 +997,9 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         } else if (ctx.TRUE() != null) {
             type = ExprNode.Constant.Type.BOOL;
             value = true;
+        } else if (ctx.OBJ() != null) {
+            type = ExprNode.Constant.Type.OBJ;
+            value = generateObjId();
         }
 
         if (type != null) {
@@ -1011,6 +1034,10 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         return generateAttributeSource(token, token);
     }
 
+    private String generateObjId() {
+        return source + "$obj" + objCounter++;
+    }
+
     private static Type getType(String type) {
         switch (type) {
             case "any":
@@ -1021,6 +1048,8 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
                 return Type.TYPE_INT;
             case "null":
                 return Type.TYPE_NULL;
+            case "obj":
+                return Type.TYPE_OBJ;
             case "real":
                 return Type.TYPE_REAL;
             case "str":

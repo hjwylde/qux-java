@@ -22,15 +22,15 @@ import qux.util.Iterator;
  *
  * @author Henry J. Wylde
  */
-public final class List extends Obj implements Access, Assign, Iterable, Len, Slice {
+public final class List extends AbstractObj implements Access, Assign, Iterable, Len, Slice {
 
-    private Obj[] data;
+    private AbstractObj[] data;
     private int count;
 
     private int refs;
 
     private List() {
-        this.data = new Obj[10];
+        this.data = new AbstractObj[10];
         count = 0;
     }
 
@@ -44,14 +44,14 @@ public final class List extends Obj implements Access, Assign, Iterable, Len, Sl
         list.refs++;
     }
 
-    private List(Obj[] data) {
+    private List(AbstractObj[] data) {
         checkArgument(!Arrays.asList(data).contains(null), "data cannot contain null");
 
         this.data = data.clone();
         this.count = data.length;
 
         if (count == 0) {
-            this.data = new Obj[10];
+            this.data = new AbstractObj[10];
         }
     }
 
@@ -59,7 +59,7 @@ public final class List extends Obj implements Access, Assign, Iterable, Len, Sl
      * {@inheritDoc}
      */
     @Override
-    public Obj _access_(Int index) {
+    public AbstractObj _access_(Int index) {
         return get(index);
     }
 
@@ -79,7 +79,7 @@ public final class List extends Obj implements Access, Assign, Iterable, Len, Sl
      * {@inheritDoc}
      */
     @Override
-    public void _assign_(Int index, Obj value) {
+    public void _assign_(Int index, AbstractObj value) {
         set(index, value);
     }
 
@@ -87,7 +87,7 @@ public final class List extends Obj implements Access, Assign, Iterable, Len, Sl
      * {@inheritDoc}
      */
     @Override
-    public Int _comp_(Obj obj) {
+    public Int _comp_(AbstractObj obj) {
         if (!(obj instanceof List)) {
             return meta()._comp_(obj.meta());
         }
@@ -112,7 +112,7 @@ public final class List extends Obj implements Access, Assign, Iterable, Len, Sl
         return Int.ZERO;
     }
 
-    public Bool _contains_(Obj obj) {
+    public Bool _contains_(AbstractObj obj) {
         return indexOf(obj) >= 0 ? TRUE : FALSE;
     }
 
@@ -148,7 +148,7 @@ public final class List extends Obj implements Access, Assign, Iterable, Len, Sl
      * {@inheritDoc}
      */
     @Override
-    public Bool _eq_(Obj obj) {
+    public Bool _eq_(AbstractObj obj) {
         if (super._eq_(obj) == FALSE) {
             return FALSE;
         }
@@ -194,7 +194,7 @@ public final class List extends Obj implements Access, Assign, Iterable, Len, Sl
 
         return new Iterator() {
 
-            private Obj[] data = List.this.data;
+            private AbstractObj[] data = List.this.data;
             private int count = List.this.count;
             private int index = 0;
 
@@ -213,7 +213,7 @@ public final class List extends Obj implements Access, Assign, Iterable, Len, Sl
             }
 
             @Override
-            public Obj next() {
+            public AbstractObj next() {
                 return data[index++];
             }
         };
@@ -285,11 +285,11 @@ public final class List extends Obj implements Access, Assign, Iterable, Len, Sl
         return Meta.forSet(Meta.forUnion(types));
     }
 
-    public static List valueOf(Obj... data) {
+    public static List valueOf(AbstractObj... data) {
         return new List(data);
     }
 
-    synchronized void add(Obj obj) {
+    synchronized void add(AbstractObj obj) {
         checkRefs();
 
         ensureCapacity();
@@ -297,23 +297,23 @@ public final class List extends Obj implements Access, Assign, Iterable, Len, Sl
         data[count++] = checkNotNull(obj, "obj cannot be null");
     }
 
-    Obj get(Int index) {
+    AbstractObj get(Int index) {
         return get(index._value_());
     }
 
-    synchronized Obj get(int index) {
+    synchronized AbstractObj get(int index) {
         checkElementIndex(index, count);
 
         return data[index];
     }
 
-    Obj get(BigInteger index) {
+    AbstractObj get(BigInteger index) {
         checkArgument(index.bitLength() < 32, "lists of size larger than 32 bits is unsupported");
 
         return get(index.intValue());
     }
 
-    int indexOf(Obj obj) {
+    int indexOf(AbstractObj obj) {
         int index = 0;
         for (Iterator it = _iter_(); it.hasNext() == TRUE; ) {
             if (it.next().equals(obj)) {
@@ -330,7 +330,7 @@ public final class List extends Obj implements Access, Assign, Iterable, Len, Sl
         return count == 0 ? TRUE : FALSE;
     }
 
-    synchronized void remove(Obj obj) {
+    synchronized void remove(AbstractObj obj) {
         checkRefs();
 
         int index = indexOf(obj);
@@ -344,11 +344,11 @@ public final class List extends Obj implements Access, Assign, Iterable, Len, Sl
         count--;
     }
 
-    void set(Int index, Obj value) {
+    void set(Int index, AbstractObj value) {
         set(index._value_(), value);
     }
 
-    synchronized void set(int index, Obj value) {
+    synchronized void set(int index, AbstractObj value) {
         checkElementIndex(index, count);
 
         checkRefs();
@@ -356,7 +356,7 @@ public final class List extends Obj implements Access, Assign, Iterable, Len, Sl
         data[index] = checkNotNull(value, "value cannot be null");
     }
 
-    void set(BigInteger index, Obj value) {
+    void set(BigInteger index, AbstractObj value) {
         checkArgument(index.bitLength() < 32, "lists of size larger than 32 bits is unsupported");
 
         set(index.intValue(), value);

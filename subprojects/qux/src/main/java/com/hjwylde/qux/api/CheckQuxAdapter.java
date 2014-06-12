@@ -21,6 +21,7 @@ public class CheckQuxAdapter extends QuxAdapter {
     private boolean visitedPackage = false;
     private boolean visitedEnd = false;
 
+    private List<CheckConstantAdapter> ccas = new ArrayList<>();
     private List<CheckFunctionAdapter> cfas = new ArrayList<>();
 
     public CheckQuxAdapter(QuxVisitor next) {
@@ -47,27 +48,17 @@ public class CheckQuxAdapter extends QuxAdapter {
      * {@inheritDoc}
      */
     @Override
-    public void visitPackage(String pkg) {
-        checkState(visitedStart, "must call visit(int, String) before visitPackage(String)");
-        checkState(!visitedPackage, "may only call visitPackage(String) once");
-        checkState(!visitedEnd, "must call visitPackage(String) before visitEnd()");
+    public ConstantVisitor visitConstant(int flags, String name, Type type) {
+        checkState(visitedStart, "must call visit(int, String) before visitConstant(int, String)");
+        checkState(visitedPackage,
+                "must call visitPackage(String) before visitConstant(int, String)");
+        checkState(!visitedEnd, "must call visitConstant(int, String) before visitEnd()");
+        checkNotNull(name, "name cannot be null");
+        checkNotNull(type, "type cannot be null");
 
-        visitedPackage = true;
+        ccas.add(new CheckConstantAdapter(super.visitConstant(flags, name, type)));
 
-        super.visitPackage(pkg);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void visitImport(String id) {
-        checkState(visitedStart, "must call visit(int, String) before visitImport(String)");
-        checkState(visitedPackage, "must call visitPackage(String) before visitImport(String)");
-        checkState(!visitedEnd, "must call visitImport(String) before visitEnd()");
-        checkNotNull(id, "id cannot be null");
-
-        super.visitImport(id);
+        return ccas.get(ccas.size() - 1);
     }
 
     /**
@@ -106,5 +97,32 @@ public class CheckQuxAdapter extends QuxAdapter {
         cfas.add(new CheckFunctionAdapter(super.visitFunction(flags, name, type)));
 
         return cfas.get(cfas.size() - 1);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void visitImport(String id) {
+        checkState(visitedStart, "must call visit(int, String) before visitImport(String)");
+        checkState(visitedPackage, "must call visitPackage(String) before visitImport(String)");
+        checkState(!visitedEnd, "must call visitImport(String) before visitEnd()");
+        checkNotNull(id, "id cannot be null");
+
+        super.visitImport(id);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void visitPackage(String pkg) {
+        checkState(visitedStart, "must call visit(int, String) before visitPackage(String)");
+        checkState(!visitedPackage, "may only call visitPackage(String) once");
+        checkState(!visitedEnd, "must call visitPackage(String) before visitEnd()");
+
+        visitedPackage = true;
+
+        super.visitPackage(pkg);
     }
 }

@@ -1,0 +1,21 @@
+int A is 5
+int B is 5
+int C is -5
+
+int f(int a):
+    return a + A
+
+int g(int A):
+    return A
+
+
+void main([str] args):
+    print A
+    print B
+    print C
+    print A == B
+    print A == C
+    print B == C
+    print f(C)
+    print g(C)
+

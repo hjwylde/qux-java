@@ -1,12 +1,14 @@
 package com.hjwylde.qux.pipelines;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.hjwylde.qux.util.Type.TYPE_BOOL;
 import static com.hjwylde.qux.util.Type.TYPE_INT;
 import static com.hjwylde.qux.util.Type.TYPE_ITERABLE;
 import static com.hjwylde.qux.util.Type.TYPE_LIST_ANY;
 import static com.hjwylde.qux.util.Type.TYPE_META;
 import static com.hjwylde.qux.util.Type.TYPE_NULL;
+import static com.hjwylde.qux.util.Type.TYPE_OBJ;
 import static com.hjwylde.qux.util.Type.TYPE_REAL;
 import static com.hjwylde.qux.util.Type.TYPE_SET_ANY;
 import static com.hjwylde.qux.util.Type.TYPE_STR;
@@ -18,6 +20,7 @@ import com.hjwylde.common.error.MethodNotImplementedError;
 import com.hjwylde.qbs.builder.Context;
 import com.hjwylde.qbs.builder.QuxContext;
 import com.hjwylde.qbs.builder.resources.Resource;
+import com.hjwylde.qux.api.ConstantAdapter;
 import com.hjwylde.qux.api.ExprVisitor;
 import com.hjwylde.qux.api.StmtVisitor;
 import com.hjwylde.qux.builder.AbstractControlFlowGraphListener;
@@ -25,6 +28,7 @@ import com.hjwylde.qux.builder.ControlFlowGraph;
 import com.hjwylde.qux.builder.ControlFlowGraphEdge;
 import com.hjwylde.qux.builder.ControlFlowGraphIterator;
 import com.hjwylde.qux.builder.Environment;
+import com.hjwylde.qux.tree.ConstantNode;
 import com.hjwylde.qux.tree.ExprNode;
 import com.hjwylde.qux.tree.FunctionNode;
 import com.hjwylde.qux.tree.Node;
@@ -67,6 +71,10 @@ public final class TypePropagator extends Pipeline {
     public QuxNode apply(QuxNode node) {
         this.node = node;
 
+        for (ConstantNode constant : node.getConstants()) {
+            apply(constant);
+        }
+
         for (FunctionNode function : node.getFunctions()) {
             apply(function);
         }
@@ -74,8 +82,51 @@ public final class TypePropagator extends Pipeline {
         return node;
     }
 
-    static Type.Function getFunctionType(Context context, String owner, ExprNode.Function function,
+    private void apply(ConstantNode constant) {
+        constant.accept(new ConstantTypePropagator());
+    }
+
+    private void apply(FunctionNode function) {
+        ControlFlowGraph cfg = Attributes.getAttributeUnchecked(function,
+                Attribute.ControlFlowGraph.class).getControlFlowGraph();
+
+        FunctionTypePropagator listener = new FunctionTypePropagator(function, cfg);
+
+        while (!listener.isFinished()) {
+            ControlFlowGraphIterator it = new ControlFlowGraphIterator(cfg);
+            it.addTraversalListener(listener);
+
+            listener.notifyTraversalStarted();
+            while (it.hasNext()) {
+                it.next();
+            }
+            listener.notifyTraversalFinished();
+        }
+    }
+
+    private static Type getConstantType(Context context, String owner, ExprNode.Variable constant,
             Node node) {
+        Resource.Single resource = getResource(context, owner, node);
+
+        Optional<String> type = resource.getConstantType(constant.getName());
+        if (type.isPresent()) {
+            return Type.forDescriptor(type.get());
+        }
+
+        Optional<Attribute.Source> opt = Attributes.getAttribute(node, Attribute.Source.class);
+
+        if (opt.isPresent()) {
+            Attribute.Source source = opt.get();
+
+            throw CompilerErrors.noConstantFound(owner, constant.getName(), source.getSource(),
+                    source.getLine(), source.getCol(), source.getLength());
+        } else {
+            throw CompilerErrors.noConstantFound(owner, constant.getName());
+        }
+    }
+
+    private static Type.Function getFunctionType(Context context, String owner,
+            ExprNode.Function function, Node node) {
         Resource.Single resource = getResource(context, owner, node);
 
         Optional<String> type = resource.getFunctionType(function.getName());
@@ -95,7 +146,7 @@ public final class TypePropagator extends Pipeline {
         }
     }
 
-    static Resource.Single getResource(Context context, String id, Node node) {
+    private static Resource.Single getResource(Context context, String id, Node node) {
         Optional<Resource.Single> resource = context.getResourceById(id);
         if (resource.isPresent()) {
             return resource.get();
@@ -113,11 +164,12 @@ public final class TypePropagator extends Pipeline {
         }
     }
 
-    static Type getType(Node node) {
+    private static Type getType(Node node) {
         return Attributes.getAttributeUnchecked(node, Attribute.Type.class).getType();
     }
 
-    static Environment<String, Type> mergeEnvironments(List<Environment<String, Type>> envs) {
+    private static Environment<String, Type> mergeEnvironments(
+            List<Environment<String, Type>> envs) {
         checkArgument(!envs.isEmpty(), "envs cannot be empty");
 
         Environment<String, Type> merged = new Environment<>();
@@ -141,7 +193,19 @@ public final class TypePropagator extends Pipeline {
         return merged;
     }
 
-    static boolean setType(Node node, Type type) {
+    private boolean propagate(ExprNode expr) {
+        return propagate(expr, new Environment<String, Type>());
+    }
+
+    private boolean propagate(ExprNode expr, Environment<String, Type> env) {
+        ExprTypePropagator etp = new ExprTypePropagator(env);
+
+        expr.accept(etp);
+
+        return etp.isModified();
+    }
+
+    private static boolean setType(Node node, Type type) {
         Optional<Attribute.Type> opt = Attributes.getAttribute(node, Attribute.Type.class);
 
         if (!opt.isPresent()) {
@@ -159,21 +223,20 @@ public final class TypePropagator extends Pipeline {
         return !type.equals(ntype);
     }
 
-    private void apply(FunctionNode function) {
-        ControlFlowGraph cfg = Attributes.getAttributeUnchecked(function,
-                Attribute.ControlFlowGraph.class).getControlFlowGraph();
+    /**
+     * TODO: Documentation.
+     *
+     * @author Henry J. Wylde
+     * @since 0.2.2
+     */
+    private final class ConstantTypePropagator extends ConstantAdapter {
 
-        FunctionTypePropagator listener = new FunctionTypePropagator(function, cfg);
-
-        while (!listener.isFinished()) {
-            ControlFlowGraphIterator it = new ControlFlowGraphIterator(cfg);
-            it.addTraversalListener(listener);
-
-            listener.notifyTraversalStarted();
-            while (it.hasNext()) {
-                it.next();
-            }
-            listener.notifyTraversalFinished();
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void visitExpr(ExprNode expr) {
+            propagate(expr);
         }
     }
 
@@ -181,42 +244,20 @@ public final class TypePropagator extends Pipeline {
      * TODO: Documentation.
      *
      * @author Henry J. Wylde
-     * @since 0.2.0
+     * @since 0.2.2
      */
-    private final class FunctionTypePropagator extends AbstractControlFlowGraphListener
-            implements ExprVisitor, StmtVisitor {
+    private final class ExprTypePropagator implements ExprVisitor {
 
-        private static final String RETURN = "$";
+        private final Environment<String, Type> env;
 
-        private final Environment<String, Type> baseEnv = new Environment<>();
-        private final Map<StmtNode, Environment<String, Type>> envs = new HashMap<>();
+        private boolean modified = false;
 
-        private Environment<String, Type> env;
-
-        public FunctionTypePropagator(FunctionNode function, ControlFlowGraph cfg) {
-            super(function, cfg);
-
-            initialiseBaseEnvironment();
+        public ExprTypePropagator(Environment<String, Type> env) {
+            this.env = checkNotNull(env, "env cannot be null");
         }
 
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void notifyTraversalStarted() {
-            setFinished(true);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void vertexTraversed(VertexTraversalEvent<StmtNode> e) {
-            StmtNode stmt = e.getVertex();
-
-            env = getEnvironment(stmt);
-
-            stmt.accept(this);
+        public boolean isModified() {
+            return modified;
         }
 
         public void visitExpr(ExprNode expr) {
@@ -297,6 +338,9 @@ public final class TypePropagator extends Pipeline {
                 case NULL:
                     setType(expr, TYPE_NULL);
                     break;
+                case OBJ:
+                    setType(expr, TYPE_OBJ);
+                    break;
                 case REAL:
                     setType(expr, TYPE_REAL);
                     break;
@@ -314,9 +358,15 @@ public final class TypePropagator extends Pipeline {
         @Override
         public void visitExprExternal(ExprNode.External expr) {
             visitExpr(expr.getMeta());
-            visitExprFunction(expr.getMeta().getId(), expr.getFunction(), expr);
+            if (expr.getExpr() instanceof ExprNode.Function) {
+                visitExprFunction(expr.getMeta().getId(), (ExprNode.Function) expr.getExpr(), expr);
+            } else if (expr.getExpr() instanceof ExprNode.Variable) {
+                visitExprVariable(expr.getMeta().getId(), (ExprNode.Variable) expr.getExpr(), expr);
+            } else {
+                throw new MethodNotImplementedError(expr.getExpr().getClass().toString());
+            }
 
-            setType(expr, getType(expr.getFunction()));
+            setType(expr, getType(expr.getExpr()));
         }
 
         /**
@@ -425,6 +475,10 @@ public final class TypePropagator extends Pipeline {
             }
         }
 
+        public void visitExprVariable(String owner, ExprNode.Variable expr, Node node) {
+            setType(expr, getConstantType(getContext(), owner, expr, node));
+        }
+
         /**
          * {@inheritDoc}
          */
@@ -433,13 +487,62 @@ public final class TypePropagator extends Pipeline {
             setType(expr, env.getUnchecked(expr.getName()));
         }
 
+        private void setType(Node node, Type type) {
+            if (TypePropagator.setType(node, type)) {
+                modified = true;
+            }
+        }
+    }
+
+    /**
+     * TODO: Documentation.
+     *
+     * @author Henry J. Wylde
+     * @since 0.2.0
+     */
+    private final class FunctionTypePropagator extends AbstractControlFlowGraphListener
+            implements StmtVisitor {
+
+        private static final String RETURN = "$";
+
+        private final Environment<String, Type> baseEnv = new Environment<>();
+        private final Map<StmtNode, Environment<String, Type>> envs = new HashMap<>();
+
+        private Environment<String, Type> env;
+
+        public FunctionTypePropagator(FunctionNode function, ControlFlowGraph cfg) {
+            super(function, cfg);
+
+            initialiseBaseEnvironment();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void notifyTraversalStarted() {
+            setFinished(true);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void vertexTraversed(VertexTraversalEvent<StmtNode> e) {
+            StmtNode stmt = e.getVertex();
+
+            env = getEnvironment(stmt);
+
+            stmt.accept(this);
+        }
+
         /**
          * {@inheritDoc}
          */
         @Override
         public void visitStmtAccessAssign(StmtNode.AccessAssign stmt) {
-            visitExpr(stmt.getAccess());
-            visitExpr(stmt.getExpr());
+            propagate(stmt.getAccess());
+            propagate(stmt.getExpr());
         }
 
         /**
@@ -447,7 +550,7 @@ public final class TypePropagator extends Pipeline {
          */
         @Override
         public void visitStmtAssign(StmtNode.Assign stmt) {
-            visitExpr(stmt.getExpr());
+            propagate(stmt.getExpr());
 
             env.put(stmt.getVar(), getType(stmt.getExpr()));
         }
@@ -457,7 +560,7 @@ public final class TypePropagator extends Pipeline {
          */
         @Override
         public void visitStmtExpr(StmtNode.Expr stmt) {
-            visitExpr(stmt.getExpr());
+            propagate(stmt.getExpr());
         }
 
         /**
@@ -465,7 +568,7 @@ public final class TypePropagator extends Pipeline {
          */
         @Override
         public void visitStmtFor(StmtNode.For stmt) {
-            visitExpr(stmt.getExpr());
+            propagate(stmt.getExpr());
 
             // Sanity check, if it fails then we don't care - the type checker should pick it up
             if (isSubtype(getType(stmt.getExpr()), TYPE_ITERABLE)) {
@@ -478,7 +581,7 @@ public final class TypePropagator extends Pipeline {
          */
         @Override
         public void visitStmtIf(StmtNode.If stmt) {
-            visitExpr(stmt.getCondition());
+            propagate(stmt.getCondition());
         }
 
         /**
@@ -486,7 +589,7 @@ public final class TypePropagator extends Pipeline {
          */
         @Override
         public void visitStmtPrint(StmtNode.Print stmt) {
-            visitExpr(stmt.getExpr());
+            propagate(stmt.getExpr());
         }
 
         /**
@@ -495,7 +598,7 @@ public final class TypePropagator extends Pipeline {
         @Override
         public void visitStmtReturn(StmtNode.Return stmt) {
             if (stmt.getExpr().isPresent()) {
-                visitExpr(stmt.getExpr().get());
+                propagate(stmt.getExpr().get());
             }
         }
 
@@ -504,7 +607,7 @@ public final class TypePropagator extends Pipeline {
          */
         @Override
         public void visitStmtWhile(StmtNode.While stmt) {
-            visitExpr(stmt.getCondition());
+            propagate(stmt.getCondition());
         }
 
         private Environment<String, Type> getEnvironment(StmtNode stmt) {
@@ -543,10 +646,10 @@ public final class TypePropagator extends Pipeline {
             baseEnv.put(RETURN, function.getReturnType());
         }
 
-        private void setType(Node node, Type type) {
-            if (TypePropagator.setType(node, type)) {
-                setFinished(false);
-            }
+        private void propagate(ExprNode expr) {
+            boolean modified = TypePropagator.this.propagate(expr, env);
+
+            setFinished(isFinished() && !modified);
         }
     }
 }

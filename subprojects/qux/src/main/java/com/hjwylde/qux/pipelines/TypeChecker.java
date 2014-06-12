@@ -1,7 +1,6 @@
 package com.hjwylde.qux.pipelines;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.hjwylde.qux.pipelines.TypePropagator.getType;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.hjwylde.qux.util.Type.TYPE_BOOL;
 import static com.hjwylde.qux.util.Type.TYPE_INT;
 import static com.hjwylde.qux.util.Type.TYPE_ITERABLE;
@@ -14,13 +13,16 @@ import static com.hjwylde.qux.util.Types.isSubtype;
 import com.hjwylde.common.error.CompilerErrors;
 import com.hjwylde.common.error.MethodNotImplementedError;
 import com.hjwylde.qbs.builder.QuxContext;
+import com.hjwylde.qux.api.ConstantAdapter;
 import com.hjwylde.qux.api.ExprVisitor;
 import com.hjwylde.qux.api.StmtVisitor;
 import com.hjwylde.qux.builder.AbstractControlFlowGraphListener;
 import com.hjwylde.qux.builder.ControlFlowGraph;
 import com.hjwylde.qux.builder.ControlFlowGraphIterator;
+import com.hjwylde.qux.tree.ConstantNode;
 import com.hjwylde.qux.tree.ExprNode;
 import com.hjwylde.qux.tree.FunctionNode;
+import com.hjwylde.qux.tree.Node;
 import com.hjwylde.qux.tree.QuxNode;
 import com.hjwylde.qux.tree.StmtNode;
 import com.hjwylde.qux.util.Attribute;
@@ -45,6 +47,10 @@ public final class TypeChecker extends Pipeline {
      */
     @Override
     public QuxNode apply(QuxNode node) {
+        for (ConstantNode constant : node.getConstants()) {
+            apply(constant);
+        }
+
         for (FunctionNode function : node.getFunctions()) {
             apply(function);
         }
@@ -52,7 +58,11 @@ public final class TypeChecker extends Pipeline {
         return node;
     }
 
-    private void apply(FunctionNode function) {
+    private static void apply(ConstantNode constant) {
+        constant.accept(new ConstantTypeChecker(constant));
+    }
+
+    private static void apply(FunctionNode function) {
         ControlFlowGraph cfg = Attributes.getAttributeUnchecked(function,
                 Attribute.ControlFlowGraph.class).getControlFlowGraph();
 
@@ -70,26 +80,83 @@ public final class TypeChecker extends Pipeline {
         }
     }
 
+    private static void check(ExprNode expr) {
+        expr.accept(new ExprTypeChecker());
+    }
+
+    private static void checkEquivalent(ExprNode expr, Type expected) {
+        Type type = getType(expr);
+
+        if (isEquivalent(type, expected)) {
+            return;
+        }
+
+        Optional<Attribute.Source> opt = Attributes.getAttribute(expr, Attribute.Source.class);
+
+        if (opt.isPresent()) {
+            Attribute.Source source = opt.get();
+
+            throw CompilerErrors.invalidType(type.toString(), expected.toString(),
+                    source.getSource(), source.getLine(), source.getCol(), source.getLength());
+        } else {
+            throw CompilerErrors.invalidType(type.toString(), expected.toString());
+        }
+    }
+
+    private static void checkSubtype(ExprNode expr, Type rhs) {
+        Type type = getType(expr);
+
+        if (isSubtype(type, rhs)) {
+            return;
+        }
+
+        Optional<Attribute.Source> opt = Attributes.getAttribute(expr, Attribute.Source.class);
+
+        if (opt.isPresent()) {
+            Attribute.Source source = opt.get();
+
+            throw CompilerErrors.invalidType(type.toString(), rhs.toString(), source.getSource(),
+                    source.getLine(), source.getCol(), source.getLength());
+        } else {
+            throw CompilerErrors.invalidType(type.toString(), rhs.toString());
+        }
+    }
+
+    private static Type getType(Node node) {
+        return Attributes.getAttributeUnchecked(node, Attribute.Type.class).getType();
+    }
+
     /**
      * TODO: Documentation.
      *
      * @author Henry J. Wylde
+     * @since 0.2.2
      */
-    private final class FunctionTypeChecker extends AbstractControlFlowGraphListener
-            implements ExprVisitor, StmtVisitor {
+    private static final class ConstantTypeChecker extends ConstantAdapter {
 
-        public FunctionTypeChecker(FunctionNode function, ControlFlowGraph cfg) {
-            super(function, cfg);
+        private final ConstantNode constant;
+
+        public ConstantTypeChecker(ConstantNode constant) {
+            this.constant = checkNotNull(constant, "constant cannot be null");
         }
 
         /**
          * {@inheritDoc}
          */
         @Override
-        public void notifyTraversalStarted() {
-            // Type checking only needs one iteration
-            setFinished(true);
+        public void visitExpr(ExprNode expr) {
+            check(expr);
+            checkSubtype(expr, constant.getType());
         }
+    }
+
+    /**
+     * TODO: Documentation.
+     *
+     * @author Henry J. Wylde
+     * @since 0.2.2
+     */
+    private static final class ExprTypeChecker implements ExprVisitor {
 
         public void visitExpr(ExprNode expr) {
             expr.accept(this);
@@ -115,7 +182,7 @@ public final class TypeChecker extends Pipeline {
             visitExpr(expr.getLhs());
             visitExpr(expr.getRhs());
 
-            Type lhsType = getType(expr.getLhs());
+            Type rhsType = getType(expr.getLhs());
 
             // TODO: Properly type check using references to methods that exist
             switch (expr.getOp()) {
@@ -124,7 +191,7 @@ public final class TypeChecker extends Pipeline {
                 case MUL:
                 case REM:
                 case SUB:
-                    checkEquivalent(expr.getLhs(), getType(expr.getRhs()));
+                    checkEquivalent(expr.getLhs(), rhsType);
                     break;
                 case EXP:
                 case IDIV:
@@ -134,7 +201,7 @@ public final class TypeChecker extends Pipeline {
                     break;
                 case IN:
                     checkSubtype(expr.getRhs(), TYPE_ITERABLE);
-                    checkSubtype(expr.getLhs(), getInnerType(getType(expr.getRhs())));
+                    checkSubtype(expr.getLhs(), getInnerType(rhsType));
                 case EQ:
                 case GT:
                 case GTE:
@@ -165,6 +232,15 @@ public final class TypeChecker extends Pipeline {
          * {@inheritDoc}
          */
         @Override
+        public void visitExprExternal(ExprNode.External expr) {
+            visitExpr(expr.getMeta());
+            visitExpr(expr.getExpr());
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
         public void visitExprFunction(ExprNode.Function expr) {
             // TODO: Type check the arguments
             for (ExprNode argument : expr.getArguments()) {
@@ -188,15 +264,6 @@ public final class TypeChecker extends Pipeline {
         @Override
         public void visitExprMeta(ExprNode.Meta expr) {
             checkEquivalent(expr, TYPE_META);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void visitExprExternal(ExprNode.External expr) {
-            visitExpr(expr.getMeta());
-            visitExpr(expr.getFunction());
         }
 
         /**
@@ -259,14 +326,36 @@ public final class TypeChecker extends Pipeline {
          */
         @Override
         public void visitExprVariable(ExprNode.Variable expr) {}
+    }
+
+    /**
+     * TODO: Documentation.
+     *
+     * @author Henry J. Wylde
+     */
+    private static final class FunctionTypeChecker extends AbstractControlFlowGraphListener
+            implements StmtVisitor {
+
+        public FunctionTypeChecker(FunctionNode function, ControlFlowGraph cfg) {
+            super(function, cfg);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void notifyTraversalStarted() {
+            // Type checking only needs one iteration
+            setFinished(true);
+        }
 
         /**
          * {@inheritDoc}
          */
         @Override
         public void visitStmtAccessAssign(StmtNode.AccessAssign stmt) {
-            visitExpr(stmt.getAccess());
-            visitExpr(stmt.getExpr());
+            check(stmt.getAccess());
+            check(stmt.getExpr());
         }
 
         /**
@@ -274,7 +363,7 @@ public final class TypeChecker extends Pipeline {
          */
         @Override
         public void visitStmtAssign(StmtNode.Assign stmt) {
-            visitExpr(stmt.getExpr());
+            check(stmt.getExpr());
         }
 
         /**
@@ -282,7 +371,7 @@ public final class TypeChecker extends Pipeline {
          */
         @Override
         public void visitStmtExpr(StmtNode.Expr stmt) {
-            visitExpr(stmt.getExpr());
+            check(stmt.getExpr());
         }
 
         /**
@@ -290,7 +379,7 @@ public final class TypeChecker extends Pipeline {
          */
         @Override
         public void visitStmtFor(StmtNode.For stmt) {
-            visitExpr(stmt.getExpr());
+            check(stmt.getExpr());
             checkSubtype(stmt.getExpr(), TYPE_ITERABLE);
         }
 
@@ -299,7 +388,7 @@ public final class TypeChecker extends Pipeline {
          */
         @Override
         public void visitStmtIf(StmtNode.If stmt) {
-            visitExpr(stmt.getCondition());
+            check(stmt.getCondition());
             checkSubtype(stmt.getCondition(), TYPE_BOOL);
         }
 
@@ -308,7 +397,7 @@ public final class TypeChecker extends Pipeline {
          */
         @Override
         public void visitStmtPrint(StmtNode.Print stmt) {
-            visitExpr(stmt.getExpr());
+            check(stmt.getExpr());
         }
 
         /**
@@ -327,50 +416,8 @@ public final class TypeChecker extends Pipeline {
          */
         @Override
         public void visitStmtWhile(StmtNode.While stmt) {
-            visitExpr(stmt.getCondition());
+            check(stmt.getCondition());
             checkSubtype(stmt.getCondition(), TYPE_BOOL);
-        }
-
-        private void checkEquivalent(ExprNode expr, Type expected) {
-            visitExpr(expr);
-
-            Type type = getType(expr);
-
-            if (isEquivalent(type, expected)) {
-                return;
-            }
-
-            Optional<Attribute.Source> opt = Attributes.getAttribute(expr, Attribute.Source.class);
-
-            if (opt.isPresent()) {
-                Attribute.Source source = opt.get();
-
-                throw CompilerErrors.invalidType(type.toString(), expected.toString(),
-                        source.getSource(), source.getLine(), source.getCol(), source.getLength());
-            } else {
-                throw CompilerErrors.invalidType(type.toString(), expected.toString());
-            }
-        }
-
-        private void checkSubtype(ExprNode expr, Type rhs) {
-            visitExpr(expr);
-
-            Type type = getType(expr);
-
-            if (isSubtype(type, rhs)) {
-                return;
-            }
-
-            Optional<Attribute.Source> opt = Attributes.getAttribute(expr, Attribute.Source.class);
-
-            if (opt.isPresent()) {
-                Attribute.Source source = opt.get();
-
-                throw CompilerErrors.invalidType(type.toString(), rhs.toString(),
-                        source.getSource(), source.getLine(), source.getCol(), source.getLength());
-            } else {
-                throw CompilerErrors.invalidType(type.toString(), rhs.toString());
-            }
         }
     }
 }

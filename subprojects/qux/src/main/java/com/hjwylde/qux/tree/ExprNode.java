@@ -10,6 +10,8 @@ import com.hjwylde.qux.util.Op;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -137,11 +139,21 @@ public abstract class ExprNode extends Node {
             this(type, value, Arrays.asList(attributes));
         }
 
-        public Constant(Type type, Object value, Collection<? extends Attribute> attribtues) {
-            super(attribtues);
+        public Constant(Type type, Object value, Collection<? extends Attribute> attributes) {
+            super(attributes);
 
-            checkArgument(value != null || type == Type.NULL,
-                    "value cannot be null unless type is null");
+            checkArgument(type != Type.BOOL || value instanceof Boolean,
+                    "value must be of class Boolean for bool constant");
+            checkArgument(type != Type.INT || value instanceof BigInteger,
+                    "value must be of class BigInteger for int constant");
+            checkArgument(type != Type.NULL || value == null,
+                    "value must be null for null constant");
+            checkArgument(type != Type.OBJ || value instanceof String,
+                    "value must be of class String for obj constant");
+            checkArgument(type != Type.REAL || value instanceof BigDecimal,
+                    "value must be of class BigDecimal for real constant");
+            checkArgument(type != Type.STR || value instanceof String,
+                    "value must be of class String for str constant");
 
             this.type = checkNotNull(type, "type cannot be null");
             this.value = value;
@@ -169,7 +181,7 @@ public abstract class ExprNode extends Node {
          * @author Henry J. Wylde
          */
         public static enum Type {
-            BOOL, INT, NULL, REAL, STR;
+            BOOL, INT, NULL, OBJ, REAL, STR;
         }
     }
 
@@ -181,18 +193,23 @@ public abstract class ExprNode extends Node {
      */
     public static final class External extends ExprNode {
 
-        private final Meta meta;
-        private final Function function;
+        // TODO: Add in an enum for the Type of the external, either FUNCTION or CONSTANT
 
-        public External(Meta meta, Function function, Attribute... attributes) {
-            this(meta, function, Arrays.asList(attributes));
+        private final Meta meta;
+        private final ExprNode expr;
+
+        public External(Meta meta, ExprNode expr, Attribute... attributes) {
+            this(meta, expr, Arrays.asList(attributes));
         }
 
-        public External(Meta meta, Function function, Collection<? extends Attribute> attributes) {
+        public External(Meta meta, ExprNode expr, Collection<? extends Attribute> attributes) {
             super(attributes);
 
+            checkArgument(expr instanceof Function || expr instanceof Variable,
+                    "expr must be a function or variable");
+
             this.meta = checkNotNull(meta, "meta cannot be null");
-            this.function = checkNotNull(function, "function cannot be null");
+            this.expr = checkNotNull(expr, "expr cannot be null");
         }
 
         /**
@@ -203,8 +220,8 @@ public abstract class ExprNode extends Node {
             ev.visitExprExternal(this);
         }
 
-        public Function getFunction() {
-            return function;
+        public ExprNode getExpr() {
+            return expr;
         }
 
         public Meta getMeta() {

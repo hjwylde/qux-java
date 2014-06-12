@@ -105,8 +105,12 @@ imp : 'import' Identifier ('.' Identifier)* ('$' Identifier)? NEWLINE
 
 // Declarations
 
-decl : declFunction
+decl : declConstant
+     | declFunction
      ;
+
+declConstant : type Identifier 'is' expr NEWLINE
+             ;
 
 declFunction : typeReturn Identifier '(' (type Identifier (',' type Identifier)*)? ')' block
              ;
@@ -270,6 +274,7 @@ value : valueKeyword
 
 valueKeyword : FALSE
              | NULL
+             | OBJ
              | TRUE
              ;
 
@@ -293,6 +298,7 @@ typeKeyword : ANY
             | BOOL
             | INT
             | NULL
+            | OBJ
             | REAL
             | STR
             ;
@@ -364,8 +370,10 @@ FALSE   : 'false' ;
 IF      : 'if' ;
 IMPORT  : 'import' ;
 INT     : 'int' ;
+IS      : 'is' ;
 LIST    : 'list' ;
 NULL    : 'null' ;
+OBJ     : 'obj' ;
 PACKAGE : 'package' ;
 REAL    : 'real' ;
 RETURN  : 'return' ;

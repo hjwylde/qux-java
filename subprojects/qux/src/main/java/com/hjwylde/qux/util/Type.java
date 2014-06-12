@@ -57,6 +57,12 @@ public abstract class Type {
     public static final Type.Null TYPE_NULL = new Type.Null();
 
     /**
+     * String representation of the {@code obj} type.
+     */
+    public static final String OBJ = "O";
+    public static final Type.Obj TYPE_OBJ = new Type.Obj();
+
+    /**
      * String representation of the {@code real} type.
      */
     public static final String REAL = "R";
@@ -209,6 +215,9 @@ public abstract class Type {
             case NULL:
                 checkArgument(!match || desc.length() == 1, "desc is invalid: %s", desc);
                 return TYPE_NULL;
+            case OBJ:
+                checkArgument(!match || desc.length() == 1, "desc is invalid: %s", desc);
+                return TYPE_OBJ;
             case REAL:
                 checkArgument(!match || desc.length() == 1, "desc is invalid: %s", desc);
                 return TYPE_REAL;
@@ -231,8 +240,8 @@ public abstract class Type {
                     index += types.get(types.size() - 1).getDescriptor().length();
                 }
 
-                checkArgument(desc.substring(index).startsWith(UNION_END),
-                        "desc is invalid: %s", desc);
+                checkArgument(desc.substring(index).startsWith(UNION_END), "desc is invalid: %s",
+                        desc);
                 checkArgument(!match || desc.length() == index + 1, "desc is invalid: %s", desc);
 
                 return forUnion(types);
@@ -563,6 +572,44 @@ public abstract class Type {
         @Override
         public String toString() {
             return "null";
+        }
+    }
+
+    /**
+     * TODO: Documentation
+     *
+     * @author Henry J. Wylde
+     * @since 0.2.2
+     */
+    public static final class Obj extends Type {
+
+        /**
+         * This class is a singleton.
+         */
+        private Obj() {}
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getDescriptor() {
+            return OBJ;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int hashCode() {
+            return 12;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String toString() {
+            return "obj";
         }
     }
 

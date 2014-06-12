@@ -31,6 +31,7 @@ import static org.objectweb.asm.Opcodes.LCONST_0;
 import static org.objectweb.asm.Opcodes.LCONST_1;
 import static org.objectweb.asm.Opcodes.NEWARRAY;
 import static org.objectweb.asm.Opcodes.POP;
+import static org.objectweb.asm.Opcodes.PUTSTATIC;
 import static org.objectweb.asm.Opcodes.RETURN;
 import static org.objectweb.asm.Opcodes.SIPUSH;
 import static org.objectweb.asm.Opcodes.SWAP;
@@ -38,11 +39,12 @@ import static org.objectweb.asm.Opcodes.T_BYTE;
 import static org.objectweb.asm.Opcodes.V1_7;
 
 import com.hjwylde.common.error.MethodNotImplementedError;
+import com.hjwylde.qux.api.ConstantAdapter;
+import com.hjwylde.qux.api.ConstantVisitor;
 import com.hjwylde.qux.api.ExprVisitor;
 import com.hjwylde.qux.api.FunctionAdapter;
 import com.hjwylde.qux.api.FunctionVisitor;
 import com.hjwylde.qux.api.QuxAdapter;
-import com.hjwylde.qux.api.QuxVisitor;
 import com.hjwylde.qux.tree.ExprNode;
 import com.hjwylde.qux.tree.Node;
 import com.hjwylde.qux.tree.StmtNode;
@@ -53,11 +55,10 @@ import com.hjwylde.qux.util.Op;
 import com.google.common.base.Optional;
 
 import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.PrintStream;
@@ -67,6 +68,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import qux.lang.AbstractObj;
 import qux.lang.Bool;
 import qux.lang.Int;
 import qux.lang.List;
@@ -91,14 +93,18 @@ import qux.util.Iterator;
  */
 public final class Qux2ClassTranslater extends QuxAdapter {
 
-    private static final Logger logger = LoggerFactory.getLogger(QuxVisitor.class);
-
     private final String source;
 
     private final ClassVisitor cv;
 
     private String name;
     private String pkg;
+
+    /**
+     * A method visitor for the static initialiser, "&lt;clinit&gt;". It is used when generating
+     * constants to initialise their values to complex expressions.
+     */
+    private MethodVisitor simv;
 
     public Qux2ClassTranslater(String source, ClassVisitor cv) {
         this.source = checkNotNull(source, "source cannot be null");
@@ -122,7 +128,25 @@ public final class Qux2ClassTranslater extends QuxAdapter {
      * {@inheritDoc}
      */
     @Override
+    public ConstantVisitor visitConstant(int flags, String name, com.hjwylde.qux.util.Type type) {
+        FieldVisitor fv = cv.visitField(flags, name, getType(type).getDescriptor(), null, null);
+
+        if (fv == null) {
+            return ConstantVisitor.NULL_INSTANCE;
+        }
+
+        return new Constant2ClassTranslater(fv, flags, name, type);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void visitEnd() {
+        simv.visitInsn(RETURN);
+        simv.visitMaxs(0, 0);
+        simv.visitEnd();
+
         cv.visitEnd();
     }
 
@@ -149,10 +173,13 @@ public final class Qux2ClassTranslater extends QuxAdapter {
     public void visitPackage(String pkg) {
         this.pkg = pkg;
 
-        cv.visit(V1_7, ACC_PUBLIC | ACC_FINAL, getId(), null, Type.getInternalName(Obj.class),
-                new String[0]);
+        cv.visit(V1_7, ACC_PUBLIC | ACC_FINAL, getId(), null, Type.getInternalName(
+                AbstractObj.class), new String[0]);
 
         cv.visitSource(getFileName(), null);
+
+        simv = cv.visitMethod(ACC_STATIC, "<clinit>", "()V", null, null);
+        simv.visitCode();
     }
 
     static Class<?> getClass(Node node) {
@@ -189,7 +216,7 @@ public final class Qux2ClassTranslater extends QuxAdapter {
 
     static Type getType(com.hjwylde.qux.util.Type type) {
         if (type instanceof com.hjwylde.qux.util.Type.Any) {
-            return Type.getType(Obj.class);
+            return Type.getType(AbstractObj.class);
         } else if (type instanceof com.hjwylde.qux.util.Type.Bool) {
             return Type.getType(Bool.class);
         } else if (type instanceof com.hjwylde.qux.util.Type.Function) {
@@ -208,6 +235,8 @@ public final class Qux2ClassTranslater extends QuxAdapter {
             return Type.getType(List.class);
         } else if (type instanceof com.hjwylde.qux.util.Type.Null) {
             return Type.getType(Null.class);
+        } else if (type instanceof com.hjwylde.qux.util.Type.Obj) {
+            return Type.getType(Obj.class);
         } else if (type instanceof com.hjwylde.qux.util.Type.Real) {
             return Type.getType(Real.class);
         } else if (type instanceof com.hjwylde.qux.util.Type.Set) {
@@ -215,7 +244,7 @@ public final class Qux2ClassTranslater extends QuxAdapter {
         } else if (type instanceof com.hjwylde.qux.util.Type.Str) {
             return Type.getType(Str.class);
         } else if (type instanceof com.hjwylde.qux.util.Type.Union) {
-            return Type.getType(Obj.class);
+            return Type.getType(AbstractObj.class);
         } else if (type instanceof com.hjwylde.qux.util.Type.Void) {
             return Type.VOID_TYPE;
         }
@@ -229,88 +258,88 @@ public final class Qux2ClassTranslater extends QuxAdapter {
         return index < 0 ? source : source.substring(index + 1);
     }
 
+    private static int visitLineNumber(MethodVisitor mv, Node node, int line) {
+        Optional<Attribute.Source> opt = Attributes.getAttribute(node, Attribute.Source.class);
+        if (!opt.isPresent()) {
+            return line;
+        }
+
+        Attribute.Source source = opt.get();
+
+        if (line >= source.getLine()) {
+            return line;
+        }
+
+        Label start = new Label();
+        mv.visitLabel(start);
+        mv.visitLineNumber(source.getLine(), start);
+
+        return source.getLine();
+    }
+
     /**
      * TODO: Documentation.
      *
      * @author Henry J. Wylde
+     * @since 0.2.2
      */
-    private final class Function2ClassTranslater extends FunctionAdapter implements ExprVisitor {
+    private final class Constant2ClassTranslater extends ConstantAdapter {
 
-        private static final String THIS = "this";
-
-        private final MethodVisitor mv;
+        private final FieldVisitor fv;
 
         private final int flags;
         private final String name;
-        private final com.hjwylde.qux.util.Type.Function type;
+        private final com.hjwylde.qux.util.Type type;
 
-        /**
-         * Stores a map of parameter names to jvm types.
-         */
-        private Map<String, String> parameters = new HashMap<>();
-        /**
-         * Stores the return type as a jvm type.
-         */
-        private String returnType;
-
-        /**
-         * Unique number for generating variable names.
-         */
-        private int gen;
-
-        /**
-         * Stores a map of variable names to jvm local indices.
-         * <p/>
-         * TODO: Change this so that the number of local variables are minimized, i.e. can be used
-         * more than once like for loop vars
-         */
-        private java.util.List<String> locals = new ArrayList<>();
-
-        /**
-         * The current source line number, used for generating the line number table attribute.
-         */
-        private int line = Integer.MIN_VALUE;
-
-        public Function2ClassTranslater(MethodVisitor mv, int flags, String name,
-                com.hjwylde.qux.util.Type.Function type) {
-            this.mv = checkNotNull(mv, "mv cannot be null");
+        public Constant2ClassTranslater(FieldVisitor fv, int flags, String name,
+                com.hjwylde.qux.util.Type type) {
+            this.fv = checkNotNull(fv, "fv cannot be null");
 
             this.flags = flags;
             this.name = checkNotNull(name, "name cannot be null");
             this.type = checkNotNull(type, "type cannot be null");
-
-            if ((flags & ACC_STATIC) == 0) {
-                locals.add(THIS);
-            }
-        }
-
-        public void visitBlock(java.util.List<StmtNode> stmts) {
-            for (StmtNode stmt : stmts) {
-                stmt.accept(this);
-            }
         }
 
         /**
          * {@inheritDoc}
          */
         @Override
-        public void visitCode() {
-            mv.visitCode();
+        public void visitExpr(ExprNode expr) {
+            new Expr2ClassTranslater(simv).visitExpr(expr);
+
+            simv.visitFieldInsn(PUTSTATIC, getId().replace(".", "/"), name, getType(type)
+                    .getDescriptor());
         }
+    }
+
+    /**
+     * TODO: Documentation.
+     *
+     * @author Henry J. Wylde
+     * @since 0.2.2
+     */
+    private final class Expr2ClassTranslater implements ExprVisitor {
+
+        private final MethodVisitor mv;
 
         /**
-         * {@inheritDoc}
+         * Stores a list of variable names, each at their associated jvm local indices.
+         * <p/>
+         * TODO: Change this so that the number of local variables are minimized, i.e. can be used
+         * more than once like for loop vars
          */
-        @Override
-        public void visitEnd() {
-            // If the type is Void, then add in a return instruction
-            if (type.getReturnType() instanceof com.hjwylde.qux.util.Type.Void) {
-                mv.visitInsn(RETURN);
-            }
+        private final java.util.List<String> locals;
 
-            // These values are ignored so long as ClassWriter.COMPUTE_MAXS is set
-            mv.visitMaxs(0, 0);
-            mv.visitEnd();
+        private int line = Integer.MIN_VALUE;
+
+        public Expr2ClassTranslater(MethodVisitor mv) {
+            this(mv, new ArrayList<String>());
+        }
+
+        public Expr2ClassTranslater(MethodVisitor mv, java.util.List<String> locals) {
+            this.mv = checkNotNull(mv, "mv cannot be null");
+
+            this.locals = checkNotNull(locals, "locals cannot be null");
         }
 
         public void visitExpr(ExprNode expr) {
@@ -358,19 +387,21 @@ public final class Qux2ClassTranslater extends QuxAdapter {
                     break;
                 case EQ:
                     mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Eq.class), "_eq_",
-                            getMethodDescriptor(Eq.class, "_eq_", Obj.class), true);
+                            getMethodDescriptor(Eq.class, "_eq_", AbstractObj.class), true);
                     break;
                 case EXP:
                     mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(Int.class), "_exp_",
                             getMethodDescriptor(Int.class, "_exp_", Int.class), false);
                     break;
                 case GT:
-                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(Obj.class), "_gt_",
-                            getMethodDescriptor(Obj.class, "_gt_", Obj.class), false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(AbstractObj.class),
+                            "_gt_", getMethodDescriptor(AbstractObj.class, "_gt_",
+                                    AbstractObj.class), false);
                     break;
                 case GTE:
-                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(Obj.class), "_gte_",
-                            getMethodDescriptor(Obj.class, "_gte_", Obj.class), false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(AbstractObj.class),
+                            "_gte_", getMethodDescriptor(AbstractObj.class, "_gte_",
+                                    AbstractObj.class), false);
                     break;
                 case IDIV:
                     mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(Int.class), "_idiv_",
@@ -387,15 +418,17 @@ public final class Qux2ClassTranslater extends QuxAdapter {
                 case IN:
                     mv.visitInsn(SWAP);
                     mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(rhsClass), "_contains_",
-                            getMethodDescriptor(rhsClass, "_contains_", Obj.class), false);
+                            getMethodDescriptor(rhsClass, "_contains_", AbstractObj.class), false);
                     break;
                 case LT:
-                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(Obj.class), "_lt_",
-                            getMethodDescriptor(Obj.class, "_lt_", Obj.class), false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(AbstractObj.class),
+                            "_lt_", getMethodDescriptor(AbstractObj.class, "_lt_",
+                                    AbstractObj.class), false);
                     break;
                 case LTE:
-                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(Obj.class), "_lte_",
-                            getMethodDescriptor(Obj.class, "_lte_", Obj.class), false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(AbstractObj.class),
+                            "_lte_", getMethodDescriptor(AbstractObj.class, "_lte_",
+                                    AbstractObj.class), false);
                     break;
                 case MUL:
                     mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(lhsClass), "_mul_",
@@ -403,7 +436,7 @@ public final class Qux2ClassTranslater extends QuxAdapter {
                     break;
                 case NEQ:
                     mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Neq.class), "_neq_",
-                            getMethodDescriptor(Neq.class, "_neq_", Obj.class), true);
+                            getMethodDescriptor(Neq.class, "_neq_", AbstractObj.class), true);
                     break;
                 case OR:
                     mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(Bool.class), "_or_",
@@ -474,6 +507,13 @@ public final class Qux2ClassTranslater extends QuxAdapter {
                     mv.visitFieldInsn(GETSTATIC, Type.getInternalName(Null.class), "INSTANCE",
                             Type.getDescriptor(Null.class));
                     break;
+                case OBJ:
+                    value = expr.getValue();
+
+                    mv.visitLdcInsn(value);
+                    mv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(Obj.class), "valueOf",
+                            getMethodDescriptor(Obj.class, "valueOf", String.class), false);
+                    break;
                 case REAL:
                     value = expr.getValue();
 
@@ -499,7 +539,13 @@ public final class Qux2ClassTranslater extends QuxAdapter {
          */
         @Override
         public void visitExprExternal(ExprNode.External expr) {
-            visitExprFunction(expr.getMeta().getId(), expr.getFunction());
+            if (expr.getExpr() instanceof ExprNode.Function) {
+                visitExprFunction(expr.getMeta().getId(), (ExprNode.Function) expr.getExpr());
+            } else if (expr.getExpr() instanceof ExprNode.Variable) {
+                visitExprVariable(expr.getMeta().getId(), (ExprNode.Variable) expr.getExpr());
+            } else {
+                throw new MethodNotImplementedError(expr.getExpr().getClass().toString());
+            }
         }
 
         public void visitExprFunction(String owner, ExprNode.Function expr) {
@@ -539,7 +585,7 @@ public final class Qux2ClassTranslater extends QuxAdapter {
         @Override
         public void visitExprList(ExprNode.List expr) {
             visitValue(expr.getValues().size());
-            mv.visitTypeInsn(ANEWARRAY, Type.getInternalName(Obj.class));
+            mv.visitTypeInsn(ANEWARRAY, Type.getInternalName(AbstractObj.class));
 
             for (int i = 0; i < expr.getValues().size(); i++) {
                 mv.visitInsn(DUP);
@@ -549,7 +595,7 @@ public final class Qux2ClassTranslater extends QuxAdapter {
             }
 
             mv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(List.class), "valueOf",
-                    getMethodDescriptor(List.class, "valueOf", Obj[].class), false);
+                    getMethodDescriptor(List.class, "valueOf", AbstractObj[].class), false);
         }
 
         /**
@@ -564,7 +610,7 @@ public final class Qux2ClassTranslater extends QuxAdapter {
         @Override
         public void visitExprSet(ExprNode.Set expr) {
             visitValue(expr.getValues().size());
-            mv.visitTypeInsn(ANEWARRAY, Type.getInternalName(Obj.class));
+            mv.visitTypeInsn(ANEWARRAY, Type.getInternalName(AbstractObj.class));
 
             for (int i = 0; i < expr.getValues().size(); i++) {
                 mv.visitInsn(DUP);
@@ -574,7 +620,7 @@ public final class Qux2ClassTranslater extends QuxAdapter {
             }
 
             mv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(Set.class), "valueOf",
-                    getMethodDescriptor(Set.class, "valueOf", Obj[].class), false);
+                    getMethodDescriptor(Set.class, "valueOf", AbstractObj[].class), false);
         }
 
         /**
@@ -645,12 +691,195 @@ public final class Qux2ClassTranslater extends QuxAdapter {
             }
         }
 
+        public void visitExprVariable(String owner, ExprNode.Variable expr) {
+            mv.visitFieldInsn(GETSTATIC, owner.replace(".", "/"), expr.getName(), getType(expr)
+                    .getDescriptor());
+        }
+
         /**
          * {@inheritDoc}
          */
         @Override
         public void visitExprVariable(ExprNode.Variable expr) {
             mv.visitVarInsn(ALOAD, locals.indexOf(expr.getName()));
+        }
+
+        private void visitCheckcast(Node node) {
+            mv.visitTypeInsn(CHECKCAST, getType(node).getInternalName());
+        }
+
+        private void visitLineNumber(Node node) {
+            line = Qux2ClassTranslater.visitLineNumber(mv, node, line);
+        }
+
+        private void visitValue(BigDecimal value) {
+            mv.visitLdcInsn(value.toString());
+        }
+
+        private void visitValue(byte value) {
+            mv.visitIntInsn(BIPUSH, value);
+        }
+
+        private void visitValue(short value) {
+            mv.visitIntInsn(SIPUSH, value);
+        }
+
+        private void visitValue(int value) {
+            switch (value) {
+                case -1:
+                    mv.visitInsn(ICONST_M1);
+                    break;
+                case 0:
+                    mv.visitInsn(ICONST_0);
+                    break;
+                case 1:
+                    mv.visitInsn(ICONST_1);
+                    break;
+                case 2:
+                    mv.visitInsn(ICONST_2);
+                    break;
+                case 3:
+                    mv.visitInsn(ICONST_3);
+                    break;
+                case 4:
+                    mv.visitInsn(ICONST_4);
+                    break;
+                case 5:
+                    mv.visitInsn(ICONST_5);
+                    break;
+                default:
+                    mv.visitLdcInsn(value);
+            }
+        }
+
+        private void visitValue(long value) {
+            if (value == 0) {
+                mv.visitInsn(LCONST_0);
+            } else if (value == 1) {
+                mv.visitInsn(LCONST_1);
+            } else {
+                mv.visitLdcInsn(value);
+            }
+        }
+
+        private void visitValue(byte[] value) {
+            // Push the array size
+            visitValue(value.length);
+            // Create the new byte array
+            mv.visitIntInsn(NEWARRAY, T_BYTE);
+
+            for (byte b : value) {
+                // Duplicate the array reference
+                mv.visitInsn(DUP);
+
+                // Push the array index
+                visitValue(1);
+                // Push the byte value
+                visitValue(b);
+                // Store to the array reference
+                mv.visitInsn(BASTORE);
+            }
+        }
+
+        private void visitValue(BigInteger value) {
+            if (value.bitLength() < 8) {
+                visitValue(value.byteValue());
+            } else if (value.bitLength() < 16) {
+                visitValue(value.shortValue());
+            } else if (value.bitLength() < 32) {
+                visitValue(value.intValue());
+            } else if (value.bitLength() < 64) {
+                visitValue(value.longValue());
+            } else {
+                visitValue(value.toByteArray());
+            }
+        }
+    }
+
+    /**
+     * TODO: Documentation.
+     *
+     * @author Henry J. Wylde
+     */
+    private final class Function2ClassTranslater extends FunctionAdapter {
+
+        private final MethodVisitor mv;
+
+        private final int flags;
+        private final String name;
+        private final com.hjwylde.qux.util.Type.Function type;
+
+        private Expr2ClassTranslater et;
+
+        /**
+         * Stores a map of parameter names to jvm types.
+         */
+        private Map<String, String> parameters = new HashMap<>();
+        /**
+         * Stores the return type as a jvm type.
+         */
+        private String returnType;
+
+        /**
+         * Unique number for generating variable names.
+         */
+        private int gen;
+
+        /**
+         * Stores a list of variable names, each at their associated jvm local indices.
+         * <p/>
+         * TODO: Change this so that the number of local variables are minimized, i.e. can be used
+         * more than once like for loop vars
+         */
+        private java.util.List<String> locals = new ArrayList<>();
+
+        /**
+         * The current source line number, used for generating the line number table attribute.
+         */
+        private int line = Integer.MIN_VALUE;
+
+        public Function2ClassTranslater(MethodVisitor mv, int flags, String name,
+                com.hjwylde.qux.util.Type.Function type) {
+            this.mv = checkNotNull(mv, "mv cannot be null");
+
+            this.flags = flags;
+            this.name = checkNotNull(name, "name cannot be null");
+            this.type = checkNotNull(type, "type cannot be null");
+        }
+
+        public void visitBlock(java.util.List<StmtNode> stmts) {
+            for (StmtNode stmt : stmts) {
+                stmt.accept(this);
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void visitCode() {
+            mv.visitCode();
+
+            et = new Expr2ClassTranslater(mv, locals);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void visitEnd() {
+            // If the type is Void, then add in a return instruction
+            if (type.getReturnType() instanceof com.hjwylde.qux.util.Type.Void) {
+                mv.visitInsn(RETURN);
+            }
+
+            // These values are ignored so long as ClassWriter.COMPUTE_MAXS is set
+            mv.visitMaxs(0, 0);
+            mv.visitEnd();
+        }
+
+        public void visitExpr(ExprNode expr) {
+            expr.accept(et);
         }
 
         /**
@@ -689,7 +918,8 @@ public final class Qux2ClassTranslater extends QuxAdapter {
             visitExpr(stmt.getExpr());
 
             mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Assign.class), "_assign_",
-                    getMethodDescriptor(Assign.class, "_assign_", Int.class, Obj.class), true);
+                    getMethodDescriptor(Assign.class, "_assign_", Int.class, AbstractObj.class),
+                    true);
         }
 
         /**
@@ -875,110 +1105,8 @@ public final class Qux2ClassTranslater extends QuxAdapter {
             return name;
         }
 
-        private void visitCheckcast(Node node) {
-            mv.visitTypeInsn(CHECKCAST, getType(node).getInternalName());
-        }
-
         private void visitLineNumber(Node node) {
-            Optional<Attribute.Source> opt = Attributes.getAttribute(node, Attribute.Source.class);
-            if (!opt.isPresent()) {
-                return;
-            }
-
-            Attribute.Source source = opt.get();
-
-            if (line >= source.getLine()) {
-                return;
-            }
-
-            line = source.getLine();
-
-            Label start = new Label();
-            mv.visitLabel(start);
-            mv.visitLineNumber(line, start);
-        }
-
-        private void visitValue(BigInteger value) {
-            if (value.bitLength() < 8) {
-                visitValue(value.byteValue());
-            } else if (value.bitLength() < 16) {
-                visitValue(value.shortValue());
-            } else if (value.bitLength() < 32) {
-                visitValue(value.intValue());
-            } else if (value.bitLength() < 64) {
-                visitValue(value.longValue());
-            } else {
-                visitValue(value.toByteArray());
-            }
-        }
-
-        private void visitValue(BigDecimal value) {
-            mv.visitLdcInsn(value.toString());
-        }
-
-        private void visitValue(byte value) {
-            mv.visitIntInsn(BIPUSH, value);
-        }
-
-        private void visitValue(short value) {
-            mv.visitIntInsn(SIPUSH, value);
-        }
-
-        private void visitValue(int value) {
-            switch (value) {
-                case -1:
-                    mv.visitInsn(ICONST_M1);
-                    break;
-                case 0:
-                    mv.visitInsn(ICONST_0);
-                    break;
-                case 1:
-                    mv.visitInsn(ICONST_1);
-                    break;
-                case 2:
-                    mv.visitInsn(ICONST_2);
-                    break;
-                case 3:
-                    mv.visitInsn(ICONST_3);
-                    break;
-                case 4:
-                    mv.visitInsn(ICONST_4);
-                    break;
-                case 5:
-                    mv.visitInsn(ICONST_5);
-                    break;
-                default:
-                    mv.visitLdcInsn(value);
-            }
-        }
-
-        private void visitValue(long value) {
-            if (value == 0) {
-                mv.visitInsn(LCONST_0);
-            } else if (value == 1) {
-                mv.visitInsn(LCONST_1);
-            } else {
-                mv.visitLdcInsn(value);
-            }
-        }
-
-        private void visitValue(byte[] value) {
-            // Push the array size
-            visitValue(value.length);
-            // Create the new byte array
-            mv.visitIntInsn(NEWARRAY, T_BYTE);
-
-            for (byte b : value) {
-                // Duplicate the array reference
-                mv.visitInsn(DUP);
-
-                // Push the array index
-                visitValue(1);
-                // Push the byte value
-                visitValue(b);
-                // Store to the array reference
-                mv.visitInsn(BASTORE);
-            }
+            line = Qux2ClassTranslater.visitLineNumber(mv, node, line);
         }
     }
 }

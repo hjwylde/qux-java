@@ -1,7 +1,7 @@
 package qux.lang.op;
 
+import qux.lang.AbstractObj;
 import qux.lang.Bool;
-import qux.lang.Obj;
 
 /**
  * TODO: Documentation.
@@ -11,5 +11,5 @@ import qux.lang.Obj;
  */
 public interface Neq {
 
-    Bool _neq_(Obj obj);
+    Bool _neq_(AbstractObj obj);
 }

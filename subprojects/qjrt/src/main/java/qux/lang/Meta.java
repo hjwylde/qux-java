@@ -18,13 +18,14 @@ import qux.util.Iterator;
  * @author Henry J. Wylde
  * @since 0.1.2
  */
-public class Meta extends Obj {
+public class Meta extends AbstractObj {
 
     static final Meta META_ANY = new Any();
     static final Meta META_BOOL = new Bool();
     static final Meta META_INT = new Int();
     static final Meta META_META = new Meta();
     static final Meta META_NULL = new Null();
+    static final Meta META_OBJ = new Obj();
     static final Meta META_REAL = new Real();
     static final Meta META_STR = new Str();
 
@@ -34,24 +35,21 @@ public class Meta extends Obj {
                                                             public Meta load(Meta key) {
                                                                 return new List(key);
                                                             }
-                                                        }
-            );
+                                                        });
     private static final LoadingCache<Meta, Meta> setMetas =
             CacheBuilder.<Meta, Meta>newBuilder().build(new CacheLoader<Meta, Meta>() {
                                                             @Override
                                                             public Meta load(Meta key) {
                                                                 return new Set(key);
                                                             }
-                                                        }
-            );
+                                                        });
     private static final LoadingCache<qux.lang.Set, Meta> unionMetas =
             CacheBuilder.<Meta, Meta>newBuilder().build(new CacheLoader<qux.lang.Set, Meta>() {
                                                             @Override
                                                             public Meta load(qux.lang.Set key) {
                                                                 return new Union(key);
                                                             }
-                                                        }
-            );
+                                                        });
 
     /**
      * This class can only be instantiated locally.
@@ -62,7 +60,7 @@ public class Meta extends Obj {
      * {@inheritDoc}
      */
     @Override
-    public qux.lang.Int _comp_(Obj obj) {
+    public qux.lang.Int _comp_(AbstractObj obj) {
         if (!(obj instanceof Meta)) {
             return meta()._comp_(obj.meta());
         }
@@ -90,7 +88,7 @@ public class Meta extends Obj {
      * {@inheritDoc}
      */
     @Override
-    public qux.lang.Bool _eq_(Obj obj) {
+    public qux.lang.Bool _eq_(AbstractObj obj) {
         if (super._eq_(obj) == FALSE) {
             return FALSE;
         }
@@ -212,7 +210,7 @@ public class Meta extends Obj {
          * {@inheritDoc}
          */
         @Override
-        public qux.lang.Bool _eq_(Obj obj) {
+        public qux.lang.Bool _eq_(AbstractObj obj) {
             if (super._eq_(obj) == FALSE) {
                 return FALSE;
             }
@@ -247,6 +245,23 @@ public class Meta extends Obj {
         @Override
         public qux.lang.Str _desc_() {
             return qux.lang.Str.valueOf("null");
+        }
+    }
+
+    /**
+     * TODO: Documentation
+     *
+     * @author Henry J. Wylde
+     * @since 0.2.2
+     */
+    private static final class Obj extends Meta {
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public qux.lang.Str _desc_() {
+            return qux.lang.Str.valueOf("obj");
         }
     }
 
@@ -293,7 +308,7 @@ public class Meta extends Obj {
          * {@inheritDoc}
          */
         @Override
-        public qux.lang.Bool _eq_(Obj obj) {
+        public qux.lang.Bool _eq_(AbstractObj obj) {
             if (super._eq_(obj) == FALSE) {
                 return FALSE;
             }
@@ -354,7 +369,7 @@ public class Meta extends Obj {
          */
         @Override
         public qux.lang.Str _desc_() {
-            java.util.Iterator<Obj> it = new java.util.Iterator<Obj>() {
+            java.util.Iterator<AbstractObj> it = new java.util.Iterator<AbstractObj>() {
 
                 Iterator it = types._iter_();
 
@@ -364,7 +379,7 @@ public class Meta extends Obj {
                 }
 
                 @Override
-                public Obj next() {
+                public AbstractObj next() {
                     return it.next();
                 }
 
@@ -381,7 +396,7 @@ public class Meta extends Obj {
          * {@inheritDoc}
          */
         @Override
-        public qux.lang.Bool _eq_(Obj obj) {
+        public qux.lang.Bool _eq_(AbstractObj obj) {
             if (super._eq_(obj) == FALSE) {
                 return FALSE;
             }

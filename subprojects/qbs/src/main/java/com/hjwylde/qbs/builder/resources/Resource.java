@@ -83,6 +83,8 @@ public interface Resource {
      */
     public static interface Single extends Resource {
 
+        Optional<String> getConstantType(String name);
+
         Optional<String> getFunctionType(String name);
 
         String getId();

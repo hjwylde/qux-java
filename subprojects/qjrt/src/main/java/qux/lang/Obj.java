@@ -1,40 +1,67 @@
 package qux.lang;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static qux.lang.Bool.FALSE;
 import static qux.lang.Bool.TRUE;
-
-import qux.lang.op.Comp;
-import qux.lang.op.Desc;
-import qux.lang.op.Dup;
-import qux.lang.op.Eq;
-import qux.lang.op.Hash;
-import qux.lang.op.Neq;
+import static qux.lang.Meta.META_OBJ;
 
 /**
  * TODO: Documentation
  *
  * @author Henry J. Wylde
+ * @since 0.2.2
  */
-public abstract class Obj implements Desc, Dup, Eq, Neq, Hash, Comp {
+public final class Obj extends AbstractObj {
+
+    private String id;
+
+    /**
+     * Creates a new {@code Obj} with the given id.
+     *
+     * @param id the id of this object.
+     */
+    private Obj(String id) {
+        this.id = checkNotNull(id, "id cannot be null");
+    }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Bool _eq_(Obj obj) {
-        if (this == obj) {
-            return TRUE;
+    public Int _comp_(AbstractObj obj) {
+        if (!(obj instanceof Obj)) {
+            return meta()._comp_(obj.meta());
         }
 
-        return (obj != null && getClass() == obj.getClass()) ? TRUE : FALSE;
+        return Int.valueOf(id.compareTo(((Obj) obj).id));
     }
 
-    public Bool _gt_(Obj t) {
-        return _comp_(t)._gt_(Int.ZERO);
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Str _desc_() {
+        return Str.valueOf("obj");
     }
 
-    public Bool _gte_(Obj t) {
-        return _comp_(t)._gte_(Int.ZERO);
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Obj _dup_() {
+        return valueOf(id);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Bool _eq_(AbstractObj obj) {
+        if (super._eq_(obj) == FALSE) {
+            return FALSE;
+        }
+
+        return id.equals(((Obj) obj).id) ? TRUE : FALSE;
     }
 
     /**
@@ -42,41 +69,19 @@ public abstract class Obj implements Desc, Dup, Eq, Neq, Hash, Comp {
      */
     @Override
     public Int _hash_() {
-        return Int.valueOf(hashCode());
-    }
-
-    public Bool _lt_(Obj t) {
-        return _comp_(t)._lt_(Int.ZERO);
-    }
-
-    public Bool _lte_(Obj t) {
-        return _comp_(t)._lte_(Int.ZERO);
+        return Int.valueOf(id.hashCode());
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Bool _neq_(Obj obj) {
-        return _eq_(obj)._not_();
+    public Meta meta() {
+        return META_OBJ;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean equals(Object obj) {
-        return _eq_((Obj) obj) == TRUE ? true : false;
-    }
-
-    public abstract Meta meta();
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String toString() {
-        return _desc_().toString();
+    public static Obj valueOf(String id) {
+        return new Obj(id);
     }
 }
 

@@ -22,15 +22,15 @@ import qux.util.Iterator;
  * @author Henry J. Wylde
  * @since 0.1.3
  */
-public final class Set extends Obj implements Access, Iterable, Len, Slice {
+public final class Set extends AbstractObj implements Access, Iterable, Len, Slice {
 
-    private Obj[] data;
+    private AbstractObj[] data;
     private int count;
 
     private int refs;
 
     private Set() {
-        this.data = new Obj[10];
+        this.data = new AbstractObj[10];
         count = 0;
     }
 
@@ -44,12 +44,12 @@ public final class Set extends Obj implements Access, Iterable, Len, Slice {
         set.refs++;
     }
 
-    private Set(Obj[] data) {
+    private Set(AbstractObj[] data) {
         this();
 
         checkArgument(!Arrays.asList(data).contains(null), "data cannot contain null");
 
-        for (Obj datum : data) {
+        for (AbstractObj datum : data) {
             add(datum);
         }
     }
@@ -58,7 +58,7 @@ public final class Set extends Obj implements Access, Iterable, Len, Slice {
      * {@inheritDoc}
      */
     @Override
-    public Obj _access_(Int index) {
+    public AbstractObj _access_(Int index) {
         return get(index);
     }
 
@@ -78,7 +78,7 @@ public final class Set extends Obj implements Access, Iterable, Len, Slice {
      * {@inheritDoc}
      */
     @Override
-    public Int _comp_(Obj obj) {
+    public Int _comp_(AbstractObj obj) {
         if (!(obj instanceof Set)) {
             return meta()._comp_(obj.meta());
         }
@@ -103,7 +103,7 @@ public final class Set extends Obj implements Access, Iterable, Len, Slice {
         return Int.ZERO;
     }
 
-    public Bool _contains_(Obj obj) {
+    public Bool _contains_(AbstractObj obj) {
         return indexOf(obj) >= 0 ? TRUE : FALSE;
     }
 
@@ -139,7 +139,7 @@ public final class Set extends Obj implements Access, Iterable, Len, Slice {
      * {@inheritDoc}
      */
     @Override
-    public Bool _eq_(Obj obj) {
+    public Bool _eq_(AbstractObj obj) {
         if (super._eq_(obj) == FALSE) {
             return FALSE;
         }
@@ -185,7 +185,7 @@ public final class Set extends Obj implements Access, Iterable, Len, Slice {
 
         return new Iterator() {
 
-            private Obj[] data = Set.this.data;
+            private AbstractObj[] data = Set.this.data;
             private int count = Set.this.count;
             private int index = 0;
 
@@ -204,7 +204,7 @@ public final class Set extends Obj implements Access, Iterable, Len, Slice {
             }
 
             @Override
-            public Obj next() {
+            public AbstractObj next() {
                 return data[index++];
             }
         };
@@ -261,11 +261,11 @@ public final class Set extends Obj implements Access, Iterable, Len, Slice {
         return Meta.forSet(Meta.forUnion(types));
     }
 
-    public static Set valueOf(Obj... data) {
+    public static Set valueOf(AbstractObj... data) {
         return new Set(data);
     }
 
-    synchronized void add(Obj obj) {
+    synchronized void add(AbstractObj obj) {
         checkNotNull(obj, "obj cannot be null");
 
         checkRefs();
@@ -286,17 +286,17 @@ public final class Set extends Obj implements Access, Iterable, Len, Slice {
         count++;
     }
 
-    Obj get(Int index) {
+    AbstractObj get(Int index) {
         return get(index._value_());
     }
 
-    synchronized Obj get(int index) {
+    synchronized AbstractObj get(int index) {
         checkElementIndex(index, count);
 
         return data[index];
     }
 
-    Obj get(BigInteger index) {
+    AbstractObj get(BigInteger index) {
         checkArgument(index.bitLength() < 32, "sets of size larger than 32 bits is unsupported");
 
         return get(index.intValue());
@@ -306,7 +306,7 @@ public final class Set extends Obj implements Access, Iterable, Len, Slice {
         return count == 0 ? TRUE : FALSE;
     }
 
-    synchronized void remove(Obj obj) {
+    synchronized void remove(AbstractObj obj) {
         checkNotNull(obj, "obj cannot be null");
 
         checkRefs();
@@ -372,11 +372,11 @@ public final class Set extends Obj implements Access, Iterable, Len, Slice {
         }
     }
 
-    private synchronized int indexOf(Obj obj) {
+    private synchronized int indexOf(AbstractObj obj) {
         return indexOf(obj, 0, count);
     }
 
-    private synchronized int indexOf(Obj obj, int low, int high) {
+    private synchronized int indexOf(AbstractObj obj, int low, int high) {
         if (low == high) {
             return -low - 1;
         }
