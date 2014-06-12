@@ -115,7 +115,7 @@ public final class NamePropagator extends Pipeline {
      * TODO: Documentation.
      *
      * @author Henry J. Wylde
-     * @since TODO: SINCE
+     * @since 0.2.2
      */
     private final class ConstantNamePropagator extends ConstantAdapter {
 
@@ -136,7 +136,7 @@ public final class NamePropagator extends Pipeline {
      * TODO: Documentation.
      *
      * @author Henry J. Wylde
-     * @since TODO: SINCE
+     * @since 0.2.2
      */
     private final class ExprNamePropagator implements ExprVisitor {
 

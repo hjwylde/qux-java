@@ -281,7 +281,7 @@ public final class Qux2ClassTranslater extends QuxAdapter {
      * TODO: Documentation.
      *
      * @author Henry J. Wylde
-     * @since TODO: SINCE
+     * @since 0.2.2
      */
     private final class Constant2ClassTranslater extends ConstantAdapter {
 
@@ -316,7 +316,7 @@ public final class Qux2ClassTranslater extends QuxAdapter {
      * TODO: Documentation.
      *
      * @author Henry J. Wylde
-     * @since TODO: SINCE
+     * @since 0.2.2
      */
     private final class Expr2ClassTranslater implements ExprVisitor {
 

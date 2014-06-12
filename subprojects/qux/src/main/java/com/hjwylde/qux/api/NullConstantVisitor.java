@@ -6,7 +6,7 @@ import com.hjwylde.qux.tree.ExprNode;
  * TODO: Documentation
  *
  * @author Henry J. Wylde
- * @since TODO: SINCE
+ * @since 0.2.2
  */
 final class NullConstantVisitor implements ConstantVisitor {
 

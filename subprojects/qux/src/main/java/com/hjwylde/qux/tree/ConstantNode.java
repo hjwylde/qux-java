@@ -15,7 +15,7 @@ import java.util.Collection;
  * TODO: Documentation
  *
  * @author Henry J. Wylde
- * @since TODO: SINCE
+ * @since 0.2.2
  */
 public final class ConstantNode extends Node implements ConstantVisitor {
 

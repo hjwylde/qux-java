@@ -130,7 +130,7 @@ public final class TypeChecker extends Pipeline {
      * TODO: Documentation.
      *
      * @author Henry J. Wylde
-     * @since TODO: SINCE
+     * @since 0.2.2
      */
     private static final class ConstantTypeChecker extends ConstantAdapter {
 
@@ -154,7 +154,7 @@ public final class TypeChecker extends Pipeline {
      * TODO: Documentation.
      *
      * @author Henry J. Wylde
-     * @since TODO: SINCE
+     * @since 0.2.2
      */
     private static final class ExprTypeChecker implements ExprVisitor {
 

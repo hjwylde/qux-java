@@ -252,7 +252,7 @@ public class Meta extends AbstractObj {
      * TODO: Documentation
      *
      * @author Henry J. Wylde
-     * @since TODO: SINCE
+     * @since 0.2.2
      */
     private static final class Obj extends Meta {
 

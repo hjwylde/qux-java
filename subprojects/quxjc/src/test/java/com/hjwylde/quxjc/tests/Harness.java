@@ -52,7 +52,7 @@ public abstract class Harness {
     static {
         // Grab all of the library files in our libraries directory
         final List<String> files = new ArrayList<>();
-        SimpleFileVisitor sfv = new SimpleFileVisitor<Path>() {
+        SimpleFileVisitor<Path> sfv = new SimpleFileVisitor<Path>() {
 
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
