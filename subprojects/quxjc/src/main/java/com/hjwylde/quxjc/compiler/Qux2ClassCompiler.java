@@ -14,6 +14,7 @@ import com.hjwylde.quxjc.builder.Qux2ClassBuilder;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
+import org.apache.log4j.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +41,7 @@ public final class Qux2ClassCompiler<T extends QuxCompileSpec> implements Compil
      */
     @Override
     public void execute(T spec) {
-        setLogLevel(spec.getOptions().isVerbose());
+        setVerbose(spec.getOptions().isVerbose());
 
         QuxProject project = QuxProject.builder(spec).build();
         QuxContext context = initialiseContext(project);
@@ -85,13 +86,16 @@ public final class Qux2ClassCompiler<T extends QuxCompileSpec> implements Compil
         return context;
     }
 
-    private static void setLogLevel(boolean verbose) {
-        // TODO: Implement a solution for verbose mode
-        // One idea is to have different loggers and to change which one is being used based on the
-        // verbose mode
-        // Another idea is to use markers, have a marker that turns verbose mode on
+    /**
+     * Sets the compiler to be verbose or not.
+     *
+     * @param verbose true if the compiler should be verbose.
+     */
+    private static void setVerbose(boolean verbose) {
         if (verbose) {
-            logger.warn("verbose mode is not currently supported");
+            LoggerUtils.setLogLevel(Level.INFO);
+        } else {
+            LoggerUtils.setLogLevel(Level.WARN);
         }
     }
 }
