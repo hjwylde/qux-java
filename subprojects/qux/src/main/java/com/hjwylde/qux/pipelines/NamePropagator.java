@@ -20,8 +20,10 @@ import com.hjwylde.qux.util.Attributes;
 import com.hjwylde.qux.util.Type;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +50,7 @@ public final class NamePropagator extends Pipeline {
     @Override
     public QuxNode apply(QuxNode node) {
         this.node = node;
+
         namespace.clear();
 
         QuxNode resolved = new QuxNode();
@@ -58,8 +61,8 @@ public final class NamePropagator extends Pipeline {
         return resolved;
     }
 
-    private ExprNode propagate(ExprNode expr) {
-        ExprNamePropagator enp = new ExprNamePropagator();
+    private ExprNode propagate(ExprNode expr, List<String> namespace) {
+        ExprNamePropagator enp = new ExprNamePropagator(namespace);
 
         expr.accept(enp);
 
@@ -128,7 +131,7 @@ public final class NamePropagator extends Pipeline {
          */
         @Override
         public void visitExpr(ExprNode expr) {
-            super.visitExpr(propagate(expr));
+            super.visitExpr(propagate(expr, Collections.<String>emptyList()));
         }
     }
 
@@ -140,7 +143,13 @@ public final class NamePropagator extends Pipeline {
      */
     private final class ExprNamePropagator implements ExprVisitor {
 
+        private final ImmutableList<String> namespace;
+
         private ExprNode result;
+
+        public ExprNamePropagator(List<String> namespace) {
+            this.namespace = ImmutableList.copyOf(namespace);
+        }
 
         public ExprNode getResult() {
             return result;
@@ -313,7 +322,7 @@ public final class NamePropagator extends Pipeline {
         @Override
         public void visitExprVariable(ExprNode.Variable expr) {
             Optional<String> id = resolveConstant(expr.getName());
-            if (!id.isPresent()) {
+            if (!id.isPresent() || namespace.contains(expr.getName())) {
                 result = expr;
                 return;
             }
@@ -335,8 +344,20 @@ public final class NamePropagator extends Pipeline {
      */
     private final class FunctionNamePropagator extends FunctionAdapter {
 
+        private final List<String> parameters = new ArrayList<>();
+
         private FunctionNamePropagator(FunctionVisitor next) {
             super(next);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void visitParameter(String var, Type type) {
+            parameters.add(var);
+
+            super.visitParameter(var, type);
         }
 
         /**
@@ -401,6 +422,10 @@ public final class NamePropagator extends Pipeline {
         @Override
         public void visitStmtWhile(StmtNode.While stmt) {
             super.visitStmtWhile(resolveStmtWhile(stmt));
+        }
+
+        private ExprNode propagate(ExprNode expr) {
+            return NamePropagator.this.propagate(expr, parameters);
         }
 
         private StmtNode resolveStmt(StmtNode stmt) {

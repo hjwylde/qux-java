@@ -36,11 +36,12 @@ public final class Constants {
     public static final int QUX0_2_0 = 0 << 16 | 2 << 8 | 0;
     public static final int QUX0_2_1 = 0 << 16 | 2 << 8 | 1;
     public static final int QUX0_2_2 = 0 << 16 | 2 << 8 | 2;
+    public static final int QUX0_2_3 = 0 << 16 | 2 << 8 | 3;
 
     /**
      * A list of supported Qux versions for this API.
      */
-    public static final ImmutableList<Integer> SUPPORTED_VERSIONS = ImmutableList.of(QUX0_2_2);
+    public static final ImmutableList<Integer> SUPPORTED_VERSIONS = ImmutableList.of(QUX0_2_3);
 
     private static final Logger logger = LoggerFactory.getLogger(Constants.class);
 

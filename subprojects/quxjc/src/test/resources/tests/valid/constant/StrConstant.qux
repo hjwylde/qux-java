@@ -5,8 +5,8 @@ str C is 'bar'
 str f(str a):
     return a + A
 
-str g(str a):
-    return a
+str g(str A):
+    return A
 
 
 void main([str] args):

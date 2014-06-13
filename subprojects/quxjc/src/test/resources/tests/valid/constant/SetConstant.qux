@@ -5,8 +5,8 @@
 {int} f({int} a):
     return a + A
 
-{int} g({int} a):
-    return a
+{int} g({int} A):
+    return A
 
 
 void main([str] args):

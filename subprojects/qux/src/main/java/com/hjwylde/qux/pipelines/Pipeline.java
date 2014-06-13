@@ -16,8 +16,9 @@ import com.google.common.collect.ImmutableList;
 public abstract class Pipeline {
 
     public static final ImmutableList<Class<? extends Pipeline>> DEFAULT_PIPELINES =
-            ImmutableList.of(NamePropagator.class, ControlFlowGraphPropagator.class,
-                    DeadCodeChecker.class, TypePropagator.class, TypeChecker.class);
+            ImmutableList.of(NameChecker.class, NamePropagator.class,
+                    ControlFlowGraphPropagator.class, DeadCodeChecker.class, TypePropagator.class,
+                    TypeChecker.class);
 
     protected final QuxContext context;
 

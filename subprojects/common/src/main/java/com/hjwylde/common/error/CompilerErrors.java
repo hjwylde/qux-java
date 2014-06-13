@@ -14,6 +14,132 @@ public final class CompilerErrors {
     private CompilerErrors() {}
 
     /**
+     * Creates a new {@link com.hjwylde.common.error.CompilerError} representing a duplicate
+     * constant definition found.
+     *
+     * @param name the name of the constant.
+     * @return the created {@link com.hjwylde.common.error.CompilerError}.
+     */
+    public static CompilerError duplicateConstant(String name) {
+        String message = String.format("duplicate constant definition found for '%s'", name);
+
+        return new CompilerError(message);
+    }
+
+    /**
+     * Creates a new {@link com.hjwylde.common.error.SourceCompilerError} representing a duplicate
+     * constant definition found with the provided source information.
+     *
+     * @param name the name of the constant.
+     * @param source the source file name.
+     * @param line the line number.
+     * @param col the column number.
+     * @param length the length.
+     * @return the created {@link com.hjwylde.common.error.SourceCompilerError}.
+     */
+    public static SourceCompilerError duplicateConstant(String name, String source, int line,
+            int col, int length) {
+        String message = String.format("duplicate constant definition found for '%s'", name);
+
+        return new SourceCompilerError(message, source, line, col, length);
+    }
+
+    /**
+     * Creates a new {@link com.hjwylde.common.error.CompilerError} representing a duplicate
+     * function definition found.
+     *
+     * @param name the name of the function.
+     * @return the created {@link com.hjwylde.common.error.CompilerError}.
+     */
+    public static CompilerError duplicateFunction(String name) {
+        String message = String.format("duplicate function definition found for '%s'", name);
+
+        return new CompilerError(message);
+    }
+
+    /**
+     * Creates a new {@link com.hjwylde.common.error.SourceCompilerError} representing a duplicate
+     * function definition found with the provided source information.
+     *
+     * @param name the name of the function.
+     * @param source the source file name.
+     * @param line the line number.
+     * @param col the column number.
+     * @param length the length.
+     * @return the created {@link com.hjwylde.common.error.SourceCompilerError}.
+     */
+    public static SourceCompilerError duplicateFunction(String name, String source, int line,
+            int col, int length) {
+        String message = String.format("duplicate function definition found for '%s'", name);
+
+        return new SourceCompilerError(message, source, line, col, length);
+    }
+
+    /**
+     * Creates a new {@link com.hjwylde.common.error.CompilerError} representing a duplicate
+     * function parameter definition found.
+     *
+     * @param name the name of the function parameter.
+     * @return the created {@link com.hjwylde.common.error.CompilerError}.
+     */
+    public static CompilerError duplicateFunctionParameter(String name) {
+        String message = String.format("duplicate function parameter definition found for '%s'",
+                name);
+
+        return new CompilerError(message);
+    }
+
+    /**
+     * Creates a new {@link com.hjwylde.common.error.SourceCompilerError} representing a duplicate
+     * function parameter definition found with the provided source information.
+     *
+     * @param name the name of the function parameter.
+     * @param source the source file name.
+     * @param line the line number.
+     * @param col the column number.
+     * @param length the length.
+     * @return the created {@link com.hjwylde.common.error.SourceCompilerError}.
+     */
+    public static SourceCompilerError duplicateFunctionParameter(String name, String source,
+            int line, int col, int length) {
+        String message = String.format("duplicate function parameter definition found for '%s'",
+                name);
+
+        return new SourceCompilerError(message, source, line, col, length);
+    }
+
+    /**
+     * Creates a new {@link com.hjwylde.common.error.CompilerError} representing a duplicate import
+     * definition found.
+     *
+     * @param id the id of the import.
+     * @return the created {@link com.hjwylde.common.error.CompilerError}.
+     */
+    public static CompilerError duplicateImport(String id) {
+        String message = String.format("duplicate import definition found for '%s'", id);
+
+        return new CompilerError(message);
+    }
+
+    /**
+     * Creates a new {@link com.hjwylde.common.error.SourceCompilerError} representing a duplicate
+     * import definition found with the provided source information.
+     *
+     * @param id the id of the import.
+     * @param source the source file name.
+     * @param line the line number.
+     * @param col the column number.
+     * @param length the length.
+     * @return the created {@link com.hjwylde.common.error.SourceCompilerError}.
+     */
+    public static SourceCompilerError duplicateImport(String id, String source, int line, int col,
+            int length) {
+        String message = String.format("duplicate import definition found for '%s'", id);
+
+        return new SourceCompilerError(message, source, line, col, length);
+    }
+
+    /**
      * Creates a new {@link com.hjwylde.common.error.CompilerError} representing an invalid dedent.
      *
      * @return the created {@link com.hjwylde.common.error.CompilerError}.
@@ -152,7 +278,7 @@ public final class CompilerErrors {
 
     /**
      * Creates a new {@link com.hjwylde.common.error.SourceCompilerError} representing a no constant
-     * definition found type with the provided source information.
+     * definition found with the provided source information.
      *
      * @param owner the owner of the constant.
      * @param name the name of the constant.
@@ -185,7 +311,7 @@ public final class CompilerErrors {
 
     /**
      * Creates a new {@link com.hjwylde.common.error.SourceCompilerError} representing a no function
-     * definition found type with the provided source information.
+     * definition found with the provided source information.
      *
      * @param owner the owner of the function.
      * @param name the name of the function.
