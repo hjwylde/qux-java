@@ -23,7 +23,7 @@ import java.util.Map;
  * functions declared</li> <li>No clashing function parameters</li> </ul>
  *
  * @author Henry J. Wylde
- * @since TODO: SINCE
+ * @since 0.2.3
  */
 public final class NameChecker extends Pipeline {
 
