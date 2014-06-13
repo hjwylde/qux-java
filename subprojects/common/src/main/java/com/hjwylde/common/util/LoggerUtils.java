@@ -3,6 +3,8 @@ package com.hjwylde.common.util;
 import com.hjwylde.common.error.BuildError;
 import com.hjwylde.common.error.CompilerError;
 
+import org.apache.log4j.Level;
+import org.apache.log4j.LogManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -93,5 +95,10 @@ public final class LoggerUtils {
         } else {
             logger.error("error", t);
         }
+    }
+
+    public static void setLogLevel(Level level) {
+        org.apache.log4j.Logger rootLogger = LogManager.getRootLogger();
+        rootLogger.setLevel(level);
     }
 }
