@@ -24,6 +24,10 @@ public interface ExprVisitor {
 
     void visitExprMeta(ExprNode.Meta expr);
 
+    void visitExprRecord(ExprNode.Record expr);
+
+    void visitExprRecordAccess(ExprNode.RecordAccess expr);
+
     void visitExprSet(ExprNode.Set expr);
 
     void visitExprSlice(ExprNode.Slice expr);

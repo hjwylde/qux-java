@@ -1,6 +1,7 @@
 package com.hjwylde.qux.pipelines;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.hjwylde.qux.util.Type.TYPE_ANY;
 import static com.hjwylde.qux.util.Type.TYPE_BOOL;
 import static com.hjwylde.qux.util.Type.TYPE_INT;
 import static com.hjwylde.qux.util.Type.TYPE_ITERABLE;
@@ -30,6 +31,11 @@ import com.hjwylde.qux.util.Attributes;
 import com.hjwylde.qux.util.Type;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
+
+import org.jgrapht.event.VertexTraversalEvent;
+
+import java.util.Map;
 
 /**
  * TODO: Documentation
@@ -270,6 +276,28 @@ public final class TypeChecker extends Pipeline {
          * {@inheritDoc}
          */
         @Override
+        public void visitExprRecord(ExprNode.Record expr) {
+            for (Map.Entry<String, ExprNode> field : expr.getFields().entrySet()) {
+                visitExpr(field.getValue());
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void visitExprRecordAccess(ExprNode.RecordAccess expr) {
+            visitExpr(expr.getTarget());
+
+            Type expected = Type.forRecord(ImmutableMap.<String, Type>of(expr.getField(),
+                    TYPE_ANY));
+            checkSubtype(expr.getTarget(), expected);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
         public void visitExprSet(ExprNode.Set expr) {
             for (ExprNode value : expr.getValues()) {
                 visitExpr(value);
@@ -344,6 +372,14 @@ public final class TypeChecker extends Pipeline {
          * {@inheritDoc}
          */
         @Override
+        public void vertexTraversed(VertexTraversalEvent<StmtNode> e) {
+            e.getVertex().accept(this);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
         public void notifyTraversalStarted() {
             // Type checking only needs one iteration
             setFinished(true);
@@ -406,6 +442,7 @@ public final class TypeChecker extends Pipeline {
         @Override
         public void visitStmtReturn(StmtNode.Return stmt) {
             if (stmt.getExpr().isPresent()) {
+                check(stmt.getExpr().get());
                 Type returnType = function.getReturnType();
                 checkSubtype(stmt.getExpr().get(), returnType);
             }

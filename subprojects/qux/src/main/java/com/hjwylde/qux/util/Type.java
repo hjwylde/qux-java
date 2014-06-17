@@ -2,16 +2,20 @@ package com.hjwylde.qux.util;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.hjwylde.qux.util.Types.isSubtype;
 
 import com.hjwylde.common.error.MethodNotImplementedError;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.annotation.Nullable;
 
@@ -87,6 +91,9 @@ public abstract class Type {
 
     static final String LIST_START = "[";
 
+    static final String RECORD_START = "C";
+    static final String RECORD_END = ";";
+
     static final String SET_START = "{";
 
     static final String UNION_START = "U";
@@ -128,6 +135,10 @@ public abstract class Type {
         return new Type.List(Types.normalise(innerType));
     }
 
+    public static Type forRecord(Map<String, Type> fields) {
+        return Types.normalise(new Type.Record(fields));
+    }
+
     public static Type.Set forSet(Type innerType) {
         return new Type.Set(Types.normalise(innerType));
     }
@@ -141,6 +152,27 @@ public abstract class Type {
     }
 
     public abstract String getDescriptor();
+
+    public static Type getFieldType(Type type, String field) {
+        if (type instanceof Type.Union) {
+            java.util.List<Type> types = new ArrayList<>();
+            for (Type bound : ((Type.Union) type).getTypes()) {
+                types.add(getFieldType(bound, field));
+            }
+
+            return Type.forUnion(types);
+        } else if (type instanceof Type.Record) {
+            Type.Record record = (Type.Record) type;
+
+            Type expected = Type.forRecord(ImmutableMap.<String, Type>of(field, TYPE_ANY));
+            checkArgument(isSubtype(record, expected),
+                    "record type '%s' does not contain field '%s'", type, field);
+
+            return ((Type.Record) type).getFields().get(field);
+        }
+
+        throw new MethodNotImplementedError(type.getClass().toString());
+    }
 
     public static Type getInnerType(Type type) {
         if (type instanceof Type.Union) {
@@ -187,7 +219,7 @@ public abstract class Type {
                 java.util.List<Type> parameterTypes = new ArrayList<>();
                 int index = 1;
                 while (index < desc.length()) {
-                    if (desc.substring(index).startsWith(FUNCTION_PARAM_END)) {
+                    if (desc.startsWith(FUNCTION_PARAM_END, index)) {
                         break;
                     }
 
@@ -196,8 +228,8 @@ public abstract class Type {
                     index += parameterTypes.get(parameterTypes.size() - 1).getDescriptor().length();
                 }
 
-                checkArgument(desc.substring(index).startsWith(FUNCTION_PARAM_END),
-                        "desc is invalid: %s", desc);
+                checkArgument(desc.startsWith(FUNCTION_PARAM_END, index), "desc is invalid: %s",
+                        desc);
 
                 Type returnType = forDescriptor(desc.substring(index + 1), match);
 
@@ -221,6 +253,29 @@ public abstract class Type {
             case REAL:
                 checkArgument(!match || desc.length() == 1, "desc is invalid: %s", desc);
                 return TYPE_REAL;
+            case RECORD_START:
+                Map<String, Type> fields = new HashMap<>();
+                index = 1;
+                while (index < desc.length()) {
+                    if (desc.startsWith(RECORD_END, index)) {
+                        break;
+                    }
+
+                    Type type = forDescriptor(desc.substring(index), false);
+
+                    index += type.getDescriptor().length();
+
+                    String field = desc.substring(index, desc.indexOf(RECORD_END, index));
+
+                    index += field.length() + 1;
+
+                    fields.put(field, type);
+                }
+
+                checkArgument(desc.startsWith(RECORD_END, index), "desc is invalid: %s", desc);
+                checkArgument(!match || desc.length() == index + 1, "desc is invalid: %s", desc);
+
+                return forRecord(fields);
             case SET_START:
                 checkArgument(desc.length() > 1, "desc is invalid: %s", desc);
                 return forSet(forDescriptor(desc.substring(1), match));
@@ -231,7 +286,7 @@ public abstract class Type {
                 java.util.List<Type> types = new ArrayList<>();
                 index = 1;
                 while (index < desc.length()) {
-                    if (desc.substring(index).startsWith(UNION_END)) {
+                    if (desc.startsWith(UNION_END, index)) {
                         break;
                     }
 
@@ -240,8 +295,7 @@ public abstract class Type {
                     index += types.get(types.size() - 1).getDescriptor().length();
                 }
 
-                checkArgument(desc.substring(index).startsWith(UNION_END), "desc is invalid: %s",
-                        desc);
+                checkArgument(desc.startsWith(UNION_END, index), "desc is invalid: %s", desc);
                 checkArgument(!match || desc.length() == index + 1, "desc is invalid: %s", desc);
 
                 return forUnion(types);
@@ -648,6 +702,84 @@ public abstract class Type {
         @Override
         public String toString() {
             return "real";
+        }
+    }
+
+    /**
+     * TODO: Documentation
+     *
+     * @author Henry J. Wylde
+     * @since TODO: SINCE
+     */
+    public static final class Record extends Type {
+
+        private final ImmutableMap<String, Type> fields;
+
+        Record(Map<String, Type> fields) {
+            checkArgument(!fields.isEmpty(), "fields must contain at least 1 element");
+
+            this.fields = ImmutableMap.copyOf(fields);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean equals(@Nullable Object obj) {
+            if (!super.equals(obj)) {
+                return false;
+            }
+
+            return fields.equals(((Type.Record) obj).fields);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getDescriptor() {
+            StringBuilder sb = new StringBuilder();
+
+            sb.append(RECORD_START);
+            for (Map.Entry<String, Type> field : fields.entrySet()) {
+                sb.append(field.getValue().getDescriptor());
+                sb.append(field.getKey());
+                sb.append(RECORD_END);
+            }
+            sb.append(RECORD_END);
+
+            return sb.toString();
+        }
+
+        public ImmutableMap<String, Type> getFields() {
+            return fields;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int hashCode() {
+            return 13 + 31 * fields.hashCode();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
+
+            sb.append("{");
+            for (Map.Entry<String, Type> field : fields.entrySet()) {
+                sb.append(field.getValue()).append(" ");
+                sb.append(field.getKey());
+                sb.append(", ");
+            }
+            sb.setLength(sb.length() - 2);
+            sb.append("}");
+
+            return sb.toString();
         }
     }
 

@@ -1,0 +1,13 @@
+void f([{any x}] anys):
+    for a in anys:
+        if a.x == null:
+            return
+
+        print a
+
+void main([str] args):
+    f([{x: 0}, {x: 1}, {x: 'foo'}, {x: null}, {x: 2}])
+    f([{x: null}, {x: 'bar'}, {x: {'2'}}])
+    f([])
+    f([{x: {{{}}}}, {x: []}, {x: [{[null]}]}, {x: null}, {x: {}}])
+

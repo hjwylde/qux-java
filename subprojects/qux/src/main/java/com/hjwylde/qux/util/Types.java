@@ -3,10 +3,16 @@ package com.hjwylde.qux.util;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.hjwylde.common.lang.Pair;
+
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -72,6 +78,12 @@ public final class Types {
             }
 
             return isSubtype(((Type.List) lhs).getInnerType(), ((Type.List) rhs).getInnerType());
+        } else if (lhs instanceof Type.Record) {
+            if (!(rhs instanceof Type.Record)) {
+                return false;
+            }
+
+            return isSubtype((Type.Record) lhs, (Type.Record) rhs);
         } else if (lhs instanceof Type.Set) {
             if (!(rhs instanceof Type.Set)) {
                 return false;
@@ -102,6 +114,8 @@ public final class Types {
             return normalise((Type.Function) type);
         } else if (type instanceof Type.List) {
             return Type.forList(((Type.List) type).getInnerType());
+        } else if (type instanceof Type.Record) {
+            return normalise((Type.Record) type);
         } else if (type instanceof Type.Set) {
             return Type.forSet(((Type.Set) type).getInnerType());
         } else if (type instanceof Type.Union) {
@@ -154,6 +168,81 @@ public final class Types {
 
         // Create a new union using the constructor to avoid an infinite recursive call to normalise
         return new Type.Union(union);
+    }
+
+    /**
+     * Normalises the given record type. The purpose of this is to have a consistent form for
+     * comparing different types (specifically, subtype relations). A normalised record will have
+     * all element types normalised, along with any union types brought out to the upper most level.
+     * For example, {@code {int|null a, real b}} would be normalised to {@code {int a, real b}|{null
+     * a, real b}}. This maintains all properties of the type while making it easy to do subtype
+     * comparisons between records.
+     *
+     * @param type the record type to normalise.
+     * @return the normalised record type.
+     */
+    public static Type normalise(Type.Record type) {
+        // We're going to split up all the inner unions of the record
+        // An example of how it will be represented:
+        // {int|null a, real b} = [{("a", int), ("a", null)}, {("b", real)}]
+        // That way when we do a cartesian product on all of the sets, we will get all possible
+        // record types
+        // The final result will be: {int a, real b}|{null a, real b}
+
+        // Split up the record as per the example above
+        List<Set<Pair<String, Type>>> split = new ArrayList<>();
+        for (Map.Entry<String, Type> entry : type.getFields().entrySet()) {
+            Set<Pair<String, Type>> pairs = new HashSet<>();
+            Type normalised = normalise(entry.getValue());
+
+            if (normalised instanceof Type.Union) {
+                for (Type inner : ((Type.Union) normalised).getTypes()) {
+                    pairs.add(new Pair<>(entry.getKey(), normalise(inner)));
+                }
+            } else {
+                pairs.add(new Pair<>(entry.getKey(), normalised));
+            }
+
+            split.add(pairs);
+        }
+
+        // Cartesian product time!
+        Set<List<Pair<String, Type>>> product = Sets.cartesianProduct(split);
+
+        // Recreate the union of records now, so we'll have {int a, real b}|{null a, real b}
+        List<Type> union = new ArrayList<>();
+        for (List<Pair<String, Type>> inner : product) {
+            Map<String, Type> record = new HashMap<>();
+            for (Pair<String, Type> pair : inner) {
+                record.put(pair.getFirst(), pair.getSecond());
+            }
+
+            union.add(new Type.Record(record));
+        }
+
+        checkState(!union.isEmpty(), "normalisation of record resulted in union of size 0: %s",
+                type);
+
+        if (union.size() == 1) {
+            return union.get(0);
+        }
+
+        // Create a new union using the constructor to avoid an infinite recursive call to normalise
+        return new Type.Union(union);
+    }
+
+    private static boolean isSubtype(Type.Record lhs, Type.Record rhs) {
+        if (!lhs.getFields().keySet().containsAll(rhs.getFields().keySet())) {
+            return false;
+        }
+
+        for (String key : rhs.getFields().keySet()) {
+            if (!isSubtype(lhs.getFields().get(key), rhs.getFields().get(key))) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private static boolean isSubtype(Type.Function lhs, Type.Function rhs) {

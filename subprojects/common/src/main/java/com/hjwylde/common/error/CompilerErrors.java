@@ -140,6 +140,37 @@ public final class CompilerErrors {
     }
 
     /**
+     * Creates a new {@link com.hjwylde.common.error.CompilerError} representing a duplicate record
+     * field definition found.
+     *
+     * @param name the name of the record field.
+     * @return the created {@link com.hjwylde.common.error.CompilerError}.
+     */
+    public static CompilerError duplicateRecordField(String name) {
+        String message = String.format("duplicate record field definition found for '%s'", name);
+
+        return new CompilerError(message);
+    }
+
+    /**
+     * Creates a new {@link com.hjwylde.common.error.SourceCompilerError} representing a duplicate
+     * record field definition found with the provided source information.
+     *
+     * @param name the name of the record field.
+     * @param source the source file name.
+     * @param line the line number.
+     * @param col the column number.
+     * @param length the length.
+     * @return the created {@link com.hjwylde.common.error.SourceCompilerError}.
+     */
+    public static SourceCompilerError duplicateRecordField(String name, String source, int line,
+            int col, int length) {
+        String message = String.format("duplicate record field definition found for '%s'", name);
+
+        return new SourceCompilerError(message, source, line, col, length);
+    }
+
+    /**
      * Creates a new {@link com.hjwylde.common.error.CompilerError} representing an invalid dedent.
      *
      * @return the created {@link com.hjwylde.common.error.CompilerError}.

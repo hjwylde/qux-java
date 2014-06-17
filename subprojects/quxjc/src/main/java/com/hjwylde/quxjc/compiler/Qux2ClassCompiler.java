@@ -93,7 +93,7 @@ public final class Qux2ClassCompiler<T extends QuxCompileSpec> implements Compil
      */
     private static void setVerbose(boolean verbose) {
         if (verbose) {
-            LoggerUtils.setLogLevel(Level.INFO);
+            LoggerUtils.setLogLevel(Level.DEBUG);
         } else {
             LoggerUtils.setLogLevel(Level.WARN);
         }

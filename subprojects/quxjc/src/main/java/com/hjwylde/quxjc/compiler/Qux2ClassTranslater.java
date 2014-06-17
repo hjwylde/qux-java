@@ -25,10 +25,12 @@ import static org.objectweb.asm.Opcodes.ICONST_M1;
 import static org.objectweb.asm.Opcodes.IF_ACMPEQ;
 import static org.objectweb.asm.Opcodes.IF_ACMPNE;
 import static org.objectweb.asm.Opcodes.INVOKEINTERFACE;
+import static org.objectweb.asm.Opcodes.INVOKESPECIAL;
 import static org.objectweb.asm.Opcodes.INVOKESTATIC;
 import static org.objectweb.asm.Opcodes.INVOKEVIRTUAL;
 import static org.objectweb.asm.Opcodes.LCONST_0;
 import static org.objectweb.asm.Opcodes.LCONST_1;
+import static org.objectweb.asm.Opcodes.NEW;
 import static org.objectweb.asm.Opcodes.NEWARRAY;
 import static org.objectweb.asm.Opcodes.POP;
 import static org.objectweb.asm.Opcodes.PUTSTATIC;
@@ -75,6 +77,7 @@ import qux.lang.List;
 import qux.lang.Null;
 import qux.lang.Obj;
 import qux.lang.Real;
+import qux.lang.Record;
 import qux.lang.Set;
 import qux.lang.Str;
 import qux.lang.op.Access;
@@ -194,6 +197,14 @@ public final class Qux2ClassTranslater extends QuxAdapter {
         }
     }
 
+    static String getConstructorDescriptor(Class<?> clazz, Class<?>... parameterClasses) {
+        try {
+            return Type.getConstructorDescriptor(clazz.getConstructor(parameterClasses));
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     static String getMethodDescriptor(Class<?> clazz, String name, Class<?>... parameterClasses) {
         try {
             return Type.getMethodDescriptor(clazz.getMethod(name, parameterClasses));
@@ -239,6 +250,8 @@ public final class Qux2ClassTranslater extends QuxAdapter {
             return Type.getType(Obj.class);
         } else if (type instanceof com.hjwylde.qux.util.Type.Real) {
             return Type.getType(Real.class);
+        } else if (type instanceof com.hjwylde.qux.util.Type.Record) {
+            return Type.getType(Record.class);
         } else if (type instanceof com.hjwylde.qux.util.Type.Set) {
             return Type.getType(Set.class);
         } else if (type instanceof com.hjwylde.qux.util.Type.Str) {
@@ -539,12 +552,15 @@ public final class Qux2ClassTranslater extends QuxAdapter {
          */
         @Override
         public void visitExprExternal(ExprNode.External expr) {
-            if (expr.getExpr() instanceof ExprNode.Function) {
-                visitExprFunction(expr.getMeta().getId(), (ExprNode.Function) expr.getExpr());
-            } else if (expr.getExpr() instanceof ExprNode.Variable) {
-                visitExprVariable(expr.getMeta().getId(), (ExprNode.Variable) expr.getExpr());
-            } else {
-                throw new MethodNotImplementedError(expr.getExpr().getClass().toString());
+            switch (expr.getType()) {
+                case CONSTANT:
+                    visitExprVariable(expr.getMeta().getId(), (ExprNode.Variable) expr.getExpr());
+                    break;
+                case FUNCTION:
+                    visitExprFunction(expr.getMeta().getId(), (ExprNode.Function) expr.getExpr());
+                    break;
+                default:
+                    throw new MethodNotImplementedError(expr.getType().toString());
             }
         }
 
@@ -603,6 +619,46 @@ public final class Qux2ClassTranslater extends QuxAdapter {
          */
         @Override
         public void visitExprMeta(ExprNode.Meta expr) {}
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void visitExprRecord(ExprNode.Record expr) {
+            Map<String, ExprNode> fields = expr.getFields();
+
+            mv.visitTypeInsn(NEW, Type.getInternalName(HashMap.class));
+            mv.visitInsn(DUP);
+            mv.visitMethodInsn(INVOKESPECIAL, Type.getInternalName(HashMap.class), "<init>",
+                    getConstructorDescriptor(HashMap.class), false);
+
+            for (Map.Entry<String, ExprNode> field : expr.getFields().entrySet()) {
+                mv.visitInsn(DUP);
+
+                mv.visitLdcInsn(field.getKey());
+                visitExpr(field.getValue());
+
+                mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Map.class), "put",
+                        getMethodDescriptor(Map.class, "put", Object.class, Object.class), true);
+                mv.visitInsn(POP);
+            }
+
+            mv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(Record.class), "valueOf",
+                    getMethodDescriptor(Record.class, "valueOf", Map.class), false);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void visitExprRecordAccess(ExprNode.RecordAccess expr) {
+            visitExpr(expr.getTarget());
+            mv.visitLdcInsn(expr.getField());
+
+            mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(Record.class), "get",
+                    getMethodDescriptor(Record.class, "get", String.class), false);
+            visitCheckcast(expr);
+        }
 
         /**
          * {@inheritDoc}
@@ -961,17 +1017,8 @@ public final class Qux2ClassTranslater extends QuxAdapter {
 
             visitExpr(stmt.getExpr());
 
-            // TODO: Change all these to using the Types.getInnerType() utility method
-            // TODO: Allow strings here
-            com.hjwylde.qux.util.Type type = getQuxType(stmt.getExpr());
-            com.hjwylde.qux.util.Type innerType;
-            if (type instanceof com.hjwylde.qux.util.Type.List) {
-                innerType = ((com.hjwylde.qux.util.Type.List) type).getInnerType();
-            } else if (type instanceof com.hjwylde.qux.util.Type.Set) {
-                innerType = ((com.hjwylde.qux.util.Type.Set) type).getInnerType();
-            } else {
-                throw new MethodNotImplementedError(type.toString());
-            }
+            com.hjwylde.qux.util.Type innerType = com.hjwylde.qux.util.Type.getInnerType(getQuxType(
+                    stmt.getExpr()));
 
             // The local variable holding each element of the iterable
             locals.add(stmt.getVar());

@@ -30,17 +30,17 @@ public final class Set extends AbstractObj implements Access, Iterable, Len, Sli
     private int refs;
 
     private Set() {
-        this.data = new AbstractObj[10];
+        data = new AbstractObj[10];
         count = 0;
     }
 
     private Set(Set set) {
-        this.data = set.data;
-        this.count = set.count;
+        data = set.data;
+        count = set.count;
 
         // Lazily clone the data only when the first write is performed
         refs = 1;
-        // Can't forget the fact that this list also references the prior list!
+        // Can't forget the fact that this set also references the prior set!
         set.refs++;
     }
 
@@ -117,10 +117,10 @@ public final class Set extends AbstractObj implements Access, Iterable, Len, Sli
         sb.append("{");
         for (Iterator it = _iter_(); it.hasNext() == TRUE; ) {
             sb.append(it.next()._desc_());
-            sb.append(", ");
-        }
-        if (sb.length() > 2) {
-            sb.setLength(sb.length() - 2);
+
+            if (it.hasNext() == TRUE) {
+                sb.append(", ");
+            }
         }
         sb.append("}");
 
@@ -195,7 +195,7 @@ public final class Set extends AbstractObj implements Access, Iterable, Len, Sli
                     return TRUE;
                 }
 
-                // Check if the list is still the same, if it is we can decrement the refs count
+                // Check if the set is still the same, if it is we can decrement the refs count
                 if (Set.this.data == data) {
                     refs--;
                 }
@@ -336,8 +336,8 @@ public final class Set extends AbstractObj implements Access, Iterable, Len, Sli
     }
 
     Set subset(BigInteger from, BigInteger to) {
-        checkArgument(from.bitLength() < 32, "lists of size larger than 32 bits is unsupported");
-        checkArgument(to.bitLength() < 32, "lists of size larger than 32 bits is unsupported");
+        checkArgument(from.bitLength() < 32, "sets of size larger than 32 bits is unsupported");
+        checkArgument(to.bitLength() < 32, "sets of size larger than 32 bits is unsupported");
 
         return subset(from.intValue(), to.intValue());
     }
@@ -358,8 +358,7 @@ public final class Set extends AbstractObj implements Access, Iterable, Len, Sli
     }
 
     private synchronized void ensureCapacity(BigInteger capacity) {
-        checkArgument(capacity.bitLength() < 32,
-                "lists of size larger than 32 bits is unsupported");
+        checkArgument(capacity.bitLength() < 32, "sets of size larger than 32 bits is unsupported");
 
         ensureCapacity(capacity.intValue());
     }
