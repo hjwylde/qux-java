@@ -20,9 +20,6 @@ import javax.annotation.Nullable;
  * A directory resource is an inclusion of all resources that may be located from a root directory.
  * The resources in the iterator of this directory are lazily initialised. That is, they will only
  * be read from the file system when needed.
- * <p/>
- * TODO: Consider adding in a FilteredDirectoryResource to simplify the process of includes /
- * excludes, especially with file types.
  *
  * @author Henry J. Wylde
  */
@@ -66,7 +63,7 @@ public class DirectoryResource extends AbstractResourceCollection {
      *
      * @return the root directory.
      */
-    public Path getRoot() {
+    public final Path getRoot() {
         return root;
     }
 

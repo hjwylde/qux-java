@@ -109,7 +109,9 @@ decl : declConstant
      | declFunction
      ;
 
-declConstant : type Identifier 'is' expr NEWLINE
+// TODO: It would be nice to remove the type declaration here, I think it will be possible once we
+// move the name propagation to the lexer
+declConstant : 'const' type Identifier 'is' expr NEWLINE
              ;
 
 declFunction : typeReturn Identifier '(' (type Identifier (',' type Identifier)*)? ')' block
@@ -119,12 +121,12 @@ declFunction : typeReturn Identifier '(' (type Identifier (',' type Identifier)*
 
 stmt : stmtAccessAssign
      | stmtAssign
+     | stmtExpr
      | stmtFor
      | stmtIf
      | stmtPrint
      | stmtReturn
      | stmtWhile
-     | stmtExpr
      ;
 
 stmtAccessAssign : Identifier ('[' expr ']')+ '=' expr NEWLINE
@@ -132,6 +134,12 @@ stmtAccessAssign : Identifier ('[' expr ']')+ '=' expr NEWLINE
 
 stmtAssign : Identifier (AOP | AOP_ADD | AOP_SUB | AOP_MUL | AOP_DIV | AOP_REM) expr NEWLINE
            ;
+
+stmtExpr : exprDecrement NEWLINE
+         | exprExternalConstant NEWLINE
+         | exprExternalFunction NEWLINE
+         | exprIncrement NEWLINE
+         ;
 
 stmtFor : 'for' Identifier BOP_IN expr block
         ;
@@ -148,19 +156,14 @@ stmtReturn : 'return' expr? NEWLINE
 stmtWhile : 'while' expr block
           ;
 
-stmtExpr : exprDecrement NEWLINE
-         | exprExternal NEWLINE
-         | exprFunction NEWLINE
-         | exprIncrement NEWLINE
-         ;
-
 block : ':' NEWLINE INDENT stmt* DEDENT
       ;
 
 // Expressions
 
 // TODO: Could push a mode that skips NEWLINE, INDENT and DEDENT tokens, then pop it at the end
-expr : exprBinary ;
+expr : exprBinary
+     ;
 
 exprBinary : exprBinary_1
            ;
@@ -208,6 +211,7 @@ exprAccess_1 : exprAccess_1_1
              | exprAccess_1_3
              | exprAccess_1_4
              | exprAccess_1_5
+             | exprAccess_1_6
              ;
 
 exprAccess_1_1 : '[' expr ']'
@@ -225,10 +229,14 @@ exprAccess_1_4 : '[' ':' expr ']'
 exprAccess_1_5 : '[' ':' ']'
                ;
 
+exprAccess_1_6 : '.' Identifier
+               ;
+
 exprTerm : exprBrace
          | exprBracket
          | exprDecrement
-         | exprExternal
+         | exprExternalConstant
+         | exprExternalFunction
          | exprFunction
          | exprIncrement
          | exprParen
@@ -237,6 +245,7 @@ exprTerm : exprBrace
          ;
 
 exprBrace : '{' (expr (',' expr)*)? '}'
+          | '{' Identifier ':' expr (',' Identifier ':' expr)* '}'
           ;
 
 exprBracket : '[' (expr (',' expr)*)? ']'
@@ -252,14 +261,17 @@ exprFunction : Identifier '(' ')'
 exprIncrement : Identifier UOP_INC
               ;
 
-exprExternal : exprMeta '$' exprFunction
-             ;
-
 exprParen : '(' expr ')'
           ;
 
 exprVariable : Identifier
              ;
+
+exprExternalConstant : exprMeta '$' Identifier
+                     ;
+
+exprExternalFunction : exprMeta '$' exprFunction
+                     ;
 
 exprMeta : Identifier ('.' Identifier)*
          ;
@@ -281,6 +293,7 @@ valueKeyword : FALSE
 // Types
 
 type : typeList
+     | typeRecord
      | typeSet
      | typeTerm
      ;
@@ -288,8 +301,11 @@ type : typeList
 typeList : '[' type ']'
          ;
 
+typeRecord : '{' type Identifier (',' type Identifier)* '}'
+           ;
+
 typeSet : '{' type '}'
-         ;
+        ;
 
 typeTerm : typeKeyword
          ;
@@ -364,6 +380,7 @@ Exponent : 'e' [+-] Numeral ;
 
 ANY     : 'any' ;
 BOOL    : 'bool' ;
+CONST   : 'const' ;
 ELIF    : 'elif' ;
 ELSE    : 'else' ;
 FALSE   : 'false' ;
@@ -376,6 +393,7 @@ NULL    : 'null' ;
 OBJ     : 'obj' ;
 PACKAGE : 'package' ;
 REAL    : 'real' ;
+RECORD  : 'record' ;
 RETURN  : 'return' ;
 SET     : 'set' ;
 STR     : 'str' ;

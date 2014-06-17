@@ -2,6 +2,7 @@ package com.hjwylde.qux.pipelines;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.hjwylde.qux.util.Type.TYPE_ANY;
 import static com.hjwylde.qux.util.Type.TYPE_BOOL;
 import static com.hjwylde.qux.util.Type.TYPE_INT;
 import static com.hjwylde.qux.util.Type.TYPE_ITERABLE;
@@ -12,6 +13,7 @@ import static com.hjwylde.qux.util.Type.TYPE_OBJ;
 import static com.hjwylde.qux.util.Type.TYPE_REAL;
 import static com.hjwylde.qux.util.Type.TYPE_SET_ANY;
 import static com.hjwylde.qux.util.Type.TYPE_STR;
+import static com.hjwylde.qux.util.Type.getFieldType;
 import static com.hjwylde.qux.util.Type.getInnerType;
 import static com.hjwylde.qux.util.Types.isSubtype;
 
@@ -39,6 +41,7 @@ import com.hjwylde.qux.util.Attributes;
 import com.hjwylde.qux.util.Type;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 
 import org.jgrapht.event.VertexTraversalEvent;
 
@@ -358,12 +361,18 @@ public final class TypePropagator extends Pipeline {
         @Override
         public void visitExprExternal(ExprNode.External expr) {
             visitExpr(expr.getMeta());
-            if (expr.getExpr() instanceof ExprNode.Function) {
-                visitExprFunction(expr.getMeta().getId(), (ExprNode.Function) expr.getExpr(), expr);
-            } else if (expr.getExpr() instanceof ExprNode.Variable) {
-                visitExprVariable(expr.getMeta().getId(), (ExprNode.Variable) expr.getExpr(), expr);
-            } else {
-                throw new MethodNotImplementedError(expr.getExpr().getClass().toString());
+
+            switch (expr.getType()) {
+                case CONSTANT:
+                    visitExprVariable(expr.getMeta().getId(), (ExprNode.Variable) expr.getExpr(),
+                            expr);
+                    break;
+                case FUNCTION:
+                    visitExprFunction(expr.getMeta().getId(), (ExprNode.Function) expr.getExpr(),
+                            expr);
+                    break;
+                default:
+                    throw new MethodNotImplementedError(expr.getType().toString());
             }
 
             setType(expr, getType(expr.getExpr()));
@@ -410,6 +419,35 @@ public final class TypePropagator extends Pipeline {
         @Override
         public void visitExprMeta(ExprNode.Meta expr) {
             setType(expr, TYPE_META);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void visitExprRecord(ExprNode.Record expr) {
+            Map<String, Type> fields = new HashMap<>();
+
+            for (Map.Entry<String, ExprNode> field : expr.getFields().entrySet()) {
+                visitExpr(field.getValue());
+                fields.put(field.getKey(), getType(field.getValue()));
+            }
+
+            setType(expr, Type.forRecord(fields));
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void visitExprRecordAccess(ExprNode.RecordAccess expr) {
+            visitExpr(expr.getTarget());
+
+            // Sanity check, if it fails then we don't care - the type checker should pick it up
+            if (isSubtype(getType(expr.getTarget()), Type.forRecord(ImmutableMap.<String, Type>of(
+                    expr.getField(), TYPE_ANY)))) {
+                setType(expr, getFieldType(getType(expr.getTarget()), expr.getField()));
+            }
         }
 
         /**

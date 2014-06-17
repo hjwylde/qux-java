@@ -1,0 +1,6 @@
+void main([str] args):
+    print {x: null} == {x: null}
+    print {y: null, x: 5} == {x: 5, y: null}
+    print {x: null} == {y: null}
+    print {x: 5} == {x: 5.0}
+

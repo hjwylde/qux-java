@@ -30,13 +30,13 @@ public final class List extends AbstractObj implements Access, Assign, Iterable,
     private int refs;
 
     private List() {
-        this.data = new AbstractObj[10];
+        data = new AbstractObj[10];
         count = 0;
     }
 
     private List(List list) {
-        this.data = list.data;
-        this.count = list.count;
+        data = list.data;
+        count = list.count;
 
         // Lazily clone the data only when the first write is performed
         refs = 1;
@@ -48,7 +48,7 @@ public final class List extends AbstractObj implements Access, Assign, Iterable,
         checkArgument(!Arrays.asList(data).contains(null), "data cannot contain null");
 
         this.data = data.clone();
-        this.count = data.length;
+        count = data.length;
 
         if (count == 0) {
             this.data = new AbstractObj[10];
@@ -126,10 +126,10 @@ public final class List extends AbstractObj implements Access, Assign, Iterable,
         sb.append("[");
         for (Iterator it = _iter_(); it.hasNext() == TRUE; ) {
             sb.append(it.next()._desc_());
-            sb.append(", ");
-        }
-        if (sb.length() > 2) {
-            sb.setLength(sb.length() - 2);
+
+            if (it.hasNext() == TRUE) {
+                sb.append(", ");
+            }
         }
         sb.append("]");
 

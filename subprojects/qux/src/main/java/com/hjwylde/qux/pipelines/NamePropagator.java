@@ -201,24 +201,28 @@ public final class NamePropagator extends Pipeline {
             visitExpr(expr.getMeta());
             ExprNode.Meta meta = (ExprNode.Meta) result;
 
-            if (expr.getExpr() instanceof ExprNode.Function) {
-                ExprNode.Function function = (ExprNode.Function) expr.getExpr();
+            switch (expr.getType()) {
+                case CONSTANT:
+                    result = expr.getExpr();
+                    break;
+                case FUNCTION:
+                    ExprNode.Function function = (ExprNode.Function) expr.getExpr();
 
-                List<ExprNode> arguments = new ArrayList<>();
-                for (ExprNode argument : function.getArguments()) {
-                    visitExpr(argument);
-                    arguments.add(result);
-                }
+                    List<ExprNode> arguments = new ArrayList<>();
+                    for (ExprNode argument : function.getArguments()) {
+                        visitExpr(argument);
+                        arguments.add(result);
+                    }
 
-                result = new ExprNode.Function(function.getName(), arguments, expr.getAttributes());
-            } else if (expr.getExpr() instanceof ExprNode.Variable) {
-                result = expr.getExpr();
-            } else {
-                throw new MethodNotImplementedError(expr.getExpr().getClass().toString());
+                    result = new ExprNode.Function(function.getName(), arguments,
+                            expr.getAttributes());
+                    break;
+                default:
+                    throw new MethodNotImplementedError(expr.getType().toString());
             }
 
-            result = new ExprNode.External(meta, result, Attributes.getAttributes(expr,
-                    Attribute.Source.class));
+            result = new ExprNode.External(expr.getType(), meta, result, Attributes.getAttributes(
+                    expr, Attribute.Source.class));
         }
 
         /**
@@ -240,8 +244,8 @@ public final class NamePropagator extends Pipeline {
             ExprNode.Function function = new ExprNode.Function(expr.getName(), arguments,
                     expr.getAttributes());
 
-            result = new ExprNode.External(meta, function, Attributes.getAttributes(expr,
-                    Attribute.Source.class));
+            result = new ExprNode.External(ExprNode.External.Type.FUNCTION, meta, function,
+                    Attributes.getAttributes(expr, Attribute.Source.class));
         }
 
         /**
@@ -266,6 +270,30 @@ public final class NamePropagator extends Pipeline {
             String id = resolveClass(expr.getId());
 
             result = new ExprNode.Meta(id, expr.getAttributes());
+        }
+
+        /**
+         * {@inheritDoc
+         */
+        @Override
+        public void visitExprRecord(ExprNode.Record expr) {
+            Map<String, ExprNode> fields = new HashMap<>();
+            for (Map.Entry<String, ExprNode> field : expr.getFields().entrySet()) {
+                visitExpr(field.getValue());
+                fields.put(field.getKey(), result);
+            }
+
+            result = new ExprNode.Record(fields, expr.getAttributes());
+        }
+
+        /**
+         * {@inheritDoc
+         */
+        @Override
+        public void visitExprRecordAccess(ExprNode.RecordAccess expr) {
+            visitExpr(expr.getTarget());
+
+            result = new ExprNode.RecordAccess(result, expr.getField(), expr.getAttributes());
         }
 
         /**
@@ -331,8 +359,8 @@ public final class NamePropagator extends Pipeline {
             ExprNode.Meta meta = new ExprNode.Meta(owner, Attributes.getAttributes(expr,
                     Attribute.Source.class));
 
-            result = new ExprNode.External(meta, expr, Attributes.getAttributes(expr,
-                    Attribute.Source.class));
+            result = new ExprNode.External(ExprNode.External.Type.CONSTANT, meta, expr,
+                    Attributes.getAttributes(expr, Attribute.Source.class));
         }
     }
 

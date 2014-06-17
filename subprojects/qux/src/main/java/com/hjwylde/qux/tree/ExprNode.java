@@ -9,11 +9,13 @@ import com.hjwylde.qux.util.Op;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Map;
 
 import javax.annotation.Nullable;
 
@@ -132,7 +134,8 @@ public abstract class ExprNode extends Node {
      */
     public static final class Constant extends ExprNode {
 
-        private final ExprNode.Constant.Type type;
+        private final Type type;
+
         private final Object value;
 
         public Constant(Type type, Object value, Attribute... attributes) {
@@ -156,6 +159,7 @@ public abstract class ExprNode extends Node {
                     "value must be of class String for str constant");
 
             this.type = checkNotNull(type, "type cannot be null");
+
             this.value = value;
         }
 
@@ -167,7 +171,7 @@ public abstract class ExprNode extends Node {
             ev.visitExprConstant(this);
         }
 
-        public ExprNode.Constant.Type getType() {
+        public Type getType() {
             return type;
         }
 
@@ -193,20 +197,28 @@ public abstract class ExprNode extends Node {
      */
     public static final class External extends ExprNode {
 
-        // TODO: Add in an enum for the Type of the external, either FUNCTION or CONSTANT
+        private final Type type;
 
         private final Meta meta;
         private final ExprNode expr;
 
-        public External(Meta meta, ExprNode expr, Attribute... attributes) {
-            this(meta, expr, Arrays.asList(attributes));
+        public External(Type type, Meta meta, ExprNode expr, Attribute... attributes) {
+            this(type, meta, expr, Arrays.asList(attributes));
         }
 
-        public External(Meta meta, ExprNode expr, Collection<? extends Attribute> attributes) {
+        public External(Type type, Meta meta, ExprNode expr,
+                Collection<? extends Attribute> attributes) {
             super(attributes);
 
             checkArgument(expr instanceof Function || expr instanceof Variable,
                     "expr must be a function or variable");
+
+            checkArgument(type != Type.CONSTANT || expr instanceof Variable,
+                    "expr must be of class Variable for external constant");
+            checkArgument(type != Type.FUNCTION || expr instanceof Function,
+                    "expr must be of class Function for external function");
+
+            this.type = checkNotNull(type, "type cannot be null");
 
             this.meta = checkNotNull(meta, "meta cannot be null");
             this.expr = checkNotNull(expr, "expr cannot be null");
@@ -226,6 +238,20 @@ public abstract class ExprNode extends Node {
 
         public Meta getMeta() {
             return meta;
+        }
+
+        public Type getType() {
+            return type;
+        }
+
+        /**
+         * TODO: Documentation
+         *
+         * @author Henry J. Wylde
+         * @since TODO: SINCE
+         */
+        public static enum Type {
+            CONSTANT, FUNCTION;
         }
     }
 
@@ -330,6 +356,81 @@ public abstract class ExprNode extends Node {
 
         public String getId() {
             return id;
+        }
+    }
+
+    /**
+     * TODO: Documentation
+     *
+     * @author Henry J. Wylde
+     * @since TODO: SINCE
+     */
+    public static final class Record extends ExprNode {
+
+        private final ImmutableMap<String, ExprNode> fields;
+
+        public Record(Map<String, ExprNode> fields, Attribute... attributes) {
+            this(fields, Arrays.asList(attributes));
+        }
+
+        public Record(Map<String, ExprNode> fields, Collection<? extends Attribute> attributes) {
+            super(attributes);
+
+            checkArgument(!fields.isEmpty(), "fields must contain at least 1 element");
+
+            this.fields = ImmutableMap.copyOf(fields);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void accept(ExprVisitor ev) {
+            ev.visitExprRecord(this);
+        }
+
+        public ImmutableMap<String, ExprNode> getFields() {
+            return fields;
+        }
+    }
+
+    /**
+     * TODO: Documentation
+     *
+     * @author Henry J. Wylde
+     * @since TODO: SINCE
+     */
+    public static final class RecordAccess extends ExprNode {
+
+        private final ExprNode target;
+        private final String field;
+
+        public RecordAccess(ExprNode target, String field, Attribute... attributes) {
+            this(target, field, Arrays.asList(attributes));
+        }
+
+        public RecordAccess(ExprNode target, String field,
+                Collection<? extends Attribute> attributes) {
+            super(attributes);
+
+            this.target = checkNotNull(target, "target cannot be null");
+            this.field = checkNotNull(field, "field cannot be null");
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void accept(ExprVisitor ev) {
+            ev.visitExprRecordAccess(this);
+        }
+
+        public String getField() {
+            return field;
+        }
+
+        public ExprNode getTarget() {
+            return target;
         }
     }
 

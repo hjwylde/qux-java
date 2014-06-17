@@ -1,0 +1,14 @@
+{int x, str y} f({int x, str y} xs):
+    xs.x = 3
+
+    return xs
+
+void main([str] args):
+    xs = {x: 5, y: 'foo'}
+    print xs.x
+    print xs.y
+    print f(xs).x
+    print xs.x
+    xs.y = 'bar'
+    print xs
+
