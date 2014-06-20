@@ -3,20 +3,20 @@ package com.hjwylde.qux.api;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
-import com.hjwylde.qux.tree.ExprNode;
+import com.hjwylde.qux.util.Type;
 
 /**
  * TODO: Documentation
  *
  * @author Henry J. Wylde
- * @since 0.2.2
+ * @since TODO: SINCE
  */
-public class CheckConstantAdapter extends ConstantAdapter {
+public class CheckTypeAdapter extends TypeAdapter {
 
-    private boolean visitedExpr = false;
+    private boolean visitedType = false;
     private boolean visitedEnd = false;
 
-    public CheckConstantAdapter(ConstantVisitor next) {
+    public CheckTypeAdapter(TypeVisitor next) {
         super(next);
     }
 
@@ -29,7 +29,7 @@ public class CheckConstantAdapter extends ConstantAdapter {
      */
     @Override
     public void visitEnd() {
-        checkState(visitedExpr, "must call visitExpr(ExprNode) before visitEnd()");
+        checkState(visitedType, "must call visitType(Type) before visitEnd()");
         checkState(!visitedEnd, "may only call visitEnd() once");
 
         visitedEnd = true;
@@ -41,13 +41,13 @@ public class CheckConstantAdapter extends ConstantAdapter {
      * {@inheritDoc}
      */
     @Override
-    public void visitExpr(ExprNode expr) {
-        checkState(!visitedExpr, "may only call visitExpr(ExprNode) once");
-        checkState(!visitedEnd, "must call visitExpr(ExprNode) before visitEnd()");
-        checkNotNull(expr, "expr cannot be null");
+    public void visitType(Type type) {
+        checkState(!visitedType, "may only call visitType(Type) once");
+        checkState(!visitedEnd, "must call visitType(Type) before visitEnd()");
+        checkNotNull(type, "type cannot be null");
 
-        visitedExpr = true;
+        visitedType = true;
 
-        super.visitExpr(expr);
+        super.visitType(type);
     }
 }

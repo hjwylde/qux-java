@@ -19,12 +19,12 @@ import static com.hjwylde.qux.util.Types.isSubtype;
 
 import com.hjwylde.common.error.CompilerErrors;
 import com.hjwylde.common.error.MethodNotImplementedError;
-import com.hjwylde.qbs.builder.Context;
 import com.hjwylde.qbs.builder.QuxContext;
 import com.hjwylde.qbs.builder.resources.Resource;
 import com.hjwylde.qux.api.ConstantAdapter;
 import com.hjwylde.qux.api.ExprVisitor;
 import com.hjwylde.qux.api.StmtVisitor;
+import com.hjwylde.qux.api.TypeAdapter;
 import com.hjwylde.qux.builder.AbstractControlFlowGraphListener;
 import com.hjwylde.qux.builder.ControlFlowGraph;
 import com.hjwylde.qux.builder.ControlFlowGraphEdge;
@@ -36,6 +36,7 @@ import com.hjwylde.qux.tree.FunctionNode;
 import com.hjwylde.qux.tree.Node;
 import com.hjwylde.qux.tree.QuxNode;
 import com.hjwylde.qux.tree.StmtNode;
+import com.hjwylde.qux.tree.TypeNode;
 import com.hjwylde.qux.util.Attribute;
 import com.hjwylde.qux.util.Attributes;
 import com.hjwylde.qux.util.Type;
@@ -82,7 +83,15 @@ public final class TypePropagator extends Pipeline {
             apply(function);
         }
 
+        for (TypeNode type : node.getTypes()) {
+            apply(type);
+        }
+
         return node;
+    }
+
+    private void apply(TypeNode type) {
+        type.accept(new TypeTypePropagator());
     }
 
     private void apply(ConstantNode constant) {
@@ -107,9 +116,8 @@ public final class TypePropagator extends Pipeline {
         }
     }
 
-    private static Type getConstantType(Context context, String owner, ExprNode.Variable constant,
-            Node node) {
-        Resource.Single resource = getResource(context, owner, node);
+    private Type getConstantType(String owner, ExprNode.Variable constant, Node node) {
+        Resource.Single resource = getResource(owner, node);
 
         Optional<String> type = resource.getConstantType(constant.getName());
         if (type.isPresent()) {
@@ -128,9 +136,8 @@ public final class TypePropagator extends Pipeline {
         }
     }
 
-    private static Type.Function getFunctionType(Context context, String owner,
-            ExprNode.Function function, Node node) {
-        Resource.Single resource = getResource(context, owner, node);
+    private Type.Function getFunctionType(String owner, ExprNode.Function function, Node node) {
+        Resource.Single resource = getResource(owner, node);
 
         Optional<String> type = resource.getFunctionType(function.getName());
         if (type.isPresent()) {
@@ -149,7 +156,16 @@ public final class TypePropagator extends Pipeline {
         }
     }
 
-    private static Resource.Single getResource(Context context, String id, Node node) {
+    private Resource.Single getResource(String id) {
+        Optional<Resource.Single> resource = context.getResourceById(id);
+        if (resource.isPresent()) {
+            return resource.get();
+        }
+
+        throw CompilerErrors.noClassFound(id);
+    }
+
+    private Resource.Single getResource(String id, Node node) {
         Optional<Resource.Single> resource = context.getResourceById(id);
         if (resource.isPresent()) {
             return resource.get();
@@ -169,6 +185,23 @@ public final class TypePropagator extends Pipeline {
 
     private static Type getType(Node node) {
         return Attributes.getAttributeUnchecked(node, Attribute.Type.class).getType();
+    }
+
+    private Type getTypeType(Type.Named type) {
+        // TODO: Figure out if I can get source information here for better errors
+
+        String id = type.getId();
+        String owner = id.substring(0, id.lastIndexOf("$"));
+        String name = id.substring(id.lastIndexOf("$") + 1);
+        // Resource.Single resource = getResource(context, owner, node);
+        Resource.Single resource = getResource(owner);
+
+        Optional<String> desc = resource.getTypeType(name);
+        if (desc.isPresent()) {
+            return Type.forDescriptor(desc.get());
+        }
+
+        throw CompilerErrors.noTypeFound(owner, name);
     }
 
     private static Environment<String, Type> mergeEnvironments(
@@ -194,6 +227,28 @@ public final class TypePropagator extends Pipeline {
         }
 
         return merged;
+    }
+
+    private Type propagate(Type type) {
+        if (type instanceof Type.Function) {
+            // TODO: type instanceof Type.Function
+            throw new MethodNotImplementedError("type instanceof Type.Function");
+        } else if (type instanceof Type.List) {
+            return Type.forList(propagate(((Type.List) type).getInnerType()));
+        } else if (type instanceof Type.Set) {
+            return Type.forSet(propagate(((Type.Set) type).getInnerType()));
+        } else if (type instanceof Type.Union) {
+            List<Type> types = new ArrayList<>();
+            for (Type bound : ((Type.Union) type).getTypes()) {
+                types.add(propagate(bound));
+            }
+
+            return Type.forUnion(types);
+        } else if (type instanceof Type.Named) {
+            return propagate(getTypeType((Type.Named) type));
+        }
+
+        return type;
     }
 
     private boolean propagate(ExprNode expr) {
@@ -391,7 +446,7 @@ public final class TypePropagator extends Pipeline {
                 visitExpr(argument);
             }
 
-            setType(expr, getFunctionType(getContext(), owner, expr, node).getReturnType());
+            setType(expr, getFunctionType(owner, expr, node).getReturnType());
         }
 
         /**
@@ -514,7 +569,7 @@ public final class TypePropagator extends Pipeline {
         }
 
         public void visitExprVariable(String owner, ExprNode.Variable expr, Node node) {
-            setType(expr, getConstantType(getContext(), owner, expr, node));
+            setType(expr, getConstantType(owner, expr, node));
         }
 
         /**
@@ -679,15 +734,36 @@ public final class TypePropagator extends Pipeline {
 
         private void initialiseBaseEnvironment() {
             for (Map.Entry<String, Type> parameter : function.getParameters().entrySet()) {
-                baseEnv.put(parameter.getKey(), parameter.getValue());
+                baseEnv.put(parameter.getKey(), propagate(parameter.getValue()));
             }
             baseEnv.put(RETURN, function.getReturnType());
+        }
+
+        private Type propagate(Type type) {
+            return TypePropagator.this.propagate(type);
         }
 
         private void propagate(ExprNode expr) {
             boolean modified = TypePropagator.this.propagate(expr, env);
 
             setFinished(isFinished() && !modified);
+        }
+    }
+
+    /**
+     * TODO: Documentation.
+     *
+     * @author Henry J. Wylde
+     * @since TODO: SINCE
+     */
+    private final class TypeTypePropagator extends TypeAdapter {
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void visitType(Type type) {
+            propagate(type);
         }
     }
 }

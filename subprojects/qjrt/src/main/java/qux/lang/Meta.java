@@ -461,7 +461,6 @@ public class Meta extends AbstractObj {
      */
     private static final class Tuple extends Meta {
 
-        // TODO: Change this to a frozenlist when it exists
         private final qux.lang.List types;
 
         public Tuple(qux.lang.List types) {
@@ -532,7 +531,6 @@ public class Meta extends AbstractObj {
      */
     private static final class Union extends Meta {
 
-        // TODO: Change this to a frozenset when it exists
         private final qux.lang.Set types;
 
         public Union(qux.lang.Set types) {

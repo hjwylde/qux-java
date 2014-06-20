@@ -60,15 +60,15 @@ public abstract class QuxAdapter implements QuxVisitor {
      * {@inheritDoc}
      */
     @Override
-    public void visitImport(String id) {
-        next.visitImport(id);
+    public void visitPackage(@Nullable String pkg) {
+        next.visitPackage(pkg);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void visitPackage(@Nullable String pkg) {
-        next.visitPackage(pkg);
+    public TypeVisitor visitType(int flags, String name) {
+        return next.visitType(flags, name);
     }
 }

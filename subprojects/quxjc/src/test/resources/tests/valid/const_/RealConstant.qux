@@ -1,13 +1,12 @@
-int A is 5
-int B is 5
-int C is -5
+const real A is 5.0
+const real B is 5.0
+const real C is -5.0
 
-int f(int a):
-    return a + A
+real f(real a):
+    return a + A + 0.5
 
-int g(int A):
-    return A
-
+real g(real A):
+    return A + 0.5
 
 void main([str] args):
     print A

@@ -171,6 +171,37 @@ public final class CompilerErrors {
     }
 
     /**
+     * Creates a new {@link com.hjwylde.common.error.CompilerError} representing a duplicate type
+     * definition found.
+     *
+     * @param name the name of the type definition.
+     * @return the created {@link com.hjwylde.common.error.CompilerError}.
+     */
+    public static CompilerError duplicateType(String name) {
+        String message = String.format("duplicate type definition found for '%s'", name);
+
+        return new CompilerError(message);
+    }
+
+    /**
+     * Creates a new {@link com.hjwylde.common.error.SourceCompilerError} representing a duplicate
+     * type definition found with the provided source information.
+     *
+     * @param name the name of the type.
+     * @param source the source file name.
+     * @param line the line number.
+     * @param col the column number.
+     * @param length the length.
+     * @return the created {@link com.hjwylde.common.error.SourceCompilerError}.
+     */
+    public static SourceCompilerError duplicateType(String name, String source, int line, int col,
+            int length) {
+        String message = String.format("duplicate type definition found for '%s'", name);
+
+        return new SourceCompilerError(message, source, line, col, length);
+    }
+
+    /**
      * Creates a new {@link com.hjwylde.common.error.CompilerError} representing an invalid dedent.
      *
      * @return the created {@link com.hjwylde.common.error.CompilerError}.
@@ -191,6 +222,36 @@ public final class CompilerErrors {
      */
     public static SourceCompilerError invalidDedent(String source, int line, int col, int length) {
         return new SourceCompilerError("invalid dedent", source, line, col, length);
+    }
+
+    /**
+     * Creates a new {@link com.hjwylde.common.error.SourceCompilerError} representing an invalid
+     * import with the provided source information.
+     *
+     * @param id the import id.
+     * @param source the source file name.
+     * @param line the line number.
+     * @param col the column number.
+     * @param length the length.
+     * @return the created {@link com.hjwylde.common.error.SourceCompilerError}.
+     */
+    public static SourceCompilerError invalidImport(String id, String source, int line, int col,
+            int length) {
+        String message = String.format("invalid import '%s'", id);
+
+        return new SourceCompilerError(message, source, line, col, length);
+    }
+
+    /**
+     * Creates a new {@link com.hjwylde.common.error.CompilerError} representing an invalid import.
+     *
+     * @param id the import id.
+     * @return the created {@link com.hjwylde.common.error.CompilerError}.
+     */
+    public static CompilerError invalidInstance(String id) {
+        String message = String.format("invalid import '%s'", id);
+
+        return new CompilerError(message);
     }
 
     /**
@@ -355,6 +416,39 @@ public final class CompilerErrors {
     public static SourceCompilerError noFunctionFound(String owner, String name, String source,
             int line, int col, int length) {
         String message = String.format("no function definition found for '%s$%s'", owner, name);
+
+        return new SourceCompilerError(message, source, line, col, length);
+    }
+
+    /**
+     * Creates a new {@link com.hjwylde.common.error.CompilerError} representing a no type
+     * definition found.
+     *
+     * @param owner the owner of the type.
+     * @param name the name of the type.
+     * @return the created {@link com.hjwylde.common.error.CompilerError}.
+     */
+    public static CompilerError noTypeFound(String owner, String name) {
+        String message = String.format("no type definition found for '%s$%s'", owner, name);
+
+        return new CompilerError(message);
+    }
+
+    /**
+     * Creates a new {@link com.hjwylde.common.error.SourceCompilerError} representing a no type
+     * definition found with the provided source information.
+     *
+     * @param owner the owner of the type.
+     * @param name the name of the type.
+     * @param source the source file name.
+     * @param line the line number.
+     * @param col the column number.
+     * @param length the length.
+     * @return the created {@link com.hjwylde.common.error.SourceCompilerError}.
+     */
+    public static SourceCompilerError noTypeFound(String owner, String name, String source,
+            int line, int col, int length) {
+        String message = String.format("no type definition found for '%s$%s'", owner, name);
 
         return new SourceCompilerError(message, source, line, col, length);
     }

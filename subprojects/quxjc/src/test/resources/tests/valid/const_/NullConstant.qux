@@ -1,12 +1,11 @@
-null A is null
-int B is 5
+const null A is null
+const int B is 5
 
 null f(int a):
     return A
 
 null g(null A):
     return A
-
 
 void main([str] args):
     print A

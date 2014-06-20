@@ -91,6 +91,9 @@ public abstract class Type {
 
     static final String LIST_START = "[";
 
+    static final String NAMED_START = "L";
+    static final String NAMED_END = ";";
+
     static final String RECORD_START = "C";
     static final String RECORD_END = ";";
 
@@ -135,6 +138,10 @@ public abstract class Type {
         return new Type.List(Types.normalise(innerType));
     }
 
+    public static Type.Named forNamed(String id) {
+        return new Type.Named(id);
+    }
+
     public static Type forRecord(Map<String, Type> fields) {
         return Types.normalise(new Type.Record(fields));
     }
@@ -143,7 +150,7 @@ public abstract class Type {
         return new Type.Set(Types.normalise(innerType));
     }
 
-    public static Type forUnion(Collection<Type> types) {
+    public static Type forUnion(Collection<? extends Type> types) {
         return Types.normalise(new Type.Union(types));
     }
 
@@ -244,6 +251,16 @@ public abstract class Type {
             case LIST_START:
                 checkArgument(desc.length() > 1, "desc is invalid: %s", desc);
                 return forList(forDescriptor(desc.substring(1), match));
+            case NAMED_START:
+                index = desc.indexOf(NAMED_END);
+
+                checkArgument(index >= 0, "desc is invalid: %s", desc);
+
+                String id = desc.substring(1, index);
+
+                checkArgument(!match || desc.length() == index + 1, "desc is invalid: %s", desc);
+
+                return forNamed(id);
             case NULL:
                 checkArgument(!match || desc.length() == 1, "desc is invalid: %s", desc);
                 return TYPE_NULL;
@@ -595,6 +612,61 @@ public abstract class Type {
      * TODO: Documentation
      *
      * @author Henry J. Wylde
+     * @since TODO: SINCE
+     */
+    public static final class Named extends Type {
+
+        private final String id;
+
+        Named(String id) {
+            this.id = checkNotNull(id, "id cannot be null");
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean equals(@Nullable Object obj) {
+            if (!super.equals(obj)) {
+                return false;
+            }
+
+            return id.equals(((Named) obj).id);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getDescriptor() {
+            return NAMED_START + id + NAMED_END;
+        }
+
+        public String getId() {
+            return id;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int hashCode() {
+            return 13 + 31 * id.hashCode();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String toString() {
+            return id;
+        }
+    }
+
+    /**
+     * TODO: Documentation
+     *
+     * @author Henry J. Wylde
      * @since 0.1.1
      */
     public static final class Null extends Type {
@@ -890,7 +962,7 @@ public abstract class Type {
             this(Arrays.asList(types));
         }
 
-        Union(Collection<Type> types) {
+        Union(Collection<? extends Type> types) {
             checkArgument(!types.isEmpty(), "types must contain at least 1 element");
 
             this.types = ImmutableSet.copyOf(types);

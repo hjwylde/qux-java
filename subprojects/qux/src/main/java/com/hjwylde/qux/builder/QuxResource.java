@@ -7,6 +7,7 @@ import com.hjwylde.qbs.builder.resources.Resource;
 import com.hjwylde.qux.tree.ConstantNode;
 import com.hjwylde.qux.tree.FunctionNode;
 import com.hjwylde.qux.tree.QuxNode;
+import com.hjwylde.qux.tree.TypeNode;
 
 import com.google.common.base.Optional;
 
@@ -64,5 +65,19 @@ public final class QuxResource extends AbstractResource {
 
     public QuxNode getQuxNode() {
         return node;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Optional<String> getTypeType(String name) {
+        for (TypeNode type : node.getTypes()) {
+            if (type.getName().equals(name)) {
+                return Optional.of(type.getType().getDescriptor());
+            }
+        }
+
+        return Optional.absent();
     }
 }

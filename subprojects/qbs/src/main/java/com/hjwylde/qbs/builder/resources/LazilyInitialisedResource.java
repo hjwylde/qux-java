@@ -59,6 +59,18 @@ public abstract class LazilyInitialisedResource extends AbstractResource {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Optional<String> getTypeType(String name) {
+        if (delegate == null) {
+            delegate = loadDelegate();
+        }
+
+        return delegate.getTypeType(name);
+    }
+
+    /**
      * Loads the delegate resource. This method is only called when necessary to prevent unneeded
      * I/O operations.
      *
