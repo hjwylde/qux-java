@@ -1,0 +1,17 @@
+type B is real
+type C is any
+
+any f(B b, C c):
+    if c == null:
+        return b
+
+    return c
+
+void main([str] args):
+    b = 2.0
+    c = null
+    c2 = 3.0
+    print f(b, c)
+    print f(c2, b)
+    print f(b, b)
+

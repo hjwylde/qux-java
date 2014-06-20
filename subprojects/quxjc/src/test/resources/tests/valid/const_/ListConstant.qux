@@ -1,13 +1,12 @@
-str A is 'foo'
-str B is 'foo'
-str C is 'bar'
+const [int] A is [0, 1]
+const [int] B is [0, 1]
+const [int] C is [5]
 
-str f(str a):
+[int] f([int] a):
     return a + A
 
-str g(str A):
+[int] g([int] A):
     return A
-
 
 void main([str] args):
     print A

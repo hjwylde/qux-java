@@ -1,13 +1,12 @@
-{int} A is {5, 4}
-{int} B is {5, 4}
-{int} C is {-5}
+const {int} A is {5, 4}
+const {int} B is {5, 4}
+const {int} C is {-5}
 
 {int} f({int} a):
     return a + A
 
 {int} g({int} A):
     return A
-
 
 void main([str] args):
     print A

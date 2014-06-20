@@ -1,0 +1,13 @@
+type A is null
+type B is any
+
+any f(A a, B b):
+    return a
+
+void main([str] args):
+    a = null
+    b = null
+    print f(a, 'foo')
+    print f(a, null)
+    print f(b, null)
+

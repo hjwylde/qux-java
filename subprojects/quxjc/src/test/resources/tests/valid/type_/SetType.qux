@@ -1,0 +1,15 @@
+type A is {int}
+type B is {any}
+
+{any} f(A a, B b):
+    return a + b
+
+void main([str] args):
+    a = {5, 4}
+    b = {2, 3}
+    c = {2, 3, null}
+    print f(a, a)
+    print f(a, b)
+    print f(b, c)
+    print f(b, b)
+

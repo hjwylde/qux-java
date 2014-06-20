@@ -1,5 +1,5 @@
-obj A is obj
-obj B is obj
+const obj A is obj
+const obj B is obj
 
 obj f(obj a):
     if a == A:

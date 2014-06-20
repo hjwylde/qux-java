@@ -88,6 +88,8 @@ public interface Resource {
         Optional<String> getFunctionType(String name);
 
         String getId();
+
+        Optional<String> getTypeType(String name);
     }
 
     /**

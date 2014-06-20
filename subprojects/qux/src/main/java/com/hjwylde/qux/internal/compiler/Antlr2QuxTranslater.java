@@ -12,6 +12,8 @@ import com.hjwylde.common.error.MethodNotImplementedError;
 import com.hjwylde.qux.api.ConstantVisitor;
 import com.hjwylde.qux.api.FunctionVisitor;
 import com.hjwylde.qux.api.QuxVisitor;
+import com.hjwylde.qux.api.TypeVisitor;
+import com.hjwylde.qux.builder.Environment;
 import com.hjwylde.qux.internal.antlr.QuxBaseVisitor;
 import com.hjwylde.qux.internal.antlr.QuxParser;
 import com.hjwylde.qux.tree.ExprNode;
@@ -42,9 +44,30 @@ import java.util.Map;
  */
 public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
 
+    /**
+     * The source file name, inclusive of the extension.
+     */
     private final String source;
 
+    /**
+     * The {@link com.hjwylde.qux.api.QuxVisitor} this parser propogates the AST information to.
+     */
     private final QuxVisitor qv;
+
+    /**
+     * The source file id.
+     */
+    private String id;
+
+    /**
+     * A namespace for propagating import information throughout the code. The name space contains
+     * imported {@code meta}s, {@code constant}s, {@code type}s and {@code function}s. The latter 3
+     * are identified by their name with a '$' prefix.
+     * <p/>
+     * The namespace will also contain any local variables when parsing functions and the like, this
+     * is to ensure name propagation does not occur to the local variables.
+     */
+    private Environment<String, String> namespace = new Environment<>();
 
     private int objCounter = 0;
 
@@ -57,6 +80,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
      */
     public Antlr2QuxTranslater(String source, QuxVisitor qv) {
         this.source = checkNotNull(source, "source cannot be null");
+        id = Files.getNameWithoutExtension(source);
 
         this.qv = checkNotNull(qv, "qv cannot be null");
     }
@@ -114,10 +138,13 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         Type.Function functionType = Type.forFunction(returnType, parameterTypes.toArray(
                 new Type[0]));
 
+        namespace = namespace.push();
+
         FunctionVisitor fv = qv.visitFunction(ACC_PUBLIC | ACC_STATIC, name, functionType);
 
         for (int i = 0; i < parameterNames.size(); i++) {
             fv.visitParameter(parameterNames.get(i), parameterTypes.get(i));
+            namespace.put(parameterNames.get(i), parameterNames.get(i));
         }
 
         fv.visitReturnType(functionType.getReturnType());
@@ -127,6 +154,24 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         }
 
         fv.visitEnd();
+
+        namespace = namespace.pop();
+
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Void visitDeclType(@NotNull QuxParser.DeclTypeContext ctx) {
+        String name = ctx.Identifier().getText();
+
+        TypeVisitor tv = qv.visitType(ACC_PUBLIC | ACC_STATIC | ACC_FINAL, name);
+
+        tv.visitType(visitType(ctx.type()));
+
+        tv.visitEnd();
 
         return null;
     }
@@ -609,9 +654,12 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
     public ExprNode.External visitExprExternalFunction(
             @NotNull QuxParser.ExprExternalFunctionContext ctx) {
         ExprNode.Meta meta = visitExprMeta(ctx.exprMeta());
-        ExprNode.Function function = visitExprFunction(ctx.exprFunction());
+        ExprNode expr = visitExprFunction(ctx.exprFunction());
+        if (expr instanceof ExprNode.External) {
+            expr = ((ExprNode.External) expr).getExpr();
+        }
 
-        return new ExprNode.External(ExprNode.External.Type.FUNCTION, meta, function,
+        return new ExprNode.External(ExprNode.External.Type.FUNCTION, meta, expr,
                 generateAttributeSource(ctx));
     }
 
@@ -619,7 +667,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
      * {@inheritDoc}
      */
     @Override
-    public ExprNode.Function visitExprFunction(@NotNull QuxParser.ExprFunctionContext ctx) {
+    public ExprNode visitExprFunction(@NotNull QuxParser.ExprFunctionContext ctx) {
         String name = ctx.Identifier().getText();
 
         List<ExprNode> arguments = new ArrayList<>();
@@ -627,7 +675,16 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
             arguments.add(visitExpr(expr));
         }
 
-        return new ExprNode.Function(name, arguments, generateAttributeSource(ctx));
+        ExprNode.Function function = new ExprNode.Function(name, arguments, generateAttributeSource(
+                ctx));
+
+        String id = resolveName(name);
+
+        ExprNode.Meta meta = new ExprNode.Meta(id.substring(0, id.lastIndexOf("$")),
+                generateAttributeSource(ctx));
+
+        return new ExprNode.External(ExprNode.External.Type.FUNCTION, meta, function,
+                generateAttributeSource(ctx));
     }
 
     /**
@@ -654,6 +711,11 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
             sb.append(ctx.Identifier(i).getText());
         }
 
+        String id = sb.toString();
+        if (!id.contains(".") && namespace.contains(id)) {
+            id = namespace.getUnchecked(id);
+        }
+
         return new ExprNode.Meta(sb.toString(), generateAttributeSource(ctx));
     }
 
@@ -670,9 +732,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
      */
     @Override
     public ExprNode visitExprTerm(@NotNull QuxParser.ExprTermContext ctx) {
-        if (ctx.value() != null) {
-            return visitValue(ctx.value());
-        } else if (ctx.exprBrace() != null) {
+        if (ctx.exprBrace() != null) {
             return visitExprBrace(ctx.exprBrace());
         } else if (ctx.exprBracket() != null) {
             return visitExprBracket(ctx.exprBracket());
@@ -690,6 +750,8 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
             return visitExprParen(ctx.exprParen());
         } else if (ctx.exprVariable() != null) {
             return visitExprVariable(ctx.exprVariable());
+        } else if (ctx.value() != null) {
+            return visitValue(ctx.value());
         } else {
             throw new MethodNotImplementedError(ctx.getText());
         }
@@ -720,8 +782,21 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
      * {@inheritDoc}
      */
     @Override
-    public ExprNode.Variable visitExprVariable(@NotNull QuxParser.ExprVariableContext ctx) {
-        return new ExprNode.Variable(ctx.Identifier().getText(), generateAttributeSource(ctx));
+    public ExprNode visitExprVariable(@NotNull QuxParser.ExprVariableContext ctx) {
+        ExprNode.Variable variable = new ExprNode.Variable(ctx.Identifier().getText(),
+                generateAttributeSource(ctx));
+
+        if (namespace.contains(variable.getName())) {
+            return variable;
+        }
+
+        String id = resolveName(variable.getName());
+
+        ExprNode.Meta meta = new ExprNode.Meta(id.substring(0, id.lastIndexOf("$")),
+                generateAttributeSource(ctx));
+
+        return new ExprNode.External(ExprNode.External.Type.CONSTANT, meta, variable,
+                generateAttributeSource(ctx));
     }
 
     /**
@@ -750,7 +825,28 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         id = id.substring(start.getCharPositionInLine() - 1,
                 stop.getCharPositionInLine() + stop.getText().length() - 1);
 
-        qv.visitImport(id);
+        if (id.contains("$")) {
+            String key = id.substring(id.lastIndexOf("$"));
+
+            if (namespace.contains(key)) {
+                throw CompilerErrors.duplicateImport(id);
+            }
+
+            namespace.put(key, id);
+        } else if (id.contains(".")) {
+            String key = id.substring(id.lastIndexOf(".") + 1);
+
+            if (namespace.contains(key)) {
+                throw CompilerErrors.duplicateImport(id);
+            }
+
+            namespace.put(key, id);
+        } else {
+            Attribute.Source source = generateAttributeSource(ctx);
+
+            throw CompilerErrors.invalidImport(id, source.getSource(), source.getLine(),
+                    source.getCol(), source.getLength());
+        }
 
         return null;
     }
@@ -770,6 +866,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         }
 
         qv.visitPackage(sb.toString());
+        id = sb.toString() + "." + Files.getNameWithoutExtension(source);
 
         return null;
     }
@@ -839,6 +936,8 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
                     ctx.getStop()));
         }
 
+        namespace.put(var, var);
+
         return new StmtNode.Assign(var, expr, generateAttributeSource(ctx));
     }
 
@@ -873,7 +972,12 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
 
         ExprNode expr = visitExpr(ctx.expr());
 
+        namespace = namespace.push();
+        namespace.put(var, var);
+
         List<StmtNode> body = visitBlock(ctx.block());
+
+        namespace = namespace.pop();
 
         return new StmtNode.For(var, expr, body, generateAttributeSource(ctx));
     }
@@ -993,6 +1097,21 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
      * {@inheritDoc}
      */
     @Override
+    public Type visitTypeNamed(@NotNull QuxParser.TypeNamedContext ctx) {
+        String id = ctx.Identifier().getText();
+
+        if (ctx.exprMeta() != null) {
+            ExprNode.Meta meta = visitExprMeta(ctx.exprMeta());
+            return Type.forNamed(meta.getId() + "$" + id);
+        }
+
+        return Type.forNamed(resolveName(id));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public Type visitTypeRecord(@NotNull QuxParser.TypeRecordContext ctx) {
         Map<String, Type> fields = new HashMap<>();
         for (int i = 0; i < ctx.type().size(); i++) {
@@ -1031,14 +1150,6 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         Type innerType = visitType(ctx.type());
 
         return Type.forSet(innerType);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Type visitTypeTerm(@NotNull QuxParser.TypeTermContext ctx) {
-        return (Type) super.visitTypeTerm(ctx);
     }
 
     /**
@@ -1127,5 +1238,15 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
 
     private String generateObjId() {
         return source + "$obj" + objCounter++;
+    }
+
+    private String resolveName(String name) {
+        String key = "$" + name;
+
+        if (!namespace.contains(key)) {
+            namespace.put(key, id + key);
+        }
+
+        return namespace.getUnchecked(key);
     }
 }

@@ -1,0 +1,11 @@
+type A is str
+type B is [str]
+
+str f(A a, B b):
+    return a + b[1]
+
+void main([str] args):
+    print f('bar', ['foo', 'baz'])
+    print f('', ['', ''])
+    print f('a', ['b', 'c', 'd'])
+

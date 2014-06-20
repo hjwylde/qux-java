@@ -21,7 +21,7 @@ public interface QuxVisitor {
 
     FunctionVisitor visitFunction(int flags, String name, Type.Function type);
 
-    void visitImport(String id);
-
     void visitPackage(@Nullable String pkg);
+
+    TypeVisitor visitType(int flags, String name);
 }

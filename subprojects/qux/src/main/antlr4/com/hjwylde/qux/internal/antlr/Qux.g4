@@ -107,6 +107,7 @@ imp : 'import' Identifier ('.' Identifier)* ('$' Identifier)? NEWLINE
 
 decl : declConstant
      | declFunction
+     | declType
      ;
 
 // TODO: It would be nice to remove the type declaration here, I think it will be possible once we
@@ -116,6 +117,9 @@ declConstant : 'const' type Identifier 'is' expr NEWLINE
 
 declFunction : typeReturn Identifier '(' (type Identifier (',' type Identifier)*)? ')' block
              ;
+
+declType : 'type' Identifier 'is' type NEWLINE
+         ;
 
 // Statements
 
@@ -292,23 +296,12 @@ valueKeyword : FALSE
 
 // Types
 
-type : typeList
+type : typeKeyword
+     | typeList
+     | typeNamed
      | typeRecord
      | typeSet
-     | typeTerm
      ;
-
-typeList : '[' type ']'
-         ;
-
-typeRecord : '{' type Identifier (',' type Identifier)* '}'
-           ;
-
-typeSet : '{' type '}'
-        ;
-
-typeTerm : typeKeyword
-         ;
 
 typeKeyword : ANY
             | BOOL
@@ -318,6 +311,18 @@ typeKeyword : ANY
             | REAL
             | STR
             ;
+
+typeList : '[' type ']'
+         ;
+
+typeRecord : '{' type Identifier (',' type Identifier)* '}'
+           ;
+
+typeSet : '{' type '}'
+         ;
+
+typeNamed : (exprMeta '$')? Identifier
+          ;
 
 typeReturn : type
            | VOID
@@ -335,7 +340,7 @@ StringCharacter : ~['\\]
                 ;
 
 fragment
-EscapeSequence : '\\' [fnrt'"\\]
+EscapeSequence : '\\' [fnrt'\\]
                | '\\' 'u' HexDigit HexDigit HexDigit HexDigit
                ;
 
@@ -384,6 +389,7 @@ CONST   : 'const' ;
 ELIF    : 'elif' ;
 ELSE    : 'else' ;
 FALSE   : 'false' ;
+FOR     : 'for' ;
 IF      : 'if' ;
 IMPORT  : 'import' ;
 INT     : 'int' ;
@@ -392,13 +398,16 @@ LIST    : 'list' ;
 NULL    : 'null' ;
 OBJ     : 'obj' ;
 PACKAGE : 'package' ;
+PRINT   : 'print' ;
 REAL    : 'real' ;
 RECORD  : 'record' ;
 RETURN  : 'return' ;
 SET     : 'set' ;
 STR     : 'str' ;
 TRUE    : 'true' ;
+TYPE    : 'type' ;
 VOID    : 'void' ;
+WHILE   : 'while' ;
 
 // Separators
 

@@ -1,0 +1,15 @@
+type A is obj
+type B is any
+
+any f(B a):
+    if a == null:
+        return obj
+
+    return a
+
+void main([str] args):
+    a = obj
+    b = null
+    print f(a)
+    print f(b)
+

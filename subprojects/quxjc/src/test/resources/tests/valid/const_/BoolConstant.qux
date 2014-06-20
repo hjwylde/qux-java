@@ -1,13 +1,12 @@
-bool A is true
-bool B is true
-bool C is false
+const bool A is true
+const bool B is true
+const bool C is false
 
 bool f(bool a):
     return a and A
 
 bool g(bool A):
     return A
-
 
 void main([str] args):
     print A

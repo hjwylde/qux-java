@@ -24,14 +24,14 @@ import java.util.List;
  * @since 0.2.2
  */
 @RunWith(Parameterized.class)
-public final class ValidConstantTests extends Harness {
+public final class ValidConstTests extends Harness {
 
-    private static final Path ROOT = Paths.get("src/test/resources/tests/valid/constant/")
+    private static final Path ROOT = Paths.get("src/test/resources/tests/valid/const_/")
             .toAbsolutePath();
 
     private final String id;
 
-    public ValidConstantTests(String id) {
+    public ValidConstTests(String id) {
         super(ROOT);
 
         this.id = checkNotNull(id, "id cannot be null");

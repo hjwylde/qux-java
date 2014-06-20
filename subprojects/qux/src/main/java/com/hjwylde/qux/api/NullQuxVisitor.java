@@ -44,11 +44,13 @@ final class NullQuxVisitor implements QuxVisitor {
      * {@inheritDoc}
      */
     @Override
-    public void visitImport(String id) {}
+    public void visitPackage(@Nullable String pkg) {}
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void visitPackage(@Nullable String pkg) {}
+    public TypeVisitor visitType(int flags, String name) {
+        return TypeVisitor.NULL_INSTANCE;
+    }
 }
