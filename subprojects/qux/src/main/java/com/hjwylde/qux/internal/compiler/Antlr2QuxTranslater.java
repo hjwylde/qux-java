@@ -204,7 +204,8 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
                 // target[index]
                 ExprNode index = visitExpr(ectx.exprAccess_1_1().expr());
 
-                target = new ExprNode.Access(target, index, generateAttributeSource(ctx, ectx));
+                target = new ExprNode.Binary(Op.Binary.ACC, target, index, generateAttributeSource(
+                        ctx, ectx));
             } else if (ectx.exprAccess_1_2() != null) {
                 // target[low:high]
                 ExprNode low = visitExpr(ectx.exprAccess_1_2().expr(0));
@@ -881,13 +882,13 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         // Create a series of nested accesses
         for (int i = 0; i < ctx.expr().size() - 1; i++) {
             // TODO: VERIFY: The "ctx.expr(i).getStop()" may not include the suffix "]'
-            access = new ExprNode.Access(access, visitExpr(ctx.expr(i)), generateAttributeSource(
-                    ctx, ctx.expr(i)));
+            access = new ExprNode.Binary(Op.Binary.ACC, access, visitExpr(ctx.expr(i)),
+                    generateAttributeSource(ctx, ctx.expr(i)));
         }
 
         ExprNode expr = visitExpr(ctx.expr(ctx.expr().size() - 1));
 
-        return new StmtNode.AccessAssign((ExprNode.Access) access, expr, generateAttributeSource(
+        return new StmtNode.AccessAssign((ExprNode.Binary) access, expr, generateAttributeSource(
                 ctx));
     }
 

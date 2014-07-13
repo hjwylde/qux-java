@@ -10,7 +10,6 @@ import static qux.lang.Bool.TRUE;
 import java.math.BigInteger;
 import java.util.Arrays;
 
-import qux.lang.op.Access;
 import qux.lang.op.Len;
 import qux.lang.op.Slice;
 import qux.util.Iterable;
@@ -22,7 +21,7 @@ import qux.util.Iterator;
  * @author Henry J. Wylde
  * @since 0.1.3
  */
-public final class Set extends AbstractObj implements Access, Iterable, Len, Slice {
+public final class Set extends AbstractObj implements Iterable, Len, Slice {
 
     private AbstractObj[] data;
     private int count;
@@ -54,10 +53,6 @@ public final class Set extends AbstractObj implements Access, Iterable, Len, Sli
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public AbstractObj _access_(Int index) {
         return get(index);
     }

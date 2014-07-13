@@ -174,18 +174,6 @@ public final class TypeChecker extends Pipeline {
          * {@inheritDoc}
          */
         @Override
-        public void visitExprAccess(ExprNode.Access expr) {
-            visitExpr(expr.getTarget());
-            checkSubtype(expr.getTarget(), TYPE_ITERABLE);
-
-            visitExpr(expr.getIndex());
-            checkSubtype(expr.getIndex(), TYPE_INT);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
         public void visitExprBinary(ExprNode.Binary expr) {
             visitExpr(expr.getLhs());
             visitExpr(expr.getRhs());
@@ -210,6 +198,11 @@ public final class TypeChecker extends Pipeline {
                 case IN:
                     checkSubtype(expr.getRhs(), TYPE_ITERABLE);
                     checkSubtype(expr.getLhs(), getInnerType(rhsType));
+                    break;
+                case ACC:
+                    checkSubtype(expr.getLhs(), TYPE_ITERABLE);
+                    checkSubtype(expr.getRhs(), TYPE_INT);
+                    break;
                 case EQ:
                 case GT:
                 case GTE:

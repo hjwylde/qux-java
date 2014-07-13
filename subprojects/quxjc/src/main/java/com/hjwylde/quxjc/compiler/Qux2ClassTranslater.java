@@ -83,7 +83,6 @@ import qux.lang.Real;
 import qux.lang.Record;
 import qux.lang.Set;
 import qux.lang.Str;
-import qux.lang.op.Access;
 import qux.lang.op.Assign;
 import qux.lang.op.Eq;
 import qux.lang.op.Len;
@@ -370,19 +369,6 @@ public final class Qux2ClassTranslater extends QuxAdapter {
          * {@inheritDoc}
          */
         @Override
-        public void visitExprAccess(ExprNode.Access expr) {
-            visitExpr(expr.getTarget());
-            visitExpr(expr.getIndex());
-
-            mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Access.class), "_access_",
-                    getMethodDescriptor(Access.class, "_access_", Int.class), true);
-            visitCheckcast(expr);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
         public void visitExprBinary(ExprNode.Binary expr) {
             visitExpr(expr.getLhs());
             visitExpr(expr.getRhs());
@@ -391,6 +377,11 @@ public final class Qux2ClassTranslater extends QuxAdapter {
             Class<?> rhsClass = Qux2ClassTranslater.getClass(expr.getRhs());
 
             switch (expr.getOp()) {
+                case ACC:
+                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(lhsClass), "_access_",
+                            getMethodDescriptor(lhsClass, "_access_", Int.class), false);
+                    visitCheckcast(expr);
+                    break;
                 case ADD:
                     mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(lhsClass), "_add_",
                             getMethodDescriptor(lhsClass, "_add_", rhsClass), false);
@@ -974,8 +965,8 @@ public final class Qux2ClassTranslater extends QuxAdapter {
         public void visitStmtAccessAssign(StmtNode.AccessAssign stmt) {
             visitLineNumber(stmt);
 
-            visitExpr(stmt.getAccess().getTarget());
-            visitExpr(stmt.getAccess().getIndex());
+            visitExpr(stmt.getAccess().getLhs());
+            visitExpr(stmt.getAccess().getRhs());
             visitExpr(stmt.getExpr());
 
             mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Assign.class), "_assign_",

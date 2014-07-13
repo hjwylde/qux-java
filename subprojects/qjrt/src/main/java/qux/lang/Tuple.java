@@ -7,7 +7,6 @@ import static qux.lang.Bool.TRUE;
 
 import java.math.BigInteger;
 
-import qux.lang.op.Access;
 import qux.lang.op.Len;
 import qux.util.Iterable;
 import qux.util.Iterator;
@@ -18,7 +17,7 @@ import qux.util.Iterator;
  * @author Henry J. Wylde
  * @since TODO: SINCE
  */
-public final class Tuple extends AbstractObj implements Access, Iterable, Len {
+public final class Tuple extends AbstractObj implements Iterable, Len {
 
     private final AbstractObj[] data;
 
@@ -28,10 +27,6 @@ public final class Tuple extends AbstractObj implements Access, Iterable, Len {
         this.data = data.clone();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public AbstractObj _access_(Int index) {
         return get(index);
     }

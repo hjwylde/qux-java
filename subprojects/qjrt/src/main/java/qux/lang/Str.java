@@ -12,7 +12,6 @@ import com.google.common.base.Strings;
 
 import java.math.BigInteger;
 
-import qux.lang.op.Access;
 import qux.lang.op.Assign;
 import qux.lang.op.Len;
 import qux.lang.op.Slice;
@@ -22,7 +21,7 @@ import qux.lang.op.Slice;
  *
  * @author Henry J. Wylde
  */
-public final class Str extends AbstractObj implements Access, Assign, Len, Slice {
+public final class Str extends AbstractObj implements Assign, Len, Slice {
 
     private String value;
 
@@ -35,10 +34,6 @@ public final class Str extends AbstractObj implements Access, Assign, Len, Slice
         this.value = checkNotNull(value, "value cannot be null");
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Str _access_(Int index) {
         return get(index);
     }

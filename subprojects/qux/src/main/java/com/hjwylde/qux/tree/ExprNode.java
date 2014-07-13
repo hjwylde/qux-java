@@ -45,47 +45,6 @@ public abstract class ExprNode extends Node {
 
     /**
      * TODO: Documentation
-     * <p/>
-     * TODO: Consider turning this into a binary operation
-     *
-     * @author Henry J. Wylde
-     * @since 0.1.3
-     */
-    public static final class Access extends ExprNode {
-
-        private final ExprNode target;
-        private final ExprNode index;
-
-        public Access(ExprNode target, ExprNode index, Attribute... attributes) {
-            this(target, index, Arrays.asList(attributes));
-        }
-
-        public Access(ExprNode target, ExprNode index, Collection<? extends Attribute> attributes) {
-            super(attributes);
-
-            this.target = checkNotNull(target, "target cannot be null");
-            this.index = checkNotNull(index, "index cannot be null");
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void accept(ExprVisitor ev) {
-            ev.visitExprAccess(this);
-        }
-
-        public ExprNode getIndex() {
-            return index;
-        }
-
-        public ExprNode getTarget() {
-            return target;
-        }
-    }
-
-    /**
-     * TODO: Documentation
      *
      * @author Henry J. Wylde
      */

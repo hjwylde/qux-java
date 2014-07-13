@@ -49,16 +49,18 @@ public abstract class StmtNode extends Node {
      */
     public static final class AccessAssign extends StmtNode {
 
-        private final ExprNode.Access access;
+        private final ExprNode.Binary access;
         private final ExprNode expr;
 
-        public AccessAssign(ExprNode.Access access, ExprNode expr, Attribute... attributes) {
+        public AccessAssign(ExprNode.Binary access, ExprNode expr, Attribute... attributes) {
             this(access, expr, Arrays.asList(attributes));
         }
 
-        public AccessAssign(ExprNode.Access access, ExprNode expr,
+        public AccessAssign(ExprNode.Binary access, ExprNode expr,
                 Collection<? extends Attribute> attributes) {
             super(attributes);
+
+            checkArgument(access.getOp() == Op.Binary.ACC, "access must have operator of ACC");
 
             this.access = checkNotNull(access, "access cannot be null");
             this.expr = checkNotNull(expr, "expr cannot be null");
@@ -72,7 +74,7 @@ public abstract class StmtNode extends Node {
             sv.visitStmtAccessAssign(this);
         }
 
-        public ExprNode.Access getAccess() {
+        public ExprNode.Binary getAccess() {
             return access;
         }
 
