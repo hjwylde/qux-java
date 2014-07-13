@@ -1,3 +1,5 @@
+package valid.function
+
 int average([int] ts):
     total = 0
     for i in ts:

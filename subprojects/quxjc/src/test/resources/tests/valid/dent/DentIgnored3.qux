@@ -1,3 +1,5 @@
+package valid.dent
+
 void main([str] args):
     print 'foo'
     

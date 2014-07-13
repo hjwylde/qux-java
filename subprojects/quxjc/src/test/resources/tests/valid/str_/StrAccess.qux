@@ -1,3 +1,5 @@
+package valid.str_
+
 str f(str foo):
     foo = 'qux'
 

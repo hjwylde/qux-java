@@ -28,6 +28,7 @@ import com.hjwylde.qux.tree.QuxNode;
 import com.hjwylde.qux.tree.StmtNode;
 import com.hjwylde.qux.util.Attribute;
 import com.hjwylde.qux.util.Attributes;
+import com.hjwylde.qux.util.Identifier;
 import com.hjwylde.qux.util.Type;
 
 import com.google.common.base.Optional;
@@ -35,6 +36,7 @@ import com.google.common.collect.ImmutableMap;
 
 import org.jgrapht.event.VertexTraversalEvent;
 
+import java.util.Arrays;
 import java.util.Map;
 
 /**
@@ -188,7 +190,7 @@ public final class TypeChecker extends Pipeline {
             visitExpr(expr.getLhs());
             visitExpr(expr.getRhs());
 
-            Type rhsType = getType(expr.getLhs());
+            Type rhsType = getType(expr.getRhs());
 
             // TODO: Properly type check using references to methods that exist
             switch (expr.getOp()) {
@@ -277,7 +279,7 @@ public final class TypeChecker extends Pipeline {
          */
         @Override
         public void visitExprRecord(ExprNode.Record expr) {
-            for (Map.Entry<String, ExprNode> field : expr.getFields().entrySet()) {
+            for (Map.Entry<Identifier, ExprNode> field : expr.getFields().entrySet()) {
                 visitExpr(field.getValue());
             }
         }
@@ -289,7 +291,7 @@ public final class TypeChecker extends Pipeline {
         public void visitExprRecordAccess(ExprNode.RecordAccess expr) {
             visitExpr(expr.getTarget());
 
-            Type expected = Type.forRecord(ImmutableMap.<String, Type>of(expr.getField(),
+            Type expected = Type.forRecord(ImmutableMap.<Identifier, Type>of(expr.getField(),
                     TYPE_ANY));
             checkSubtype(expr.getTarget(), expected);
         }
@@ -339,7 +341,8 @@ public final class TypeChecker extends Pipeline {
                     checkSubtype(expr.getTarget(), TYPE_ITERABLE);
                     break;
                 case NEG:
-                    checkSubtype(expr.getTarget(), Type.forUnion(TYPE_INT, TYPE_REAL));
+                    checkSubtype(expr.getTarget(), Type.forUnion(Arrays.asList(TYPE_INT,
+                            TYPE_REAL)));
                     break;
                 case NOT:
                     checkSubtype(expr.getTarget(), TYPE_BOOL);
@@ -372,17 +375,17 @@ public final class TypeChecker extends Pipeline {
          * {@inheritDoc}
          */
         @Override
-        public void vertexTraversed(VertexTraversalEvent<StmtNode> e) {
-            e.getVertex().accept(this);
+        public void notifyTraversalStarted() {
+            // Type checking only needs one iteration
+            setFinished(true);
         }
 
         /**
          * {@inheritDoc}
          */
         @Override
-        public void notifyTraversalStarted() {
-            // Type checking only needs one iteration
-            setFinished(true);
+        public void vertexTraversed(VertexTraversalEvent<StmtNode> e) {
+            e.getVertex().accept(this);
         }
 
         /**

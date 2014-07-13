@@ -1,3 +1,5 @@
+package valid.type_
+
 type A is bool
 type B is bool
 type C is int

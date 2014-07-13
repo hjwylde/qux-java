@@ -1,8 +1,9 @@
 package com.hjwylde.qux.api;
 
+import com.hjwylde.qux.util.Identifier;
 import com.hjwylde.qux.util.Type;
 
-import javax.annotation.Nullable;
+import java.util.List;
 
 /**
  * TODO: Documentation
@@ -16,13 +17,13 @@ final class NullQuxVisitor implements QuxVisitor {
      * {@inheritDoc}
      */
     @Override
-    public void visit(int version, String name) {}
+    public void visit(int version, Identifier name) {}
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public ConstantVisitor visitConstant(int flags, String name, Type type) {
+    public ConstantVisitor visitConstant(int flags, Identifier name, Type type) {
         return ConstantVisitor.NULL_INSTANCE;
     }
 
@@ -36,7 +37,7 @@ final class NullQuxVisitor implements QuxVisitor {
      * {@inheritDoc}
      */
     @Override
-    public FunctionVisitor visitFunction(int flags, String name, Type.Function type) {
+    public FunctionVisitor visitFunction(int flags, Identifier name, Type.Function type) {
         return FunctionVisitor.NULL_INSTANCE;
     }
 
@@ -44,13 +45,13 @@ final class NullQuxVisitor implements QuxVisitor {
      * {@inheritDoc}
      */
     @Override
-    public void visitPackage(@Nullable String pkg) {}
+    public void visitPackage(List<Identifier> pkg) {}
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public TypeVisitor visitType(int flags, String name) {
+    public TypeVisitor visitType(int flags, Identifier name) {
         return TypeVisitor.NULL_INSTANCE;
     }
 }

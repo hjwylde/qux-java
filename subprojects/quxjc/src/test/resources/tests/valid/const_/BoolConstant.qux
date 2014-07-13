@@ -1,3 +1,5 @@
+package valid.const_
+
 const bool A is true
 const bool B is true
 const bool C is false

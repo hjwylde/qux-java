@@ -1,3 +1,5 @@
+package valid.record_
+
 void f([{any x}] anys):
     for a in anys:
         if a.x == null:

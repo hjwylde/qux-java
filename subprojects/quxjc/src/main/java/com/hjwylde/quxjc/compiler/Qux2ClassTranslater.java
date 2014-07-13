@@ -52,9 +52,12 @@ import com.hjwylde.qux.tree.Node;
 import com.hjwylde.qux.tree.StmtNode;
 import com.hjwylde.qux.util.Attribute;
 import com.hjwylde.qux.util.Attributes;
+import com.hjwylde.qux.util.Identifier;
 import com.hjwylde.qux.util.Op;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
@@ -100,8 +103,8 @@ public final class Qux2ClassTranslater extends QuxAdapter {
 
     private final ClassVisitor cv;
 
-    private String name;
-    private String pkg;
+    private Identifier name;
+    private ImmutableList<Identifier> pkg;
 
     /**
      * A method visitor for the static initialiser, "&lt;clinit&gt;". It is used when generating
@@ -115,15 +118,15 @@ public final class Qux2ClassTranslater extends QuxAdapter {
         this.cv = checkNotNull(cv, "cv cannot be null");
     }
 
-    public String getId() {
-        return ((pkg == null ? "" : pkg + ".") + name).replace(".", "/");
+    public ImmutableList<Identifier> getId() {
+        return ImmutableList.<Identifier>builder().addAll(pkg).add(name).build();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void visit(int version, String name) {
+    public void visit(int version, Identifier name) {
         this.name = name;
     }
 
@@ -131,8 +134,10 @@ public final class Qux2ClassTranslater extends QuxAdapter {
      * {@inheritDoc}
      */
     @Override
-    public ConstantVisitor visitConstant(int flags, String name, com.hjwylde.qux.util.Type type) {
-        FieldVisitor fv = cv.visitField(flags, name, getType(type).getDescriptor(), null, null);
+    public ConstantVisitor visitConstant(int flags, Identifier name,
+            com.hjwylde.qux.util.Type type) {
+        FieldVisitor fv = cv.visitField(flags, name.getId(), getType(type).getDescriptor(), null,
+                null);
 
         if (fv == null) {
             return ConstantVisitor.NULL_INSTANCE;
@@ -157,9 +162,9 @@ public final class Qux2ClassTranslater extends QuxAdapter {
      * {@inheritDoc}
      */
     @Override
-    public FunctionVisitor visitFunction(int flags, String name,
+    public FunctionVisitor visitFunction(int flags, Identifier name,
             com.hjwylde.qux.util.Type.Function type) {
-        MethodVisitor mv = cv.visitMethod(flags, name, getType(type).getDescriptor(), null,
+        MethodVisitor mv = cv.visitMethod(flags, name.getId(), getType(type).getDescriptor(), null,
                 new String[0]);
 
         if (mv == null) {
@@ -173,11 +178,11 @@ public final class Qux2ClassTranslater extends QuxAdapter {
      * {@inheritDoc}
      */
     @Override
-    public void visitPackage(String pkg) {
-        this.pkg = pkg;
+    public void visitPackage(java.util.List<Identifier> pkg) {
+        this.pkg = ImmutableList.copyOf(pkg);
 
-        cv.visit(V1_7, ACC_PUBLIC | ACC_FINAL, getId(), null, Type.getInternalName(
-                AbstractObj.class), new String[0]);
+        cv.visit(V1_7, ACC_PUBLIC | ACC_FINAL, Joiner.on('/').join(getId()), null,
+                Type.getInternalName(AbstractObj.class), new String[0]);
 
         cv.visitSource(getFileName(), null);
 
@@ -301,10 +306,10 @@ public final class Qux2ClassTranslater extends QuxAdapter {
         private final FieldVisitor fv;
 
         private final int flags;
-        private final String name;
+        private final Identifier name;
         private final com.hjwylde.qux.util.Type type;
 
-        public Constant2ClassTranslater(FieldVisitor fv, int flags, String name,
+        public Constant2ClassTranslater(FieldVisitor fv, int flags, Identifier name,
                 com.hjwylde.qux.util.Type type) {
             this.fv = checkNotNull(fv, "fv cannot be null");
 
@@ -320,7 +325,7 @@ public final class Qux2ClassTranslater extends QuxAdapter {
         public void visitExpr(ExprNode expr) {
             new Expr2ClassTranslater(simv).visitExpr(expr);
 
-            simv.visitFieldInsn(PUTSTATIC, getId().replace(".", "/"), name, getType(type)
+            simv.visitFieldInsn(PUTSTATIC, Joiner.on('/').join(getId()), name.getId(), getType(type)
                     .getDescriptor());
         }
     }
@@ -341,15 +346,15 @@ public final class Qux2ClassTranslater extends QuxAdapter {
          * TODO: Change this so that the number of local variables are minimized, i.e. can be used
          * more than once like for loop vars
          */
-        private final java.util.List<String> locals;
+        private final java.util.List<Identifier> locals;
 
         private int line = Integer.MIN_VALUE;
 
         public Expr2ClassTranslater(MethodVisitor mv) {
-            this(mv, new ArrayList<String>());
+            this(mv, new ArrayList<Identifier>());
         }
 
-        public Expr2ClassTranslater(MethodVisitor mv, java.util.List<String> locals) {
+        public Expr2ClassTranslater(MethodVisitor mv, java.util.List<Identifier> locals) {
             this.mv = checkNotNull(mv, "mv cannot be null");
 
             this.locals = checkNotNull(locals, "locals cannot be null");
@@ -564,7 +569,7 @@ public final class Qux2ClassTranslater extends QuxAdapter {
             }
         }
 
-        public void visitExprFunction(String owner, ExprNode.Function expr) {
+        public void visitExprFunction(java.util.List<Identifier> owner, ExprNode.Function expr) {
             Type returnType = getType(expr);
             java.util.List<Type> argumentTypes = new ArrayList<>();
 
@@ -583,7 +588,7 @@ public final class Qux2ClassTranslater extends QuxAdapter {
 
             Type type = Type.getMethodType(returnType, argumentTypes.toArray(new Type[0]));
 
-            mv.visitMethodInsn(INVOKESTATIC, owner.replace(".", "/"), expr.getName(),
+            mv.visitMethodInsn(INVOKESTATIC, Joiner.on('/').join(owner), expr.getName().getId(),
                     type.getDescriptor(), false);
         }
 
@@ -625,17 +630,17 @@ public final class Qux2ClassTranslater extends QuxAdapter {
          */
         @Override
         public void visitExprRecord(ExprNode.Record expr) {
-            Map<String, ExprNode> fields = expr.getFields();
+            Map<Identifier, ExprNode> fields = expr.getFields();
 
             mv.visitTypeInsn(NEW, Type.getInternalName(HashMap.class));
             mv.visitInsn(DUP);
             mv.visitMethodInsn(INVOKESPECIAL, Type.getInternalName(HashMap.class), "<init>",
                     getConstructorDescriptor(HashMap.class), false);
 
-            for (Map.Entry<String, ExprNode> field : expr.getFields().entrySet()) {
+            for (Map.Entry<Identifier, ExprNode> field : expr.getFields().entrySet()) {
                 mv.visitInsn(DUP);
 
-                mv.visitLdcInsn(field.getKey());
+                mv.visitLdcInsn(field.getKey().getId());
                 visitExpr(field.getValue());
 
                 mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Map.class), "put",
@@ -653,7 +658,7 @@ public final class Qux2ClassTranslater extends QuxAdapter {
         @Override
         public void visitExprRecordAccess(ExprNode.RecordAccess expr) {
             visitExpr(expr.getTarget());
-            mv.visitLdcInsn(expr.getField());
+            mv.visitLdcInsn(expr.getField().getId());
 
             mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(Record.class), "get",
                     getMethodDescriptor(Record.class, "get", String.class), false);
@@ -747,9 +752,9 @@ public final class Qux2ClassTranslater extends QuxAdapter {
             }
         }
 
-        public void visitExprVariable(String owner, ExprNode.Variable expr) {
-            mv.visitFieldInsn(GETSTATIC, owner.replace(".", "/"), expr.getName(), getType(expr)
-                    .getDescriptor());
+        public void visitExprVariable(java.util.List<Identifier> owner, ExprNode.Variable expr) {
+            mv.visitFieldInsn(GETSTATIC, Joiner.on('/').join(owner), expr.getName().getId(),
+                    getType(expr).getDescriptor());
         }
 
         /**
@@ -862,7 +867,7 @@ public final class Qux2ClassTranslater extends QuxAdapter {
         private final MethodVisitor mv;
 
         private final int flags;
-        private final String name;
+        private final Identifier name;
         private final com.hjwylde.qux.util.Type.Function type;
 
         private Expr2ClassTranslater et;
@@ -870,7 +875,7 @@ public final class Qux2ClassTranslater extends QuxAdapter {
         /**
          * Stores a map of parameter names to jvm types.
          */
-        private Map<String, String> parameters = new HashMap<>();
+        private Map<Identifier, String> parameters = new HashMap<>();
         /**
          * Stores the return type as a jvm type.
          */
@@ -887,14 +892,14 @@ public final class Qux2ClassTranslater extends QuxAdapter {
          * TODO: Change this so that the number of local variables are minimized, i.e. can be used
          * more than once like for loop vars
          */
-        private java.util.List<String> locals = new ArrayList<>();
+        private java.util.List<Identifier> locals = new ArrayList<>();
 
         /**
          * The current source line number, used for generating the line number table attribute.
          */
         private int line = Integer.MIN_VALUE;
 
-        public Function2ClassTranslater(MethodVisitor mv, int flags, String name,
+        public Function2ClassTranslater(MethodVisitor mv, int flags, Identifier name,
                 com.hjwylde.qux.util.Type.Function type) {
             this.mv = checkNotNull(mv, "mv cannot be null");
 
@@ -942,7 +947,7 @@ public final class Qux2ClassTranslater extends QuxAdapter {
          * {@inheritDoc}
          */
         @Override
-        public void visitParameter(String var, com.hjwylde.qux.util.Type type) {
+        public void visitParameter(Identifier var, com.hjwylde.qux.util.Type type) {
             checkNotNull(var, "var cannot be null");
             checkNotNull(type, "type cannot be null");
 
@@ -1144,8 +1149,8 @@ public final class Qux2ClassTranslater extends QuxAdapter {
             mv.visitLabel(endLabel);
         }
 
-        private String generateVariable() {
-            String name = "$gen" + gen++;
+        private Identifier generateVariable() {
+            Identifier name = new Identifier("$gen" + gen++);
 
             locals.add(name);
 

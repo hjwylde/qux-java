@@ -26,8 +26,8 @@ import java.util.List;
 @RunWith(Parameterized.class)
 public final class ValidStrTests extends Harness {
 
-    private static final Path ROOT = Paths.get("src/test/resources/tests/valid/str_/")
-            .toAbsolutePath();
+    private static final Path ROOT = Paths.get("src/test/resources/tests/").toAbsolutePath();
+    private static final String PKG = "valid.str_";
 
     private final String id;
 
@@ -40,7 +40,7 @@ public final class ValidStrTests extends Harness {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> data() throws IOException {
         final List<Object[]> data = new ArrayList<>();
-        for (Path path : Files.newDirectoryStream(ROOT)) {
+        for (Path path : Files.newDirectoryStream(ROOT.resolve(PKG.replace('.', '/')))) {
             if (path.toString().endsWith(".qux")) {
                 data.add(new Object[] {getTestId(path.toAbsolutePath())});
             }

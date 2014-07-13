@@ -374,7 +374,7 @@ public final class Quxjc {
         // Properties
         Option properties = OptionBuilder.withLongOpt(OPT_PROPERTIES).hasArg().withArgName("file")
                 .withDescription(
-                        "Specifies where to laod the qux properties file from, defaults to 'qux.properties'")
+                        "Specifies where to load the qux properties file from, defaults to 'qux.properties'")
                 .create("qp");
 
         Option help = new Option("h", OPT_HELP, false, "Prints this message");

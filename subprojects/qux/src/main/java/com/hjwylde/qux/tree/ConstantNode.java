@@ -6,6 +6,7 @@ import static com.google.common.base.Preconditions.checkState;
 import com.hjwylde.qux.api.ConstantVisitor;
 import com.hjwylde.qux.api.QuxVisitor;
 import com.hjwylde.qux.util.Attribute;
+import com.hjwylde.qux.util.Identifier;
 import com.hjwylde.qux.util.Type;
 
 import java.util.Arrays;
@@ -20,16 +21,16 @@ import java.util.Collection;
 public final class ConstantNode extends Node implements ConstantVisitor {
 
     private final int flags;
-    private final String name;
+    private final Identifier name;
     private final Type type;
 
     private ExprNode expr;
 
-    public ConstantNode(int flags, String name, Type type, Attribute... attributes) {
+    public ConstantNode(int flags, Identifier name, Type type, Attribute... attributes) {
         this(flags, name, type, Arrays.asList(attributes));
     }
 
-    public ConstantNode(int flags, String name, Type type,
+    public ConstantNode(int flags, Identifier name, Type type,
             Collection<? extends Attribute> attributes) {
         super(attributes);
 
@@ -60,7 +61,7 @@ public final class ConstantNode extends Node implements ConstantVisitor {
         return flags;
     }
 
-    public String getName() {
+    public Identifier getName() {
         return name;
     }
 

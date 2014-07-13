@@ -1,3 +1,5 @@
+package valid.const_
+
 const {int} A is {5, 4}
 const {int} B is {5, 4}
 const {int} C is {-5}

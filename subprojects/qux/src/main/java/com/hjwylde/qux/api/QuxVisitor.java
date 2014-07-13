@@ -1,8 +1,9 @@
 package com.hjwylde.qux.api;
 
+import com.hjwylde.qux.util.Identifier;
 import com.hjwylde.qux.util.Type;
 
-import javax.annotation.Nullable;
+import java.util.List;
 
 /**
  * TODO: Documentation.
@@ -13,15 +14,15 @@ public interface QuxVisitor {
 
     QuxVisitor NULL_INSTANCE = new NullQuxVisitor();
 
-    void visit(int version, String name);
+    void visit(int version, Identifier name);
 
-    ConstantVisitor visitConstant(int flags, String name, Type type);
+    ConstantVisitor visitConstant(int flags, Identifier name, Type type);
 
     void visitEnd();
 
-    FunctionVisitor visitFunction(int flags, String name, Type.Function type);
+    FunctionVisitor visitFunction(int flags, Identifier name, Type.Function type);
 
-    void visitPackage(@Nullable String pkg);
+    void visitPackage(List<Identifier> pkg);
 
-    TypeVisitor visitType(int flags, String name);
+    TypeVisitor visitType(int flags, Identifier name);
 }

@@ -1,3 +1,5 @@
+package valid.print_
+
 void main([str] args):
     print null
 

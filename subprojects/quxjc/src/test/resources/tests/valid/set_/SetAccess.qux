@@ -1,3 +1,5 @@
+package valid.set_
+
 {int} f({int} ts):
     ts = {3, 4, 5}
 

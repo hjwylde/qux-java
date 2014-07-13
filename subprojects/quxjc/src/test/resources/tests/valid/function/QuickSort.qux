@@ -1,3 +1,5 @@
+package valid.function
+
 [any] sort([any] data):
     return quicksort(data)
 

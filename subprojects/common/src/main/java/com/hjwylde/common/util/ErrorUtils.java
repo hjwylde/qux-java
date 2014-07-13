@@ -180,6 +180,9 @@ public final class ErrorUtils {
             return toString(e);
         }
 
+        int end = Math.min(e.getCol() + Math.max(1, e.getLength()), line.length());
+
+        // TODO: Change it from logging a warning to outputting the first line nad a "+ n more line(s)"
         if (e.getCol() + e.getLength() > line.length() + 1) {
             logger.warn("erroneous token spans more than one line @{}:{}-{}", e.getLine(),
                     e.getCol(), e.getCol() + e.getLength());
@@ -188,8 +191,7 @@ public final class ErrorUtils {
         }
 
         // A space padded string of '^' characters to point out where in the line the error occurred
-        String helper = Strings.repeat(" ", e.getCol()) + Strings.repeat("^", Math.max(1,
-                e.getLength()));
+        String helper = Strings.repeat(" ", e.getCol()) + Strings.repeat("^", end - e.getCol());
 
         return toString(e) + "\n" + line + "\n" + helper + "\n";
     }

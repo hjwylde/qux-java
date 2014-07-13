@@ -1,3 +1,5 @@
+package valid.type_
+
 type A is null
 type B is any
 

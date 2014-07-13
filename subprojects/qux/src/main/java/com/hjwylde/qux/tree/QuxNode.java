@@ -9,16 +9,14 @@ import com.hjwylde.qux.api.FunctionVisitor;
 import com.hjwylde.qux.api.QuxVisitor;
 import com.hjwylde.qux.api.TypeVisitor;
 import com.hjwylde.qux.util.Attribute;
+import com.hjwylde.qux.util.Identifier;
 import com.hjwylde.qux.util.Type;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-
-import javax.annotation.Nullable;
 
 /**
  * TODO: Documentation
@@ -28,9 +26,9 @@ import javax.annotation.Nullable;
 public final class QuxNode extends Node implements QuxVisitor {
 
     private int version;
-    private String name;
+    private Identifier name;
 
-    private String pkg;
+    private ImmutableList<Identifier> pkg;
 
     private List<ConstantNode> constants = new ArrayList<>();
     private List<FunctionNode> functions = new ArrayList<>();
@@ -72,18 +70,20 @@ public final class QuxNode extends Node implements QuxVisitor {
         return ImmutableList.copyOf(functions);
     }
 
-    public String getId() {
-        return (pkg == null ? "" : pkg + ".") + name;
+    public List<Identifier> getId() {
+        return ImmutableList.<Identifier>builder().addAll(getPackage()).add(getName()).build();
     }
 
-    public String getName() {
+    public Identifier getName() {
         checkState(name != null, "name has not been set");
 
         return name;
     }
 
-    public Optional<String> getPackage() {
-        return Optional.fromNullable(pkg);
+    public List<Identifier> getPackage() {
+        checkState(pkg != null, "pkg has not been set");
+
+        return pkg;
     }
 
     public ImmutableList<TypeNode> getTypes() {
@@ -100,7 +100,7 @@ public final class QuxNode extends Node implements QuxVisitor {
      * {@inheritDoc}
      */
     @Override
-    public void visit(int version, String name) {
+    public void visit(int version, Identifier name) {
         checkArgument(version != 0, "version cannot be 0");
 
         this.version = version;
@@ -111,7 +111,7 @@ public final class QuxNode extends Node implements QuxVisitor {
      * {@inheritDoc}
      */
     @Override
-    public ConstantVisitor visitConstant(int flags, String name, Type type) {
+    public ConstantVisitor visitConstant(int flags, Identifier name, Type type) {
         ConstantNode cn = new ConstantNode(flags, name, type);
 
         constants.add(cn);
@@ -129,7 +129,7 @@ public final class QuxNode extends Node implements QuxVisitor {
      * {@inheritDoc}
      */
     @Override
-    public FunctionVisitor visitFunction(int flags, String name, Type.Function type) {
+    public FunctionVisitor visitFunction(int flags, Identifier name, Type.Function type) {
         FunctionNode fn = new FunctionNode(flags, name, type);
 
         functions.add(fn);
@@ -141,15 +141,17 @@ public final class QuxNode extends Node implements QuxVisitor {
      * {@inheritDoc}
      */
     @Override
-    public void visitPackage(@Nullable String pkg) {
-        this.pkg = pkg;
+    public void visitPackage(List<Identifier> pkg) {
+        checkArgument(!pkg.isEmpty(), "pkg cannot be empty");
+
+        this.pkg = ImmutableList.copyOf(pkg);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public TypeVisitor visitType(int flags, String name) {
+    public TypeVisitor visitType(int flags, Identifier name) {
         TypeNode tn = new TypeNode(flags, name);
 
         types.add(tn);

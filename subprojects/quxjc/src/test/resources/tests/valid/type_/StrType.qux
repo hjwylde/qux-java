@@ -1,7 +1,9 @@
+package valid.type_
+
 type A is str
 type B is [str]
 
-str f(A a, B b):
+A f(A a, B b):
     return a + b[1]
 
 void main([str] args):

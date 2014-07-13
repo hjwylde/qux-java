@@ -290,6 +290,36 @@ public final class CompilerErrors {
     }
 
     /**
+     * Creates a new {@link com.hjwylde.common.error.CompilerError} representing an invalid meta.
+     *
+     * @param id the meta id.
+     * @return the created {@link com.hjwylde.common.error.CompilerError}.
+     */
+    public static CompilerError invalidMeta(String id) {
+        String message = String.format("invalid meta '%s'", id);
+
+        return new CompilerError(message);
+    }
+
+    /**
+     * Creates a new {@link com.hjwylde.common.error.SourceCompilerError} representing an invalid
+     * meta with the provided source information.
+     *
+     * @param id the meta id.
+     * @param source the source file name.
+     * @param line the line number.
+     * @param col the column number.
+     * @param length the length.
+     * @return the created {@link com.hjwylde.common.error.SourceCompilerError}.
+     */
+    public static SourceCompilerError invalidMeta(String id, String source, int line, int col,
+            int length) {
+        String message = String.format("invalid meta '%s'", id);
+
+        return new SourceCompilerError(message, source, line, col, length);
+    }
+
+    /**
      * Creates a new {@link com.hjwylde.common.error.CompilerError} representing an invalid type.
      *
      * @param received the received type.
@@ -319,37 +349,6 @@ public final class CompilerErrors {
             int line, int col, int length) {
         String message = String.format("invalid type, received '%s' but expected '%s'", received,
                 expected);
-
-        return new SourceCompilerError(message, source, line, col, length);
-    }
-
-    /**
-     * Creates a new {@link com.hjwylde.common.error.CompilerError} representing a no class
-     * definition found.
-     *
-     * @param id the class id.
-     * @return the created {@link com.hjwylde.common.error.CompilerError}.
-     */
-    public static CompilerError noClassFound(String id) {
-        String message = String.format("no class definition found for '%s'", id);
-
-        return new CompilerError(message);
-    }
-
-    /**
-     * Creates a new {@link com.hjwylde.common.error.SourceCompilerError} representing a no class
-     * definition found with the provided source information.
-     *
-     * @param id the class id.
-     * @param source the source file name.
-     * @param line the line number.
-     * @param col the column number.
-     * @param length the length.
-     * @return the created {@link com.hjwylde.common.error.SourceCompilerError}.
-     */
-    public static SourceCompilerError noClassFound(String id, String source, int line, int col,
-            int length) {
-        String message = String.format("no class definition found for '%s'", id);
 
         return new SourceCompilerError(message, source, line, col, length);
     }
@@ -416,6 +415,37 @@ public final class CompilerErrors {
     public static SourceCompilerError noFunctionFound(String owner, String name, String source,
             int line, int col, int length) {
         String message = String.format("no function definition found for '%s$%s'", owner, name);
+
+        return new SourceCompilerError(message, source, line, col, length);
+    }
+
+    /**
+     * Creates a new {@link com.hjwylde.common.error.CompilerError} representing a no resource
+     * definition found.
+     *
+     * @param id the resource id.
+     * @return the created {@link com.hjwylde.common.error.CompilerError}.
+     */
+    public static CompilerError noResourceFound(String id) {
+        String message = String.format("no resource definition found for '%s'", id);
+
+        return new CompilerError(message);
+    }
+
+    /**
+     * Creates a new {@link com.hjwylde.common.error.SourceCompilerError} representing a no resource
+     * definition found with the provided source information.
+     *
+     * @param id the resource id.
+     * @param source the source file name.
+     * @param line the line number.
+     * @param col the column number.
+     * @param length the length.
+     * @return the created {@link com.hjwylde.common.error.SourceCompilerError}.
+     */
+    public static SourceCompilerError noResourceFound(String id, String source, int line, int col,
+            int length) {
+        String message = String.format("no resource definition found for '%s'", id);
 
         return new SourceCompilerError(message, source, line, col, length);
     }

@@ -7,6 +7,7 @@ import com.hjwylde.common.error.MethodNotImplementedError;
 import com.hjwylde.common.lang.annotation.Alpha;
 import com.hjwylde.qux.api.StmtVisitor;
 import com.hjwylde.qux.util.Attribute;
+import com.hjwylde.qux.util.Identifier;
 import com.hjwylde.qux.util.Op;
 
 import com.google.common.base.Optional;
@@ -87,14 +88,14 @@ public abstract class StmtNode extends Node {
      */
     public static final class Assign extends StmtNode {
 
-        private final String var;
+        private final Identifier var;
         private final ExprNode expr;
 
-        public Assign(String var, ExprNode expr, Attribute... attributes) {
+        public Assign(Identifier var, ExprNode expr, Attribute... attributes) {
             this(var, expr, Arrays.asList(attributes));
         }
 
-        public Assign(String var, ExprNode expr, Collection<? extends Attribute> attributes) {
+        public Assign(Identifier var, ExprNode expr, Collection<? extends Attribute> attributes) {
             super(attributes);
 
             this.var = checkNotNull(var, "var cannot be null");
@@ -113,7 +114,7 @@ public abstract class StmtNode extends Node {
             return expr;
         }
 
-        public String getVar() {
+        public Identifier getVar() {
             return var;
         }
     }
@@ -145,11 +146,9 @@ public abstract class StmtNode extends Node {
                     checkArgument(expr instanceof ExprNode.Unary);
                     checkArgument(((ExprNode.Unary) expr).getOp() == Op.Unary.DEC);
                     break;
-                case EXTERNAL:
-                    checkArgument(expr instanceof ExprNode.External);
-                    break;
                 case FUNCTION:
-                    checkArgument(expr instanceof ExprNode.Function);
+                    checkArgument(expr instanceof ExprNode.External);
+                    checkArgument(((ExprNode.External) expr).getType() == ExprNode.External.Type.FUNCTION);
                     break;
                 case INCREMENT:
                     checkArgument(expr instanceof ExprNode.Unary);
@@ -183,7 +182,7 @@ public abstract class StmtNode extends Node {
          * @since 0.1.3
          */
         public static enum Type {
-            DECREMENT, EXTERNAL, FUNCTION, INCREMENT;
+            DECREMENT, FUNCTION, INCREMENT;
         }
     }
 
@@ -195,15 +194,15 @@ public abstract class StmtNode extends Node {
      */
     public static final class For extends StmtNode {
 
-        private final String var;
+        private final Identifier var;
         private final ExprNode expr;
         private final ImmutableList<StmtNode> body;
 
-        public For(String var, ExprNode expr, List<StmtNode> body, Attribute... attributes) {
+        public For(Identifier var, ExprNode expr, List<StmtNode> body, Attribute... attributes) {
             this(var, expr, body, Arrays.asList(attributes));
         }
 
-        public For(String var, ExprNode expr, List<StmtNode> body,
+        public For(Identifier var, ExprNode expr, List<StmtNode> body,
                 Collection<? extends Attribute> attributes) {
             super(attributes);
 
@@ -228,7 +227,7 @@ public abstract class StmtNode extends Node {
             return expr;
         }
 
-        public String getVar() {
+        public Identifier getVar() {
             return var;
         }
     }

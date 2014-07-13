@@ -1,3 +1,5 @@
+package valid.record_
+
 void main([str] args):
     print {x: null} == {x: null}
     print {y: null, x: 5} == {x: 5, y: null}

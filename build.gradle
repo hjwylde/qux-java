@@ -2,11 +2,12 @@ apply from: 'dependencies.gradle'
 
 buildscript {
     repositories {
+        mavenCentral()
         maven { url 'https://github.com/ben-manes/gradle-versions-plugin/raw/mvnrepo' }
     }
 
     dependencies {
-        classpath 'com.github.ben-manes:gradle-versions-plugin:0.5-beta-1'
+        classpath 'com.github.ben-manes:gradle-versions-plugin:0.5-beta-5'
     }
 }
 
@@ -46,6 +47,6 @@ task wrapper(type: Wrapper) {
     group 'Help'
     description 'Generates the Gradle wrapper files'
 
-    gradleVersion = '1.11'
+    gradleVersion = '2.0'
 }
 

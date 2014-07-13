@@ -12,9 +12,11 @@ import com.hjwylde.qbs.builder.QuxContext;
 import com.hjwylde.qux.api.CheckQuxAdapter;
 import com.hjwylde.qux.pipelines.Pipeline;
 import com.hjwylde.qux.tree.QuxNode;
+import com.hjwylde.qux.util.Identifier;
 import com.hjwylde.quxjc.compiler.MainFunctionInjector;
 import com.hjwylde.quxjc.compiler.Qux2ClassTranslater;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 
@@ -127,8 +129,8 @@ public final class Qux2ClassBuildJob extends BuildJob {
      * @param extension the extension of the output file.
      * @return the generated path.
      */
-    private static Path generatePath(Path outdir, String id, String extension) {
-        return outdir.resolve(id.replace(".", File.separator) + "." + extension);
+    private static Path generatePath(Path outdir, List<Identifier> id, String extension) {
+        return outdir.resolve(Joiner.on(File.separator).join(id) + "." + extension);
     }
 
     private byte[] translate(QuxNode node) {

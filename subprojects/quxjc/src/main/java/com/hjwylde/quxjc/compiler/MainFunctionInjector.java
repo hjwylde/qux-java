@@ -28,6 +28,8 @@ import org.objectweb.asm.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
+
 import qux.lang.AbstractObj;
 import qux.lang.List;
 import qux.lang.Str;
@@ -48,7 +50,8 @@ public class MainFunctionInjector extends ClassVisitor {
     private static final String FUNCTION_MAIN_NAME = "main";
     private static final com.hjwylde.qux.util.Type FUNCTION_MAIN_TYPE =
             com.hjwylde.qux.util.Type.forFunction(com.hjwylde.qux.util.Type.TYPE_VOID,
-                    com.hjwylde.qux.util.Type.forList(com.hjwylde.qux.util.Type.TYPE_STR));
+                    Arrays.asList(com.hjwylde.qux.util.Type.forList(
+                            com.hjwylde.qux.util.Type.TYPE_STR)));
 
     private final String source;
     private String id;
@@ -111,20 +114,20 @@ public class MainFunctionInjector extends ClassVisitor {
         // Local variable positions
 
         // String[] (method parameter)
-        int args = 0;
+        int varArgs = 0;
         // Str[] (local variable)
-        int strs = 1;
+        int varStrs = 1;
         // int (local variable)
-        int i = 2;
+        int varI = 2;
 
-        mv.visitParameter("args", args);
+        mv.visitParameter("args", varArgs);
         mv.visitCode();
 
         // Create the array of Str
-        mv.visitVarInsn(ALOAD, args);
+        mv.visitVarInsn(ALOAD, varArgs);
         mv.visitInsn(ARRAYLENGTH);
         mv.visitTypeInsn(ANEWARRAY, Type.getInternalName(Str.class));
-        mv.visitVarInsn(ASTORE, strs);
+        mv.visitVarInsn(ASTORE, varStrs);
 
         // Loop through the String args array
         Label start = new Label();
@@ -132,30 +135,30 @@ public class MainFunctionInjector extends ClassVisitor {
 
         // For loop initialisation
         mv.visitInsn(ICONST_0);
-        mv.visitVarInsn(ISTORE, i);
+        mv.visitVarInsn(ISTORE, varI);
         // For loop check
         mv.visitLabel(start);
-        mv.visitVarInsn(ILOAD, i);
-        mv.visitVarInsn(ALOAD, args);
+        mv.visitVarInsn(ILOAD, varI);
+        mv.visitVarInsn(ALOAD, varArgs);
         mv.visitInsn(ARRAYLENGTH);
         mv.visitJumpInsn(IF_ICMPGE, end);
         // For loop body
-        mv.visitVarInsn(ALOAD, strs);
-        mv.visitVarInsn(ALOAD, args);
-        mv.visitVarInsn(ILOAD, i);
+        mv.visitVarInsn(ALOAD, varStrs);
+        mv.visitVarInsn(ALOAD, varArgs);
+        mv.visitVarInsn(ILOAD, varI);
         mv.visitInsn(DUP_X1);
         mv.visitInsn(AALOAD);
         mv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(Str.class), "valueOf",
                 getMethodDescriptor(Str.class, "valueOf", String.class), false);
         mv.visitInsn(AASTORE);
         // For loop increment
-        mv.visitIincInsn(i, 1);
+        mv.visitIincInsn(varI, 1);
         // For loop end
         mv.visitJumpInsn(GOTO, start);
         mv.visitLabel(end);
 
         // Call the Qux main function
-        mv.visitVarInsn(ALOAD, strs);
+        mv.visitVarInsn(ALOAD, varStrs);
         mv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(List.class), "valueOf",
                 getMethodDescriptor(List.class, "valueOf", AbstractObj[].class), false);
         mv.visitMethodInsn(INVOKESTATIC, id, FUNCTION_MAIN_NAME, getType(FUNCTION_MAIN_TYPE)

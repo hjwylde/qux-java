@@ -8,11 +8,12 @@ import com.hjwylde.qux.tree.QuxNode;
 import com.hjwylde.qux.tree.TypeNode;
 import com.hjwylde.qux.util.Attribute;
 import com.hjwylde.qux.util.Attributes;
+import com.hjwylde.qux.util.Identifier;
 
 import com.google.common.base.Optional;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * TODO: Documentation.
@@ -36,34 +37,34 @@ public final class NameChecker extends Pipeline {
      */
     @Override
     public QuxNode apply(QuxNode node) {
-        List<String> constants = new ArrayList<>();
+        Set<Identifier> constants = new HashSet<>();
         // TODO: Check for recursive constants
         for (ConstantNode constant : node.getConstants()) {
-            checkConstant(constant, constants);
+            checkConstant(constant.getName(), constants);
         }
 
-        List<String> functions = new ArrayList<>();
+        Set<Identifier> functions = new HashSet<>();
         for (FunctionNode function : node.getFunctions()) {
-            checkFunction(function, functions);
+            checkFunction(function.getName(), functions);
 
-            List<String> parameters = new ArrayList<>();
-            for (String parameter : function.getParameters().keySet()) {
+            Set<Identifier> parameters = new HashSet<>();
+            for (Identifier parameter : function.getParameters().keySet()) {
                 checkFunctionParameter(parameter, parameters, function);
             }
         }
 
-        List<String> types = new ArrayList<>();
+        Set<Identifier> types = new HashSet<>();
         // TODO: Check for recursive types
         for (TypeNode type : node.getTypes()) {
-            checkType(type, types);
+            checkType(type.getName(), types);
         }
 
         return node;
     }
 
-    private void checkConstant(ConstantNode constant, List<String> constants) {
-        if (!constants.contains(constant.getName())) {
-            constants.add(constant.getName());
+    private void checkConstant(Identifier constant, Set<Identifier> constants) {
+        if (!constants.contains(constant)) {
+            constants.add(constant);
             return;
         }
 
@@ -72,16 +73,16 @@ public final class NameChecker extends Pipeline {
         if (opt.isPresent()) {
             Attribute.Source source = opt.get();
 
-            throw CompilerErrors.duplicateConstant(constant.getName(), source.getSource(),
+            throw CompilerErrors.duplicateConstant(constant.getId(), source.getSource(),
                     source.getLine(), source.getCol(), source.getLength());
         } else {
-            throw CompilerErrors.duplicateConstant(constant.getName());
+            throw CompilerErrors.duplicateConstant(constant.getId());
         }
     }
 
-    private void checkFunction(FunctionNode function, List<String> functions) {
-        if (!functions.contains(function.getName())) {
-            functions.add(function.getName());
+    private void checkFunction(Identifier function, Set<Identifier> functions) {
+        if (!functions.contains(function)) {
+            functions.add(function);
             return;
         }
 
@@ -90,14 +91,14 @@ public final class NameChecker extends Pipeline {
         if (opt.isPresent()) {
             Attribute.Source source = opt.get();
 
-            throw CompilerErrors.duplicateFunction(function.getName(), source.getSource(),
+            throw CompilerErrors.duplicateFunction(function.getId(), source.getSource(),
                     source.getLine(), source.getCol(), source.getLength());
         } else {
-            throw CompilerErrors.duplicateFunction(function.getName());
+            throw CompilerErrors.duplicateFunction(function.getId());
         }
     }
 
-    private void checkFunctionParameter(String parameter, List<String> parameters,
+    private void checkFunctionParameter(Identifier parameter, Set<Identifier> parameters,
             FunctionNode function) {
         if (!parameters.contains(parameter)) {
             parameters.add(parameter);
@@ -109,16 +110,16 @@ public final class NameChecker extends Pipeline {
         if (opt.isPresent()) {
             Attribute.Source source = opt.get();
 
-            throw CompilerErrors.duplicateFunctionParameter(parameter, source.getSource(),
+            throw CompilerErrors.duplicateFunctionParameter(parameter.getId(), source.getSource(),
                     source.getLine(), source.getCol(), source.getLength());
         } else {
-            throw CompilerErrors.duplicateFunctionParameter(parameter);
+            throw CompilerErrors.duplicateFunctionParameter(parameter.getId());
         }
     }
 
-    private void checkType(TypeNode type, List<String> types) {
-        if (!types.contains(type.getName())) {
-            types.add(type.getName());
+    private void checkType(Identifier type, Set<Identifier> types) {
+        if (!types.contains(type)) {
+            types.add(type);
             return;
         }
 
@@ -127,10 +128,10 @@ public final class NameChecker extends Pipeline {
         if (opt.isPresent()) {
             Attribute.Source source = opt.get();
 
-            throw CompilerErrors.duplicateType(type.getName(), source.getSource(), source.getLine(),
+            throw CompilerErrors.duplicateType(type.getId(), source.getSource(), source.getLine(),
                     source.getCol(), source.getLength());
         } else {
-            throw CompilerErrors.duplicateType(type.getName());
+            throw CompilerErrors.duplicateType(type.getId());
         }
     }
 }

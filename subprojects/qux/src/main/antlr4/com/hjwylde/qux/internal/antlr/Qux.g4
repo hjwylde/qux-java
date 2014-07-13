@@ -90,7 +90,7 @@ start : NEWLINE? file EOF
 
 // File
 
-file : pkg? imp* decl*
+file : pkg imp* decl*
      ;
 
 // Package statement
@@ -100,7 +100,7 @@ pkg : 'package' Identifier ('.' Identifier)* NEWLINE
 
 // Import statement
 
-imp : 'import' Identifier ('.' Identifier)* ('$' Identifier)? NEWLINE
+imp : 'import' Identifier ('.' Identifier)+ ('$' Identifier)? NEWLINE
     ;
 
 // Declarations
@@ -140,8 +140,8 @@ stmtAssign : Identifier (AOP | AOP_ADD | AOP_SUB | AOP_MUL | AOP_DIV | AOP_REM) 
            ;
 
 stmtExpr : exprDecrement NEWLINE
-         | exprExternalConstant NEWLINE
          | exprExternalFunction NEWLINE
+         | exprFunction NEWLINE
          | exprIncrement NEWLINE
          ;
 
@@ -271,7 +271,7 @@ exprParen : '(' expr ')'
 exprVariable : Identifier
              ;
 
-exprExternalConstant : exprMeta '$' Identifier
+exprExternalConstant : exprMeta '$' exprVariable
                      ;
 
 exprExternalFunction : exprMeta '$' exprFunction

@@ -1,3 +1,5 @@
+package valid.bool_
+
 void main([str] args):
     print not true
     print not false

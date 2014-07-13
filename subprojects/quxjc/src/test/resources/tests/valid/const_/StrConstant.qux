@@ -1,3 +1,5 @@
+package valid.const_
+
 const str A is 'foo'
 const str B is 'foo'
 const str C is 'bar'
