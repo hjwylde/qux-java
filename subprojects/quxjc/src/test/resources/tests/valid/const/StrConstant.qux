@@ -1,13 +1,13 @@
-package valid.const_
+package valid.const
 
-const int A is 5
-const int B is 5
-const int C is -5
+str A is 'foo'
+str B is 'foo'
+str C is 'bar'
 
-int f(int a):
+str f(str a):
     return a + A
 
-int g(int A):
+str g(str A):
     return A
 
 void main([str] args):

@@ -1,14 +1,14 @@
-package valid.const_
+package valid.const
 
-const str A is 'foo'
-const str B is 'foo'
-const str C is 'bar'
+real A is 5.0
+real B is 5.0
+real C is -5.0
 
-str f(str a):
-    return a + A
+real f(real a):
+    return a + A + 0.5
 
-str g(str A):
-    return A
+real g(real A):
+    return A + 0.5
 
 void main([str] args):
     print A

@@ -27,7 +27,7 @@ import java.util.List;
 public final class ValidConstTests extends Harness {
 
     private static final Path ROOT = Paths.get("src/test/resources/tests/").toAbsolutePath();
-    private static final String PKG = "valid.const_";
+    private static final String PKG = "valid.const";
 
     private final String id;
 

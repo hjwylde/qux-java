@@ -1,7 +1,7 @@
-package valid.const_
+package valid.const
 
-const null A is null
-const int B is 5
+null A is null
+int B is 5
 
 null f(int a):
     return A

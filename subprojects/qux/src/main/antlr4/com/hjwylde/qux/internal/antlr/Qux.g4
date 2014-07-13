@@ -112,7 +112,7 @@ decl : declConstant
 
 // TODO: It would be nice to remove the type declaration here, I think it will be possible once we
 // move the name propagation to the lexer
-declConstant : 'const' type Identifier 'is' expr NEWLINE
+declConstant : type Identifier 'is' expr NEWLINE
              ;
 
 declFunction : typeReturn Identifier '(' (type Identifier (',' type Identifier)*)? ')' block
@@ -385,7 +385,6 @@ Exponent : 'e' [+-] Numeral ;
 
 ANY     : 'any' ;
 BOOL    : 'bool' ;
-CONST   : 'const' ;
 ELIF    : 'elif' ;
 ELSE    : 'else' ;
 FALSE   : 'false' ;
