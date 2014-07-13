@@ -1,13 +1,13 @@
-package valid.const_
+package valid.const
 
-const {int} A is {5, 4}
-const {int} B is {5, 4}
-const {int} C is {-5}
+bool A is true
+bool B is true
+bool C is false
 
-{int} f({int} a):
-    return a + A
+bool f(bool a):
+    return a and A
 
-{int} g({int} A):
+bool g(bool A):
     return A
 
 void main([str] args):

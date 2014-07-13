@@ -18,7 +18,7 @@ let foldmethod='indent'
 
 syn keyword bool false true
 syn keyword externals import package
-syn keyword keywords const is type
+syn keyword keywords is type
 syn keyword operators and iff implies in nin or xor
 syn keyword statements elif else for if print return while
 syn keyword types any bool int list null obj real record set str void

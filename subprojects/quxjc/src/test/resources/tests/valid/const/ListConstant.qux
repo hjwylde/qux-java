@@ -1,13 +1,13 @@
-package valid.const_
+package valid.const
 
-const bool A is true
-const bool B is true
-const bool C is false
+[int] A is [0, 1]
+[int] B is [0, 1]
+[int] C is [5]
 
-bool f(bool a):
-    return a and A
+[int] f([int] a):
+    return a + A
 
-bool g(bool A):
+[int] g([int] A):
     return A
 
 void main([str] args):
