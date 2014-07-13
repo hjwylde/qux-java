@@ -1,3 +1,5 @@
+package valid.dent
+
         # Comment
 
 void main([str] args):

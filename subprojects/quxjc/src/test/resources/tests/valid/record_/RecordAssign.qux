@@ -1,3 +1,5 @@
+package valid.record_
+
 {int x, str y} f({int x, str y} xs):
     xs.x = 3
 

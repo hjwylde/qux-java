@@ -227,24 +227,6 @@ public final class List extends AbstractObj implements Access, Assign, Iterable,
         return Int.valueOf(count);
     }
 
-    public List _mul_(Int value) {
-        checkArgument(value._gte_(Int.ZERO) == TRUE, "cannot multiply a list by negative value");
-
-        List mul = new List();
-
-        if (value.equals(Int.ZERO)) {
-            return mul;
-        }
-
-        while (value._gt_(Int.ZERO) == TRUE) {
-            mul = mul._add_(this);
-
-            value = value._sub_(Int.ONE);
-        }
-
-        return mul;
-    }
-
     /**
      * {@inheritDoc}
      */

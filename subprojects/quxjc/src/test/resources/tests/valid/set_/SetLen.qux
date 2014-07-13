@@ -1,3 +1,5 @@
+package valid.set_
+
 void main([str] args):
     print |{}|
     print |{0, 2, 3}|

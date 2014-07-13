@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.hjwylde.qux.api.ExprVisitor;
 import com.hjwylde.qux.util.Attribute;
+import com.hjwylde.qux.util.Identifier;
 import com.hjwylde.qux.util.Op;
 
 import com.google.common.base.Optional;
@@ -262,14 +263,15 @@ public abstract class ExprNode extends Node {
      */
     public static final class Function extends ExprNode {
 
-        private final String name;
+        private final Identifier name;
         private final ImmutableList<ExprNode> arguments;
 
-        public Function(String name, java.util.List<ExprNode> arguments, Attribute... attributes) {
+        public Function(Identifier name, java.util.List<ExprNode> arguments,
+                Attribute... attributes) {
             this(name, arguments, Arrays.asList(attributes));
         }
 
-        public Function(String name, java.util.List<ExprNode> arguments,
+        public Function(Identifier name, java.util.List<ExprNode> arguments,
                 Collection<? extends Attribute> attributes) {
             super(attributes);
 
@@ -289,7 +291,7 @@ public abstract class ExprNode extends Node {
             return arguments;
         }
 
-        public String getName() {
+        public Identifier getName() {
             return name;
         }
     }
@@ -334,16 +336,18 @@ public abstract class ExprNode extends Node {
      */
     public static final class Meta extends ExprNode {
 
-        private final String id;
+        private final ImmutableList<Identifier> id;
 
-        public Meta(String id, Attribute... attributes) {
+        public Meta(java.util.List<Identifier> id, Attribute... attributes) {
             this(id, Arrays.asList(attributes));
         }
 
-        public Meta(String id, Collection<? extends Attribute> attributes) {
+        public Meta(java.util.List<Identifier> id, Collection<? extends Attribute> attributes) {
             super(attributes);
 
-            this.id = checkNotNull(id, "id cannot be null");
+            checkArgument(id.size() > 1, "id must have 2 or more elements");
+
+            this.id = ImmutableList.copyOf(id);
         }
 
         /**
@@ -354,7 +358,7 @@ public abstract class ExprNode extends Node {
             ev.visitExprMeta(this);
         }
 
-        public String getId() {
+        public ImmutableList<Identifier> getId() {
             return id;
         }
     }
@@ -367,13 +371,14 @@ public abstract class ExprNode extends Node {
      */
     public static final class Record extends ExprNode {
 
-        private final ImmutableMap<String, ExprNode> fields;
+        private final ImmutableMap<Identifier, ExprNode> fields;
 
-        public Record(Map<String, ExprNode> fields, Attribute... attributes) {
+        public Record(Map<Identifier, ExprNode> fields, Attribute... attributes) {
             this(fields, Arrays.asList(attributes));
         }
 
-        public Record(Map<String, ExprNode> fields, Collection<? extends Attribute> attributes) {
+        public Record(Map<Identifier, ExprNode> fields,
+                Collection<? extends Attribute> attributes) {
             super(attributes);
 
             checkArgument(!fields.isEmpty(), "fields must contain at least 1 element");
@@ -389,7 +394,7 @@ public abstract class ExprNode extends Node {
             ev.visitExprRecord(this);
         }
 
-        public ImmutableMap<String, ExprNode> getFields() {
+        public ImmutableMap<Identifier, ExprNode> getFields() {
             return fields;
         }
     }
@@ -403,13 +408,13 @@ public abstract class ExprNode extends Node {
     public static final class RecordAccess extends ExprNode {
 
         private final ExprNode target;
-        private final String field;
+        private final Identifier field;
 
-        public RecordAccess(ExprNode target, String field, Attribute... attributes) {
+        public RecordAccess(ExprNode target, Identifier field, Attribute... attributes) {
             this(target, field, Arrays.asList(attributes));
         }
 
-        public RecordAccess(ExprNode target, String field,
+        public RecordAccess(ExprNode target, Identifier field,
                 Collection<? extends Attribute> attributes) {
             super(attributes);
 
@@ -425,7 +430,7 @@ public abstract class ExprNode extends Node {
             ev.visitExprRecordAccess(this);
         }
 
-        public String getField() {
+        public Identifier getField() {
             return field;
         }
 
@@ -559,13 +564,13 @@ public abstract class ExprNode extends Node {
      */
     public static final class Variable extends ExprNode {
 
-        private final String name;
+        private final Identifier name;
 
-        public Variable(String name, Attribute... attributes) {
+        public Variable(Identifier name, Attribute... attributes) {
             this(name, Arrays.asList(attributes));
         }
 
-        public Variable(String name, Collection<? extends Attribute> attributes) {
+        public Variable(Identifier name, Collection<? extends Attribute> attributes) {
             super(attributes);
 
             this.name = checkNotNull(name, "name cannot be null");
@@ -579,7 +584,7 @@ public abstract class ExprNode extends Node {
             ev.visitExprVariable(this);
         }
 
-        public String getName() {
+        public Identifier getName() {
             return name;
         }
     }

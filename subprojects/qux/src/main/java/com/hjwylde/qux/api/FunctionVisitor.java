@@ -1,5 +1,6 @@
 package com.hjwylde.qux.api;
 
+import com.hjwylde.qux.util.Identifier;
 import com.hjwylde.qux.util.Type;
 
 /**
@@ -15,7 +16,7 @@ public interface FunctionVisitor extends StmtVisitor {
 
     void visitEnd();
 
-    void visitParameter(String var, Type type);
+    void visitParameter(Identifier var, Type type);
 
     void visitReturnType(Type type);
 }

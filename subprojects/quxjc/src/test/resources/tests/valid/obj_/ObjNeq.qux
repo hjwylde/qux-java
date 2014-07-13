@@ -1,3 +1,5 @@
+package valid.obj_
+
 void main([str] args):
     print obj != obj
 

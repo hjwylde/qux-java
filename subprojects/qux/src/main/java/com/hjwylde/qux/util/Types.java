@@ -2,6 +2,7 @@ package com.hjwylde.qux.util;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.hjwylde.qux.util.Type.TYPE_ANY;
 
 import com.hjwylde.common.lang.Pair;
 
@@ -48,7 +49,7 @@ public final class Types {
         }
 
         // Create a new union using the constructor to avoid an infinite recursive call to normalise
-        return new Type.Union(types);
+        return new Type.Union(types, type.getAttributes());
     }
 
     public static boolean isEquivalent(Type lhs, Type rhs) {
@@ -106,18 +107,19 @@ public final class Types {
         }
 
         // Create a new function using the constructor to avoid an infinite recursive call to normalise
-        return new Type.Function(normalise(type.getReturnType()), parameterTypes);
+        return new Type.Function(normalise(type.getReturnType()), parameterTypes,
+                type.getAttributes());
     }
 
     public static Type normalise(Type type) {
         if (type instanceof Type.Function) {
             return normalise((Type.Function) type);
         } else if (type instanceof Type.List) {
-            return Type.forList(((Type.List) type).getInnerType());
+            return Type.forList(((Type.List) type).getInnerType(), type.getAttributes());
         } else if (type instanceof Type.Record) {
             return normalise((Type.Record) type);
         } else if (type instanceof Type.Set) {
-            return Type.forSet(((Type.Set) type).getInnerType());
+            return Type.forSet(((Type.Set) type).getInnerType(), type.getAttributes());
         } else if (type instanceof Type.Union) {
             return normalise((Type.Union) type);
         }
@@ -135,8 +137,8 @@ public final class Types {
         OUTER:
         for (Type inner : type.getTypes()) {
             // If it contains an any type, then just return that
-            if (inner.equals(Type.TYPE_ANY)) {
-                return Type.TYPE_ANY;
+            if (isEquivalent(inner, TYPE_ANY)) {
+                return TYPE_ANY;
             }
 
             INNER:
@@ -167,7 +169,7 @@ public final class Types {
         }
 
         // Create a new union using the constructor to avoid an infinite recursive call to normalise
-        return new Type.Union(union);
+        return new Type.Union(union, type.getAttributes());
     }
 
     /**
@@ -190,9 +192,9 @@ public final class Types {
         // The final result will be: {int a, real b}|{null a, real b}
 
         // Split up the record as per the example above
-        List<Set<Pair<String, Type>>> split = new ArrayList<>();
-        for (Map.Entry<String, Type> entry : type.getFields().entrySet()) {
-            Set<Pair<String, Type>> pairs = new HashSet<>();
+        List<Set<Pair<Identifier, Type>>> split = new ArrayList<>();
+        for (Map.Entry<Identifier, Type> entry : type.getFields().entrySet()) {
+            Set<Pair<Identifier, Type>> pairs = new HashSet<>();
             Type normalised = normalise(entry.getValue());
 
             if (normalised instanceof Type.Union) {
@@ -207,13 +209,13 @@ public final class Types {
         }
 
         // Cartesian product time!
-        Set<List<Pair<String, Type>>> product = Sets.cartesianProduct(split);
+        Set<List<Pair<Identifier, Type>>> product = Sets.cartesianProduct(split);
 
         // Recreate the union of records now, so we'll have {int a, real b}|{null a, real b}
-        List<Type> union = new ArrayList<>();
-        for (List<Pair<String, Type>> inner : product) {
-            Map<String, Type> record = new HashMap<>();
-            for (Pair<String, Type> pair : inner) {
+        List<Type.Record> union = new ArrayList<>();
+        for (List<Pair<Identifier, Type>> inner : product) {
+            Map<Identifier, Type> record = new HashMap<>();
+            for (Pair<Identifier, Type> pair : inner) {
                 record.put(pair.getFirst(), pair.getSecond());
             }
 
@@ -224,11 +226,11 @@ public final class Types {
                 type);
 
         if (union.size() == 1) {
-            return union.get(0);
+            return new Type.Record(union.get(0).getFields(), type.getAttributes());
         }
 
         // Create a new union using the constructor to avoid an infinite recursive call to normalise
-        return new Type.Union(union);
+        return new Type.Union(union, type.getAttributes());
     }
 
     private static boolean isSubtype(Type.Record lhs, Type.Record rhs) {
@@ -236,7 +238,7 @@ public final class Types {
             return false;
         }
 
-        for (String key : rhs.getFields().keySet()) {
+        for (Identifier key : rhs.getFields().keySet()) {
             if (!isSubtype(lhs.getFields().get(key), rhs.getFields().get(key))) {
                 return false;
             }

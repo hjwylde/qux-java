@@ -1,3 +1,5 @@
+package valid.real_
+
 void main([str] args):
     print -1.9 < 1.0
     print -1.5 < -1.5

@@ -6,6 +6,7 @@ import static com.google.common.base.Preconditions.checkState;
 import com.hjwylde.qux.api.QuxVisitor;
 import com.hjwylde.qux.api.TypeVisitor;
 import com.hjwylde.qux.util.Attribute;
+import com.hjwylde.qux.util.Identifier;
 import com.hjwylde.qux.util.Type;
 
 import java.util.Arrays;
@@ -20,15 +21,15 @@ import java.util.Collection;
 public final class TypeNode extends Node implements TypeVisitor {
 
     private final int flags;
-    private final String name;
+    private final Identifier name;
 
     private Type type;
 
-    public TypeNode(int flags, String name, Attribute... attributes) {
+    public TypeNode(int flags, Identifier name, Attribute... attributes) {
         this(flags, name, Arrays.asList(attributes));
     }
 
-    public TypeNode(int flags, String name, Collection<? extends Attribute> attributes) {
+    public TypeNode(int flags, Identifier name, Collection<? extends Attribute> attributes) {
         super(attributes);
 
         this.flags = flags;
@@ -51,7 +52,7 @@ public final class TypeNode extends Node implements TypeVisitor {
         return flags;
     }
 
-    public String getName() {
+    public Identifier getName() {
         return name;
     }
 

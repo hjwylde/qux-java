@@ -1,3 +1,5 @@
+package valid.list_
+
 void main([str] args):
     foo = [0..3, 3..6, 6..9]
     bar = foo[1:]

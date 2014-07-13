@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.hjwylde.qux.util.Constants.SUPPORTED_VERSIONS;
 
+import com.hjwylde.qux.util.Identifier;
 import com.hjwylde.qux.util.Type;
 
 import java.util.ArrayList;
@@ -33,7 +34,7 @@ public class CheckQuxAdapter extends QuxAdapter {
      * {@inheritDoc}
      */
     @Override
-    public void visit(int version, String name) {
+    public void visit(int version, Identifier name) {
         checkState(!visitedStart, "may only call visit(int, String) once");
         checkState(!visitedPackage, "must call visit(int, String) before visitPackage(String)");
         checkState(!visitedEnd, "must call visit(int, String) before visitEnd()");
@@ -49,7 +50,7 @@ public class CheckQuxAdapter extends QuxAdapter {
      * {@inheritDoc}
      */
     @Override
-    public ConstantVisitor visitConstant(int flags, String name, Type type) {
+    public ConstantVisitor visitConstant(int flags, Identifier name, Type type) {
         checkState(visitedStart,
                 "must call visit(int, String) before visitConstant(int, String, Type)");
         checkState(visitedPackage,
@@ -94,7 +95,7 @@ public class CheckQuxAdapter extends QuxAdapter {
      * {@inheritDoc}
      */
     @Override
-    public FunctionVisitor visitFunction(int flags, String name, Type.Function type) {
+    public FunctionVisitor visitFunction(int flags, Identifier name, Type.Function type) {
         checkState(visitedStart,
                 "must call visit(int, String) before visitFunction(int, String, Type.Function)");
         checkState(visitedPackage,
@@ -113,10 +114,12 @@ public class CheckQuxAdapter extends QuxAdapter {
      * {@inheritDoc}
      */
     @Override
-    public void visitPackage(String pkg) {
+    public void visitPackage(List<Identifier> pkg) {
         checkState(visitedStart, "must call visit(int, String) before visitPackage(String)");
         checkState(!visitedPackage, "may only call visitPackage(String) once");
         checkState(!visitedEnd, "must call visitPackage(String) before visitEnd()");
+        checkNotNull(pkg, "pkg cannot be null");
+        checkArgument(!pkg.contains(null), "pkg cannot contain null");
 
         visitedPackage = true;
 
@@ -127,7 +130,7 @@ public class CheckQuxAdapter extends QuxAdapter {
      * {@inheritDoc}
      */
     @Override
-    public TypeVisitor visitType(int flags, String name) {
+    public TypeVisitor visitType(int flags, Identifier name) {
         checkState(visitedStart, "must call visit(int, String) before visitType(int, String)");
         checkState(visitedPackage, "must call visitPackage(String) before visitType(int, String)");
         checkState(!visitedEnd, "must call visitType(int, String) before visitEnd()");

@@ -1,3 +1,5 @@
+package valid.const_
+
 const null A is null
 const int B is 5
 

@@ -6,6 +6,7 @@ import static com.google.common.base.Preconditions.checkState;
 import com.hjwylde.qux.api.FunctionVisitor;
 import com.hjwylde.qux.api.QuxVisitor;
 import com.hjwylde.qux.util.Attribute;
+import com.hjwylde.qux.util.Identifier;
 import com.hjwylde.qux.util.Type;
 
 import com.google.common.collect.ImmutableList;
@@ -26,19 +27,19 @@ import java.util.Map;
 public final class FunctionNode extends Node implements FunctionVisitor {
 
     private final int flags;
-    private final String name;
+    private final Identifier name;
     private final Type.Function type;
 
-    private Map<String, Type> parameters = new LinkedHashMap<>();
+    private Map<Identifier, Type> parameters = new LinkedHashMap<>();
     private Type returnType;
 
     private List<StmtNode> stmts = new ArrayList<>();
 
-    public FunctionNode(int flags, String name, Type.Function type, Attribute... attributes) {
+    public FunctionNode(int flags, Identifier name, Type.Function type, Attribute... attributes) {
         this(flags, name, type, Arrays.asList(attributes));
     }
 
-    public FunctionNode(int flags, String name, Type.Function type,
+    public FunctionNode(int flags, Identifier name, Type.Function type,
             Collection<? extends Attribute> attributes) {
         super(attributes);
 
@@ -56,7 +57,7 @@ public final class FunctionNode extends Node implements FunctionVisitor {
     }
 
     public void accept(FunctionVisitor fv) {
-        for (Map.Entry<String, Type> parameter : parameters.entrySet()) {
+        for (Map.Entry<Identifier, Type> parameter : parameters.entrySet()) {
             fv.visitParameter(parameter.getKey(), parameter.getValue());
         }
 
@@ -73,11 +74,11 @@ public final class FunctionNode extends Node implements FunctionVisitor {
         return flags;
     }
 
-    public String getName() {
+    public Identifier getName() {
         return name;
     }
 
-    public ImmutableMap<String, Type> getParameters() {
+    public ImmutableMap<Identifier, Type> getParameters() {
         return ImmutableMap.copyOf(parameters);
     }
 
@@ -111,7 +112,7 @@ public final class FunctionNode extends Node implements FunctionVisitor {
      * {@inheritDoc}
      */
     @Override
-    public void visitParameter(String var, Type type) {
+    public void visitParameter(Identifier var, Type type) {
         checkNotNull(var, "var cannot be null");
         checkNotNull(type, "type cannot be null");
 

@@ -1,3 +1,5 @@
+package valid.str_
+
 void main([str] args):
     print 'hello' > 'hello'
     print 'hello' > 'abc'

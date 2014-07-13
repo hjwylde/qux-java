@@ -1,3 +1,5 @@
+package valid.list_
+
 void main([str] args):
     print [0] == [0]
     print [0, 1] == [1, 0]
