@@ -15,7 +15,7 @@ import qux.util.Iterator;
  * TODO: Documentation
  *
  * @author Henry J. Wylde
- * @since TODO: SINCE
+ * @since 0.2.4
  */
 public final class Tuple extends AbstractObj implements Iterable, Len {
 

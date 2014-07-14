@@ -99,7 +99,7 @@ public abstract class StmtNode extends Node {
          * TODO: Documentation
          *
          * @author Henry J. Wylde
-         * @since TODO: SINCE
+         * @since 0.2.4
          */
         public static enum Type {
             ACCESS, VARIABLE;

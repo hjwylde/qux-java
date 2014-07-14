@@ -205,7 +205,7 @@ public abstract class ExprNode extends Node {
          * TODO: Documentation
          *
          * @author Henry J. Wylde
-         * @since TODO: SINCE
+         * @since 0.2.4
          */
         public static enum Type {
             CONSTANT, FUNCTION;
@@ -323,7 +323,7 @@ public abstract class ExprNode extends Node {
      * TODO: Documentation
      *
      * @author Henry J. Wylde
-     * @since TODO: SINCE
+     * @since 0.2.4
      */
     public static final class Record extends ExprNode {
 
@@ -359,7 +359,7 @@ public abstract class ExprNode extends Node {
      * TODO: Documentation
      *
      * @author Henry J. Wylde
-     * @since TODO: SINCE
+     * @since 0.2.4
      */
     public static final class RecordAccess extends ExprNode {
 

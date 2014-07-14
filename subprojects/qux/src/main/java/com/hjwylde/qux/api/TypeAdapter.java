@@ -8,7 +8,7 @@ import com.hjwylde.qux.util.Type;
  * TODO: Documentation.
  *
  * @author Henry J. Wylde
- * @since TODO: SINCE
+ * @since 0.2.4
  */
 public abstract class TypeAdapter implements TypeVisitor {
 

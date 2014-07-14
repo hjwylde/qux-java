@@ -743,7 +743,7 @@ public abstract class Type extends Node {
      * TODO: Documentation
      *
      * @author Henry J. Wylde
-     * @since TODO: SINCE
+     * @since 0.2.4
      */
     public static final class Named extends Type {
 
@@ -929,7 +929,7 @@ public abstract class Type extends Node {
      * TODO: Documentation
      *
      * @author Henry J. Wylde
-     * @since TODO: SINCE
+     * @since 0.2.4
      */
     public static final class Record extends Type {
 

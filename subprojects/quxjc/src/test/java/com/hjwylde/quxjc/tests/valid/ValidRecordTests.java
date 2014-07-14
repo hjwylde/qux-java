@@ -21,7 +21,7 @@ import java.util.List;
  * Valid {@code record} tests.
  *
  * @author Henry J. Wylde
- * @since TODO: SINCE
+ * @since 0.2.4
  */
 @RunWith(Parameterized.class)
 public final class ValidRecordTests extends Harness {

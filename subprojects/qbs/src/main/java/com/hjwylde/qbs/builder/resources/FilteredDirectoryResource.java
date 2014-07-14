@@ -18,7 +18,7 @@ import javax.annotation.Nullable;
  * This directory resource only includes resources that match its filter.
  *
  * @author Henry J. Wylde
- * @since TODO: SINCE
+ * @since 0.2.4
  */
 public class FilteredDirectoryResource extends DirectoryResource {
 

@@ -326,7 +326,7 @@ public class Meta extends AbstractObj {
      * TODO: Documentation
      *
      * @author Henry J. Wylde
-     * @since TODO: SINCE
+     * @since 0.2.4
      */
     private static final class Record extends Meta {
 
@@ -457,7 +457,7 @@ public class Meta extends AbstractObj {
      * TODO: Documentation
      *
      * @author Henry J. Wylde
-     * @since TODO: SINCE
+     * @since 0.2.4
      */
     private static final class Tuple extends Meta {
 
