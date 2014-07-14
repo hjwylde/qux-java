@@ -1064,8 +1064,8 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
                 return Type.forNull(generateAttributeSource(ctx));
             case "obj":
                 return Type.forObj(generateAttributeSource(ctx));
-            case "real":
-                return Type.forReal(generateAttributeSource(ctx));
+            case "rat":
+                return Type.forRat(generateAttributeSource(ctx));
             case "str":
                 return Type.forStr(generateAttributeSource(ctx));
             case "void":
@@ -1159,9 +1159,9 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         if (ctx.ValueInt() != null) {
             type = ExprNode.Constant.Type.INT;
             value = new BigInteger(ctx.ValueInt().getText());
-        } else if (ctx.ValueReal() != null) {
-            type = ExprNode.Constant.Type.REAL;
-            value = new BigDecimal(ctx.ValueReal().getText());
+        } else if (ctx.ValueRat() != null) {
+            type = ExprNode.Constant.Type.RAT;
+            value = new BigDecimal(ctx.ValueRat().getText());
         } else if (ctx.ValueString() != null) {
             type = ExprNode.Constant.Type.STR;
             String text = ctx.ValueString().getText();

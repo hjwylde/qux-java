@@ -6,7 +6,7 @@ import static com.hjwylde.qux.util.Type.TYPE_BOOL;
 import static com.hjwylde.qux.util.Type.TYPE_INT;
 import static com.hjwylde.qux.util.Type.TYPE_ITERABLE;
 import static com.hjwylde.qux.util.Type.TYPE_META;
-import static com.hjwylde.qux.util.Type.TYPE_REAL;
+import static com.hjwylde.qux.util.Type.TYPE_RAT;
 import static com.hjwylde.qux.util.Type.getInnerType;
 import static com.hjwylde.qux.util.Types.isEquivalent;
 import static com.hjwylde.qux.util.Types.isSubtype;
@@ -335,8 +335,7 @@ public final class TypeChecker extends Pipeline {
                     checkSubtype(expr.getTarget(), TYPE_ITERABLE);
                     break;
                 case NEG:
-                    checkSubtype(expr.getTarget(), Type.forUnion(Arrays.asList(TYPE_INT,
-                            TYPE_REAL)));
+                    checkSubtype(expr.getTarget(), Type.forUnion(Arrays.asList(TYPE_INT, TYPE_RAT)));
                     break;
                 case NOT:
                     checkSubtype(expr.getTarget(), TYPE_BOOL);

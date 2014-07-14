@@ -29,7 +29,7 @@ public class Meta extends AbstractObj {
     static final Meta META_META = new Meta();
     static final Meta META_NULL = new Null();
     static final Meta META_OBJ = new Obj();
-    static final Meta META_REAL = new Real();
+    static final Meta META_RAT = new Rat();
     static final Meta META_STR = new Str();
 
     private static final LoadingCache<Meta, Meta> listMetas =
@@ -311,14 +311,14 @@ public class Meta extends AbstractObj {
      * @author Henry J. Wylde
      * @since 0.1.2
      */
-    private static final class Real extends Meta {
+    private static final class Rat extends Meta {
 
         /**
          * {@inheritDoc}
          */
         @Override
         public qux.lang.Str _desc_() {
-            return qux.lang.Str.valueOf("real");
+            return qux.lang.Str.valueOf("rat");
         }
     }
 

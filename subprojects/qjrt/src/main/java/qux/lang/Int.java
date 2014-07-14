@@ -70,12 +70,12 @@ public final class Int extends AbstractObj {
         return Str.valueOf(value.toString());
     }
 
-    public Real _div_(Int t) {
+    public Rat _div_(Int t) {
         if (t.equals(Int.ZERO)) {
             throw new InternalError("attempted division by zero");
         }
 
-        return Real.valueOf(value)._div_(Real.valueOf(t.value));
+        return Rat.valueOf(value)._div_(Rat.valueOf(t.value));
     }
 
     /**

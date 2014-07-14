@@ -18,20 +18,20 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * Valid {@code real} tests.
+ * Valid {@code rat} tests.
  *
  * @author Henry J. Wylde
  * @since 0.1.2
  */
 @RunWith(Parameterized.class)
-public final class ValidRealTests extends Harness {
+public final class ValidRatTests extends Harness {
 
     private static final Path ROOT = Paths.get("src/test/resources/tests/").toAbsolutePath();
-    private static final String PKG = "valid.real_";
+    private static final String PKG = "valid.rat_";
 
     private final String id;
 
-    public ValidRealTests(String id) {
+    public ValidRatTests(String id) {
         super(ROOT);
 
         this.id = checkNotNull(id, "id cannot be null");

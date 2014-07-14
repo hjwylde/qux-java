@@ -68,10 +68,10 @@ public abstract class Type extends Node {
     public static final Type.Obj TYPE_OBJ = new Type.Obj();
 
     /**
-     * String representation of the {@code real} type.
+     * String representation of the {@code rat} type.
      */
-    public static final String REAL = "R";
-    public static final Type.Real TYPE_REAL = new Type.Real();
+    public static final String RAT = "R";
+    public static final Type.Rat TYPE_RAT = new Rat();
 
     /**
      * String representation of the {@code str} type.
@@ -213,12 +213,12 @@ public abstract class Type extends Node {
         return new Type.Obj(attributes);
     }
 
-    public static Type.Real forReal(Collection<? extends Attribute> attributes) {
-        return new Type.Real(attributes);
+    public static Rat forRat(Collection<? extends Attribute> attributes) {
+        return new Rat(attributes);
     }
 
-    public static Type.Real forReal(Attribute... attributes) {
-        return new Type.Real(attributes);
+    public static Rat forRat(Attribute... attributes) {
+        return new Rat(attributes);
     }
 
     public static Type forRecord(Map<Identifier, ? extends Type> fields,
@@ -375,9 +375,9 @@ public abstract class Type extends Node {
             case OBJ:
                 checkArgument(!match || desc.length() == 1, "desc is invalid: %s", desc);
                 return TYPE_OBJ;
-            case REAL:
+            case RAT:
                 checkArgument(!match || desc.length() == 1, "desc is invalid: %s", desc);
-                return TYPE_REAL;
+                return TYPE_RAT;
             case RECORD_START:
                 Map<Identifier, Type> fields = new HashMap<>();
                 index = 1;
@@ -890,13 +890,13 @@ public abstract class Type extends Node {
      * @author Henry J. Wylde
      * @since 0.1.1
      */
-    public static final class Real extends Type {
+    public static final class Rat extends Type {
 
-        private Real(Attribute... attributes) {
+        private Rat(Attribute... attributes) {
             super(attributes);
         }
 
-        private Real(Collection<? extends Attribute> attributes) {
+        private Rat(Collection<? extends Attribute> attributes) {
             super(attributes);
         }
 
@@ -905,7 +905,7 @@ public abstract class Type extends Node {
          */
         @Override
         public String getDescriptor() {
-            return REAL;
+            return RAT;
         }
 
         /**
@@ -921,7 +921,7 @@ public abstract class Type extends Node {
          */
         @Override
         public String toString() {
-            return "real";
+            return "rat";
         }
     }
 
