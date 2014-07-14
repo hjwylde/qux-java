@@ -25,7 +25,6 @@ import java.util.List;
  */
 public final class QuxNode extends Node implements QuxVisitor {
 
-    private int version;
     private Identifier name;
 
     private ImmutableList<Identifier> pkg;
@@ -43,7 +42,7 @@ public final class QuxNode extends Node implements QuxVisitor {
     }
 
     public void accept(QuxVisitor qv) {
-        qv.visit(version, name);
+        qv.visit(name);
 
         qv.visitPackage(pkg);
 
@@ -90,20 +89,11 @@ public final class QuxNode extends Node implements QuxVisitor {
         return ImmutableList.copyOf(types);
     }
 
-    public int getVersion() {
-        checkState(version != 0, "version has not been set");
-
-        return version;
-    }
-
     /**
      * {@inheritDoc}
      */
     @Override
-    public void visit(int version, Identifier name) {
-        checkArgument(version != 0, "version cannot be 0");
-
-        this.version = version;
+    public void visit(Identifier name) {
         this.name = checkNotNull(name, "name cannot be null");
     }
 

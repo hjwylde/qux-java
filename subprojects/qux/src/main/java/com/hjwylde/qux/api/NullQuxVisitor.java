@@ -17,7 +17,7 @@ final class NullQuxVisitor implements QuxVisitor {
      * {@inheritDoc}
      */
     @Override
-    public void visit(int version, Identifier name) {}
+    public void visit(Identifier name) {}
 
     /**
      * {@inheritDoc}

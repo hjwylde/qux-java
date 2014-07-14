@@ -16,7 +16,5 @@ public interface FunctionVisitor extends StmtVisitor {
 
     void visitEnd();
 
-    void visitParameter(Identifier var, Type type);
-
-    void visitReturnType(Type type);
+    void visitParameter(Identifier var);
 }

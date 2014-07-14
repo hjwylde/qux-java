@@ -440,7 +440,7 @@ public final class TypeChecker extends Pipeline {
         public void visitStmtReturn(StmtNode.Return stmt) {
             if (stmt.getExpr().isPresent()) {
                 check(stmt.getExpr().get());
-                Type returnType = function.getReturnType();
+                Type returnType = ((Type.Function) getType(function.getType())).getReturnType();
                 checkSubtype(stmt.getExpr().get(), returnType);
             }
         }

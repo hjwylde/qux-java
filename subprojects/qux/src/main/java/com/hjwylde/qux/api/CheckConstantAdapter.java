@@ -13,8 +13,8 @@ import com.hjwylde.qux.tree.ExprNode;
  */
 public class CheckConstantAdapter extends ConstantAdapter {
 
-    private boolean visitedExpr = false;
-    private boolean visitedEnd = false;
+    private boolean visitedExpr;
+    private boolean visitedEnd;
 
     public CheckConstantAdapter(ConstantVisitor next) {
         super(next);

@@ -125,7 +125,7 @@ public final class Qux2ClassTranslater extends QuxAdapter {
      * {@inheritDoc}
      */
     @Override
-    public void visit(int version, Identifier name) {
+    public void visit(Identifier name) {
         this.name = name;
     }
 
@@ -163,8 +163,8 @@ public final class Qux2ClassTranslater extends QuxAdapter {
     @Override
     public FunctionVisitor visitFunction(int flags, Identifier name,
             com.hjwylde.qux.util.Type.Function type) {
-        MethodVisitor mv = cv.visitMethod(flags, name.getId(), getType(type).getDescriptor(), null,
-                new String[0]);
+        MethodVisitor mv = cv.visitMethod(flags, name.getId(), getType(getQuxType(type))
+                .getDescriptor(), null, new String[0]);
 
         if (mv == null) {
             return FunctionVisitor.NULL_INSTANCE;
@@ -867,10 +867,6 @@ public final class Qux2ClassTranslater extends QuxAdapter {
          * Stores a map of parameter names to jvm types.
          */
         private Map<Identifier, String> parameters = new HashMap<>();
-        /**
-         * Stores the return type as a jvm type.
-         */
-        private String returnType;
 
         /**
          * Unique number for generating variable names.
@@ -896,7 +892,8 @@ public final class Qux2ClassTranslater extends QuxAdapter {
 
             this.flags = flags;
             this.name = checkNotNull(name, "name cannot be null");
-            this.type = checkNotNull(type, "type cannot be null");
+            this.type = (com.hjwylde.qux.util.Type.Function) getQuxType(checkNotNull(type,
+                    "type cannot be null"));
         }
 
         public void visitBlock(java.util.List<StmtNode> stmts) {
@@ -938,24 +935,13 @@ public final class Qux2ClassTranslater extends QuxAdapter {
          * {@inheritDoc}
          */
         @Override
-        public void visitParameter(Identifier var, com.hjwylde.qux.util.Type type) {
+        public void visitParameter(Identifier var) {
             checkNotNull(var, "var cannot be null");
-            checkNotNull(type, "type cannot be null");
 
-            parameters.put(var, getType(type).getDescriptor());
-            if (!locals.contains(var)) {
-                locals.add(var);
-            }
-        }
+            Type type = getType(this.type.getParameterTypes().get(locals.size()));
 
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void visitReturnType(com.hjwylde.qux.util.Type type) {
-            checkNotNull(type, "type cannot be null");
-
-            returnType = getType(type).getDescriptor();
+            parameters.put(var, type.getDescriptor());
+            locals.add(var);
         }
 
         /**
