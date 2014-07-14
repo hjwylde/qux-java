@@ -3,6 +3,7 @@ package com.hjwylde.qux.api;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.hjwylde.qux.tree.StmtNode;
+import com.hjwylde.qux.util.Identifier;
 import com.hjwylde.qux.util.Type;
 
 /**
@@ -43,7 +44,7 @@ public abstract class FunctionAdapter implements FunctionVisitor {
      * {@inheritDoc}
      */
     @Override
-    public void visitParameter(String var, Type type) {
+    public void visitParameter(Identifier var, Type type) {
         next.visitParameter(var, type);
     }
 
@@ -53,14 +54,6 @@ public abstract class FunctionAdapter implements FunctionVisitor {
     @Override
     public void visitReturnType(Type type) {
         next.visitReturnType(type);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void visitStmtAccessAssign(StmtNode.AccessAssign stmt) {
-        next.visitStmtAccessAssign(stmt);
     }
 
     /**

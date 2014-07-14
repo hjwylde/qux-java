@@ -5,22 +5,23 @@ import com.hjwylde.qbs.builder.QuxContext;
 import com.hjwylde.qux.tree.ConstantNode;
 import com.hjwylde.qux.tree.FunctionNode;
 import com.hjwylde.qux.tree.QuxNode;
+import com.hjwylde.qux.tree.TypeNode;
 import com.hjwylde.qux.util.Attribute;
 import com.hjwylde.qux.util.Attributes;
+import com.hjwylde.qux.util.Identifier;
 
 import com.google.common.base.Optional;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * TODO: Documentation.
  * <p/>
- * Responsible for checking the following: <ul> <li>No duplicate imports declared</li> <li>No
- * clashing imports declared</li> <li>No duplicate constants declared</li> <li>No duplicate
- * functions declared</li> <li>No clashing function parameters</li> </ul>
+ * Responsible for checking the following: <ul> <li>No duplicate constants declared</li> <li>No
+ * recursive constants declared</li><li>No duplicate functions declared</li> <li>No clashing
+ * function parameters</li><li>No duplicate types declared</li><li>No recursive types
+ * declared</li></ul>
  *
  * @author Henry J. Wylde
  * @since 0.2.3
@@ -36,32 +37,34 @@ public final class NameChecker extends Pipeline {
      */
     @Override
     public QuxNode apply(QuxNode node) {
-        Map<String, String> namespace = new HashMap<>();
-        for (String id : node.getImports()) {
-            checkImport(id, namespace);
-        }
-
-        List<String> constants = new ArrayList<>();
+        Set<Identifier> constants = new HashSet<>();
+        // TODO: Check for recursive constants
         for (ConstantNode constant : node.getConstants()) {
-            checkConstant(constant, constants);
+            checkConstant(constant.getName(), constants);
         }
 
-        List<String> functions = new ArrayList<>();
+        Set<Identifier> functions = new HashSet<>();
         for (FunctionNode function : node.getFunctions()) {
-            checkFunction(function, functions);
+            checkFunction(function.getName(), functions);
 
-            List<String> parameters = new ArrayList<>();
-            for (String parameter : function.getParameters().keySet()) {
+            Set<Identifier> parameters = new HashSet<>();
+            for (Identifier parameter : function.getParameters().keySet()) {
                 checkFunctionParameter(parameter, parameters, function);
             }
+        }
+
+        Set<Identifier> types = new HashSet<>();
+        // TODO: Check for recursive types
+        for (TypeNode type : node.getTypes()) {
+            checkType(type.getName(), types);
         }
 
         return node;
     }
 
-    private void checkConstant(ConstantNode constant, List<String> constants) {
-        if (!constants.contains(constant.getName())) {
-            constants.add(constant.getName());
+    private void checkConstant(Identifier constant, Set<Identifier> constants) {
+        if (!constants.contains(constant)) {
+            constants.add(constant);
             return;
         }
 
@@ -70,16 +73,16 @@ public final class NameChecker extends Pipeline {
         if (opt.isPresent()) {
             Attribute.Source source = opt.get();
 
-            throw CompilerErrors.duplicateConstant(constant.getName(), source.getSource(),
+            throw CompilerErrors.duplicateConstant(constant.getId(), source.getSource(),
                     source.getLine(), source.getCol(), source.getLength());
         } else {
-            throw CompilerErrors.duplicateConstant(constant.getName());
+            throw CompilerErrors.duplicateConstant(constant.getId());
         }
     }
 
-    private void checkFunction(FunctionNode function, List<String> functions) {
-        if (!functions.contains(function.getName())) {
-            functions.add(function.getName());
+    private void checkFunction(Identifier function, Set<Identifier> functions) {
+        if (!functions.contains(function)) {
+            functions.add(function);
             return;
         }
 
@@ -88,14 +91,14 @@ public final class NameChecker extends Pipeline {
         if (opt.isPresent()) {
             Attribute.Source source = opt.get();
 
-            throw CompilerErrors.duplicateFunction(function.getName(), source.getSource(),
+            throw CompilerErrors.duplicateFunction(function.getId(), source.getSource(),
                     source.getLine(), source.getCol(), source.getLength());
         } else {
-            throw CompilerErrors.duplicateFunction(function.getName());
+            throw CompilerErrors.duplicateFunction(function.getId());
         }
     }
 
-    private void checkFunctionParameter(String parameter, List<String> parameters,
+    private void checkFunctionParameter(Identifier parameter, Set<Identifier> parameters,
             FunctionNode function) {
         if (!parameters.contains(parameter)) {
             parameters.add(parameter);
@@ -107,36 +110,28 @@ public final class NameChecker extends Pipeline {
         if (opt.isPresent()) {
             Attribute.Source source = opt.get();
 
-            throw CompilerErrors.duplicateFunctionParameter(parameter, source.getSource(),
+            throw CompilerErrors.duplicateFunctionParameter(parameter.getId(), source.getSource(),
                     source.getLine(), source.getCol(), source.getLength());
         } else {
-            throw CompilerErrors.duplicateFunctionParameter(parameter);
+            throw CompilerErrors.duplicateFunctionParameter(parameter.getId());
         }
     }
 
-    private void checkImport(String id, Map<String, String> namespace) {
-        if (namespace.values().contains(id)) {
-            throw CompilerErrors.duplicateImport(id);
+    private void checkType(Identifier type, Set<Identifier> types) {
+        if (!types.contains(type)) {
+            types.add(type);
+            return;
         }
 
-        if (id.contains("$")) {
-            String key = id.substring(id.lastIndexOf("$"));
+        Optional<Attribute.Source> opt = Attributes.getAttribute(type, Attribute.Source.class);
 
-            if (namespace.containsKey(key)) {
-                throw CompilerErrors.duplicateImport(id);
-            }
+        if (opt.isPresent()) {
+            Attribute.Source source = opt.get();
 
-            namespace.put(key, id);
-        } else if (id.contains(".")) {
-            String key = id.substring(id.lastIndexOf(".") + 1);
-
-            if (namespace.containsKey(key)) {
-                throw CompilerErrors.duplicateImport(id);
-            }
-
-            namespace.put(key, id);
+            throw CompilerErrors.duplicateType(type.getId(), source.getSource(), source.getLine(),
+                    source.getCol(), source.getLength());
         } else {
-            throw new InternalError("cannot import file from root package");
+            throw CompilerErrors.duplicateType(type.getId());
         }
     }
 }

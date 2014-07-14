@@ -1,3 +1,5 @@
+package valid.int_
+
 void f([int] xs):
     for i in xs:
         print i

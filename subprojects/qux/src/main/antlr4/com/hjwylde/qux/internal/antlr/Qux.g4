@@ -90,7 +90,7 @@ start : NEWLINE? file EOF
 
 // File
 
-file : pkg? imp* decl*
+file : pkg imp* decl*
      ;
 
 // Package statement
@@ -100,31 +100,37 @@ pkg : 'package' Identifier ('.' Identifier)* NEWLINE
 
 // Import statement
 
-imp : 'import' Identifier ('.' Identifier)* ('$' Identifier)? NEWLINE
+imp : 'import' Identifier ('.' Identifier)+ ('$' Identifier)? NEWLINE
     ;
 
 // Declarations
 
 decl : declConstant
      | declFunction
+     | declType
      ;
 
+// TODO: It would be nice to remove the type declaration here, I think it will be possible once we
+// move the name propagation to the lexer
 declConstant : type Identifier 'is' expr NEWLINE
              ;
 
 declFunction : typeReturn Identifier '(' (type Identifier (',' type Identifier)*)? ')' block
              ;
 
+declType : 'type' Identifier 'is' type NEWLINE
+         ;
+
 // Statements
 
 stmt : stmtAccessAssign
      | stmtAssign
+     | stmtExpr
      | stmtFor
      | stmtIf
      | stmtPrint
      | stmtReturn
      | stmtWhile
-     | stmtExpr
      ;
 
 stmtAccessAssign : Identifier ('[' expr ']')+ '=' expr NEWLINE
@@ -132,6 +138,12 @@ stmtAccessAssign : Identifier ('[' expr ']')+ '=' expr NEWLINE
 
 stmtAssign : Identifier (AOP | AOP_ADD | AOP_SUB | AOP_MUL | AOP_DIV | AOP_REM) expr NEWLINE
            ;
+
+stmtExpr : exprDecrement NEWLINE
+         | exprExternalFunction NEWLINE
+         | exprFunction NEWLINE
+         | exprIncrement NEWLINE
+         ;
 
 stmtFor : 'for' Identifier BOP_IN expr block
         ;
@@ -148,19 +160,14 @@ stmtReturn : 'return' expr? NEWLINE
 stmtWhile : 'while' expr block
           ;
 
-stmtExpr : exprDecrement NEWLINE
-         | exprExternal NEWLINE
-         | exprFunction NEWLINE
-         | exprIncrement NEWLINE
-         ;
-
 block : ':' NEWLINE INDENT stmt* DEDENT
       ;
 
 // Expressions
 
 // TODO: Could push a mode that skips NEWLINE, INDENT and DEDENT tokens, then pop it at the end
-expr : exprBinary ;
+expr : exprBinary
+     ;
 
 exprBinary : exprBinary_1
            ;
@@ -208,6 +215,7 @@ exprAccess_1 : exprAccess_1_1
              | exprAccess_1_3
              | exprAccess_1_4
              | exprAccess_1_5
+             | exprAccess_1_6
              ;
 
 exprAccess_1_1 : '[' expr ']'
@@ -225,10 +233,14 @@ exprAccess_1_4 : '[' ':' expr ']'
 exprAccess_1_5 : '[' ':' ']'
                ;
 
+exprAccess_1_6 : '.' Identifier
+               ;
+
 exprTerm : exprBrace
          | exprBracket
          | exprDecrement
-         | exprExternal
+         | exprExternalConstant
+         | exprExternalFunction
          | exprFunction
          | exprIncrement
          | exprParen
@@ -237,6 +249,7 @@ exprTerm : exprBrace
          ;
 
 exprBrace : '{' (expr (',' expr)*)? '}'
+          | '{' Identifier ':' expr (',' Identifier ':' expr)* '}'
           ;
 
 exprBracket : '[' (expr (',' expr)*)? ']'
@@ -252,14 +265,17 @@ exprFunction : Identifier '(' ')'
 exprIncrement : Identifier UOP_INC
               ;
 
-exprExternal : exprMeta '$' exprFunction
-             ;
-
 exprParen : '(' expr ')'
           ;
 
 exprVariable : Identifier
              ;
+
+exprExternalConstant : exprMeta '$' exprVariable
+                     ;
+
+exprExternalFunction : exprMeta '$' exprFunction
+                     ;
 
 exprMeta : Identifier ('.' Identifier)*
          ;
@@ -280,19 +296,12 @@ valueKeyword : FALSE
 
 // Types
 
-type : typeList
+type : typeKeyword
+     | typeList
+     | typeNamed
+     | typeRecord
      | typeSet
-     | typeTerm
      ;
-
-typeList : '[' type ']'
-         ;
-
-typeSet : '{' type '}'
-         ;
-
-typeTerm : typeKeyword
-         ;
 
 typeKeyword : ANY
             | BOOL
@@ -302,6 +311,18 @@ typeKeyword : ANY
             | REAL
             | STR
             ;
+
+typeList : '[' type ']'
+         ;
+
+typeRecord : '{' type Identifier (',' type Identifier)* '}'
+           ;
+
+typeSet : '{' type '}'
+         ;
+
+typeNamed : (exprMeta '$')? Identifier
+          ;
 
 typeReturn : type
            | VOID
@@ -319,7 +340,7 @@ StringCharacter : ~['\\]
                 ;
 
 fragment
-EscapeSequence : '\\' [fnrt'"\\]
+EscapeSequence : '\\' [fnrt'\\]
                | '\\' 'u' HexDigit HexDigit HexDigit HexDigit
                ;
 
@@ -367,6 +388,7 @@ BOOL    : 'bool' ;
 ELIF    : 'elif' ;
 ELSE    : 'else' ;
 FALSE   : 'false' ;
+FOR     : 'for' ;
 IF      : 'if' ;
 IMPORT  : 'import' ;
 INT     : 'int' ;
@@ -375,12 +397,16 @@ LIST    : 'list' ;
 NULL    : 'null' ;
 OBJ     : 'obj' ;
 PACKAGE : 'package' ;
+PRINT   : 'print' ;
 REAL    : 'real' ;
+RECORD  : 'record' ;
 RETURN  : 'return' ;
 SET     : 'set' ;
 STR     : 'str' ;
 TRUE    : 'true' ;
+TYPE    : 'type' ;
 VOID    : 'void' ;
+WHILE   : 'while' ;
 
 // Separators
 

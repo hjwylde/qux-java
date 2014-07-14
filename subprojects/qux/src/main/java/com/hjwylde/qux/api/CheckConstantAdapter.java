@@ -20,12 +20,16 @@ public class CheckConstantAdapter extends ConstantAdapter {
         super(next);
     }
 
+    public final boolean hasVisitedEnd() {
+        return visitedEnd;
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
     public void visitEnd() {
-        checkState(visitedExpr, "must call visitedExpr() before visitEnd()");
+        checkState(visitedExpr, "must call visitExpr(ExprNode) before visitEnd()");
         checkState(!visitedEnd, "may only call visitEnd() once");
 
         visitedEnd = true;

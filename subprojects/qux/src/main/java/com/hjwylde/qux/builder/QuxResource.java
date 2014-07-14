@@ -7,7 +7,9 @@ import com.hjwylde.qbs.builder.resources.Resource;
 import com.hjwylde.qux.tree.ConstantNode;
 import com.hjwylde.qux.tree.FunctionNode;
 import com.hjwylde.qux.tree.QuxNode;
+import com.hjwylde.qux.tree.TypeNode;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 
 /**
@@ -32,7 +34,7 @@ public final class QuxResource extends AbstractResource {
     @Override
     public Optional<String> getConstantType(String name) {
         for (ConstantNode constant : node.getConstants()) {
-            if (constant.getName().equals(name)) {
+            if (constant.getName().getId().equals(name)) {
                 return Optional.of(constant.getType().getDescriptor());
             }
         }
@@ -46,7 +48,7 @@ public final class QuxResource extends AbstractResource {
     @Override
     public Optional<String> getFunctionType(String name) {
         for (FunctionNode function : node.getFunctions()) {
-            if (function.getName().equals(name)) {
+            if (function.getName().getId().equals(name)) {
                 return Optional.of(function.getType().getDescriptor());
             }
         }
@@ -59,10 +61,24 @@ public final class QuxResource extends AbstractResource {
      */
     @Override
     public String getId() {
-        return node.getId();
+        return Joiner.on('.').join(node.getId());
     }
 
     public QuxNode getQuxNode() {
         return node;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Optional<String> getTypeType(String name) {
+        for (TypeNode type : node.getTypes()) {
+            if (type.getName().getId().equals(name)) {
+                return Optional.of(type.getType().getDescriptor());
+            }
+        }
+
+        return Optional.absent();
     }
 }

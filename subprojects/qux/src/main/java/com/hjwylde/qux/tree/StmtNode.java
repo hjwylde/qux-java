@@ -7,6 +7,7 @@ import com.hjwylde.common.error.MethodNotImplementedError;
 import com.hjwylde.common.lang.annotation.Alpha;
 import com.hjwylde.qux.api.StmtVisitor;
 import com.hjwylde.qux.util.Attribute;
+import com.hjwylde.qux.util.Identifier;
 import com.hjwylde.qux.util.Op;
 
 import com.google.common.base.Optional;
@@ -46,58 +47,31 @@ public abstract class StmtNode extends Node {
      *
      * @author Henry J. Wylde
      */
-    public static final class AccessAssign extends StmtNode {
+    public static final class Assign extends StmtNode {
 
-        private final ExprNode.Access access;
+        private final Type type;
+
+        private final ExprNode lhs;
         private final ExprNode expr;
 
-        public AccessAssign(ExprNode.Access access, ExprNode expr, Attribute... attributes) {
-            this(access, expr, Arrays.asList(attributes));
+        public Assign(Type type, ExprNode lhs, ExprNode expr, Attribute... attributes) {
+            this(type, lhs, expr, Arrays.asList(attributes));
         }
 
-        public AccessAssign(ExprNode.Access access, ExprNode expr,
+        public Assign(Type type, ExprNode lhs, ExprNode expr,
                 Collection<? extends Attribute> attributes) {
             super(attributes);
 
-            this.access = checkNotNull(access, "access cannot be null");
-            this.expr = checkNotNull(expr, "expr cannot be null");
-        }
+            checkArgument(type != Type.ACCESS || lhs instanceof ExprNode.Binary,
+                    "lhs must be of class Binary for access assignment");
+            checkArgument(type != Type.ACCESS || ((ExprNode.Binary) lhs).getOp() == Op.Binary.ACC,
+                    "lhs must be of class Binary with ACC operator for access assignment");
+            checkArgument(type != Type.VARIABLE || lhs instanceof ExprNode.Variable,
+                    "lhs must be of class Variable for variable assignment");
 
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void accept(StmtVisitor sv) {
-            sv.visitStmtAccessAssign(this);
-        }
+            this.type = checkNotNull(type, "type cannot be null");
 
-        public ExprNode.Access getAccess() {
-            return access;
-        }
-
-        public ExprNode getExpr() {
-            return expr;
-        }
-    }
-
-    /**
-     * TODO: Documentation.
-     *
-     * @author Henry J. Wylde
-     */
-    public static final class Assign extends StmtNode {
-
-        private final String var;
-        private final ExprNode expr;
-
-        public Assign(String var, ExprNode expr, Attribute... attributes) {
-            this(var, expr, Arrays.asList(attributes));
-        }
-
-        public Assign(String var, ExprNode expr, Collection<? extends Attribute> attributes) {
-            super(attributes);
-
-            this.var = checkNotNull(var, "var cannot be null");
+            this.lhs = checkNotNull(lhs, "lhs cannot be null");
             this.expr = checkNotNull(expr, "expr cannot be null");
         }
 
@@ -113,8 +87,22 @@ public abstract class StmtNode extends Node {
             return expr;
         }
 
-        public String getVar() {
-            return var;
+        public ExprNode getLhs() {
+            return lhs;
+        }
+
+        public Type getType() {
+            return type;
+        }
+
+        /**
+         * TODO: Documentation
+         *
+         * @author Henry J. Wylde
+         * @since 0.2.4
+         */
+        public static enum Type {
+            ACCESS, VARIABLE;
         }
     }
 
@@ -145,11 +133,10 @@ public abstract class StmtNode extends Node {
                     checkArgument(expr instanceof ExprNode.Unary);
                     checkArgument(((ExprNode.Unary) expr).getOp() == Op.Unary.DEC);
                     break;
-                case EXTERNAL:
-                    checkArgument(expr instanceof ExprNode.External);
-                    break;
                 case FUNCTION:
-                    checkArgument(expr instanceof ExprNode.Function);
+                    checkArgument(expr instanceof ExprNode.External);
+                    checkArgument(((ExprNode.External) expr).getType()
+                            == ExprNode.External.Type.FUNCTION);
                     break;
                 case INCREMENT:
                     checkArgument(expr instanceof ExprNode.Unary);
@@ -183,7 +170,7 @@ public abstract class StmtNode extends Node {
          * @since 0.1.3
          */
         public static enum Type {
-            DECREMENT, EXTERNAL, FUNCTION, INCREMENT;
+            DECREMENT, FUNCTION, INCREMENT;
         }
     }
 
@@ -195,15 +182,15 @@ public abstract class StmtNode extends Node {
      */
     public static final class For extends StmtNode {
 
-        private final String var;
+        private final Identifier var;
         private final ExprNode expr;
         private final ImmutableList<StmtNode> body;
 
-        public For(String var, ExprNode expr, List<StmtNode> body, Attribute... attributes) {
+        public For(Identifier var, ExprNode expr, List<StmtNode> body, Attribute... attributes) {
             this(var, expr, body, Arrays.asList(attributes));
         }
 
-        public For(String var, ExprNode expr, List<StmtNode> body,
+        public For(Identifier var, ExprNode expr, List<StmtNode> body,
                 Collection<? extends Attribute> attributes) {
             super(attributes);
 
@@ -228,7 +215,7 @@ public abstract class StmtNode extends Node {
             return expr;
         }
 
-        public String getVar() {
+        public Identifier getVar() {
             return var;
         }
     }

@@ -1,3 +1,5 @@
+package valid.bool_
+
 void main([str] args):
     print true implies true
     print true implies false

@@ -10,8 +10,6 @@ import com.hjwylde.qux.tree.ExprNode;
  */
 public interface ExprVisitor {
 
-    void visitExprAccess(ExprNode.Access expr);
-
     void visitExprBinary(ExprNode.Binary expr);
 
     void visitExprConstant(ExprNode.Constant expr);
@@ -23,6 +21,10 @@ public interface ExprVisitor {
     void visitExprList(ExprNode.List expr);
 
     void visitExprMeta(ExprNode.Meta expr);
+
+    void visitExprRecord(ExprNode.Record expr);
+
+    void visitExprRecordAccess(ExprNode.RecordAccess expr);
 
     void visitExprSet(ExprNode.Set expr);
 

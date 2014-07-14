@@ -1,0 +1,7 @@
+package valid.print_
+
+void main([str] args):
+    print {x: true, y: null, z: -5}
+    print {x: null, y: null}
+    print {x: {x: null}, y: [{x: 5}]}
+

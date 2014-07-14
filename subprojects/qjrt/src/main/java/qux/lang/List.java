@@ -10,7 +10,6 @@ import static qux.lang.Bool.TRUE;
 import java.math.BigInteger;
 import java.util.Arrays;
 
-import qux.lang.op.Access;
 import qux.lang.op.Assign;
 import qux.lang.op.Len;
 import qux.lang.op.Slice;
@@ -22,7 +21,7 @@ import qux.util.Iterator;
  *
  * @author Henry J. Wylde
  */
-public final class List extends AbstractObj implements Access, Assign, Iterable, Len, Slice {
+public final class List extends AbstractObj implements Assign, Iterable, Len, Slice {
 
     private AbstractObj[] data;
     private int count;
@@ -30,13 +29,13 @@ public final class List extends AbstractObj implements Access, Assign, Iterable,
     private int refs;
 
     private List() {
-        this.data = new AbstractObj[10];
+        data = new AbstractObj[10];
         count = 0;
     }
 
     private List(List list) {
-        this.data = list.data;
-        this.count = list.count;
+        data = list.data;
+        count = list.count;
 
         // Lazily clone the data only when the first write is performed
         refs = 1;
@@ -48,17 +47,13 @@ public final class List extends AbstractObj implements Access, Assign, Iterable,
         checkArgument(!Arrays.asList(data).contains(null), "data cannot contain null");
 
         this.data = data.clone();
-        this.count = data.length;
+        count = data.length;
 
         if (count == 0) {
             this.data = new AbstractObj[10];
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public AbstractObj _access_(Int index) {
         return get(index);
     }
@@ -126,10 +121,10 @@ public final class List extends AbstractObj implements Access, Assign, Iterable,
         sb.append("[");
         for (Iterator it = _iter_(); it.hasNext() == TRUE; ) {
             sb.append(it.next()._desc_());
-            sb.append(", ");
-        }
-        if (sb.length() > 2) {
-            sb.setLength(sb.length() - 2);
+
+            if (it.hasNext() == TRUE) {
+                sb.append(", ");
+            }
         }
         sb.append("]");
 
@@ -225,24 +220,6 @@ public final class List extends AbstractObj implements Access, Assign, Iterable,
     @Override
     public Int _len_() {
         return Int.valueOf(count);
-    }
-
-    public List _mul_(Int value) {
-        checkArgument(value._gte_(Int.ZERO) == TRUE, "cannot multiply a list by negative value");
-
-        List mul = new List();
-
-        if (value.equals(Int.ZERO)) {
-            return mul;
-        }
-
-        while (value._gt_(Int.ZERO) == TRUE) {
-            mul = mul._add_(this);
-
-            value = value._sub_(Int.ONE);
-        }
-
-        return mul;
     }
 
     /**

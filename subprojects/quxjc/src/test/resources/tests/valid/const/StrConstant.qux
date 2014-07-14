@@ -1,13 +1,14 @@
-int A is 5
-int B is 5
-int C is -5
+package valid.const
 
-int f(int a):
+str A is 'foo'
+str B is 'foo'
+str C is 'bar'
+
+str f(str a):
     return a + A
 
-int g(int A):
+str g(str A):
     return A
-
 
 void main([str] args):
     print A

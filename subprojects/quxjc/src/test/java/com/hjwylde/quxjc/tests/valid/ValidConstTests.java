@@ -24,14 +24,14 @@ import java.util.List;
  * @since 0.2.2
  */
 @RunWith(Parameterized.class)
-public final class ValidConstantTests extends Harness {
+public final class ValidConstTests extends Harness {
 
-    private static final Path ROOT = Paths.get("src/test/resources/tests/valid/constant/")
-            .toAbsolutePath();
+    private static final Path ROOT = Paths.get("src/test/resources/tests/").toAbsolutePath();
+    private static final String PKG = "valid.const";
 
     private final String id;
 
-    public ValidConstantTests(String id) {
+    public ValidConstTests(String id) {
         super(ROOT);
 
         this.id = checkNotNull(id, "id cannot be null");
@@ -40,7 +40,7 @@ public final class ValidConstantTests extends Harness {
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> data() throws IOException {
         final List<Object[]> data = new ArrayList<>();
-        for (Path path : Files.newDirectoryStream(ROOT)) {
+        for (Path path : Files.newDirectoryStream(ROOT.resolve(PKG.replace('.', '/')))) {
             if (path.toString().endsWith(".qux")) {
                 data.add(new Object[] {getTestId(path.toAbsolutePath())});
             }

@@ -1,0 +1,15 @@
+package valid.type_
+
+type A is bool
+type B is bool
+type C is int
+
+bool f(A a, B b, C c):
+    return a and b or c > 5
+
+void main([str] args):
+    print f(true, true, 6)
+    print f(true, true, 2)
+    print f(false, true, 5)
+    print f(false, false, 6)
+

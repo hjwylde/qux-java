@@ -5,15 +5,18 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.hjwylde.qux.api.ExprVisitor;
 import com.hjwylde.qux.util.Attribute;
+import com.hjwylde.qux.util.Identifier;
 import com.hjwylde.qux.util.Op;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Map;
 
 import javax.annotation.Nullable;
 
@@ -39,47 +42,6 @@ public abstract class ExprNode extends Node {
     }
 
     public abstract void accept(ExprVisitor ev);
-
-    /**
-     * TODO: Documentation
-     * <p/>
-     * TODO: Consider turning this into a binary operation
-     *
-     * @author Henry J. Wylde
-     * @since 0.1.3
-     */
-    public static final class Access extends ExprNode {
-
-        private final ExprNode target;
-        private final ExprNode index;
-
-        public Access(ExprNode target, ExprNode index, Attribute... attributes) {
-            this(target, index, Arrays.asList(attributes));
-        }
-
-        public Access(ExprNode target, ExprNode index, Collection<? extends Attribute> attributes) {
-            super(attributes);
-
-            this.target = checkNotNull(target, "target cannot be null");
-            this.index = checkNotNull(index, "index cannot be null");
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void accept(ExprVisitor ev) {
-            ev.visitExprAccess(this);
-        }
-
-        public ExprNode getIndex() {
-            return index;
-        }
-
-        public ExprNode getTarget() {
-            return target;
-        }
-    }
 
     /**
      * TODO: Documentation
@@ -132,7 +94,8 @@ public abstract class ExprNode extends Node {
      */
     public static final class Constant extends ExprNode {
 
-        private final ExprNode.Constant.Type type;
+        private final Type type;
+
         private final Object value;
 
         public Constant(Type type, Object value, Attribute... attributes) {
@@ -156,6 +119,7 @@ public abstract class ExprNode extends Node {
                     "value must be of class String for str constant");
 
             this.type = checkNotNull(type, "type cannot be null");
+
             this.value = value;
         }
 
@@ -167,7 +131,7 @@ public abstract class ExprNode extends Node {
             ev.visitExprConstant(this);
         }
 
-        public ExprNode.Constant.Type getType() {
+        public Type getType() {
             return type;
         }
 
@@ -193,20 +157,25 @@ public abstract class ExprNode extends Node {
      */
     public static final class External extends ExprNode {
 
-        // TODO: Add in an enum for the Type of the external, either FUNCTION or CONSTANT
+        private final Type type;
 
         private final Meta meta;
         private final ExprNode expr;
 
-        public External(Meta meta, ExprNode expr, Attribute... attributes) {
-            this(meta, expr, Arrays.asList(attributes));
+        public External(Type type, Meta meta, ExprNode expr, Attribute... attributes) {
+            this(type, meta, expr, Arrays.asList(attributes));
         }
 
-        public External(Meta meta, ExprNode expr, Collection<? extends Attribute> attributes) {
+        public External(Type type, Meta meta, ExprNode expr,
+                Collection<? extends Attribute> attributes) {
             super(attributes);
 
-            checkArgument(expr instanceof Function || expr instanceof Variable,
-                    "expr must be a function or variable");
+            checkArgument(type != Type.CONSTANT || expr instanceof Variable,
+                    "expr must be of class Variable for external constant");
+            checkArgument(type != Type.FUNCTION || expr instanceof Function,
+                    "expr must be of class Function for external function");
+
+            this.type = checkNotNull(type, "type cannot be null");
 
             this.meta = checkNotNull(meta, "meta cannot be null");
             this.expr = checkNotNull(expr, "expr cannot be null");
@@ -227,6 +196,20 @@ public abstract class ExprNode extends Node {
         public Meta getMeta() {
             return meta;
         }
+
+        public Type getType() {
+            return type;
+        }
+
+        /**
+         * TODO: Documentation
+         *
+         * @author Henry J. Wylde
+         * @since 0.2.4
+         */
+        public static enum Type {
+            CONSTANT, FUNCTION;
+        }
     }
 
     /**
@@ -236,14 +219,15 @@ public abstract class ExprNode extends Node {
      */
     public static final class Function extends ExprNode {
 
-        private final String name;
+        private final Identifier name;
         private final ImmutableList<ExprNode> arguments;
 
-        public Function(String name, java.util.List<ExprNode> arguments, Attribute... attributes) {
+        public Function(Identifier name, java.util.List<ExprNode> arguments,
+                Attribute... attributes) {
             this(name, arguments, Arrays.asList(attributes));
         }
 
-        public Function(String name, java.util.List<ExprNode> arguments,
+        public Function(Identifier name, java.util.List<ExprNode> arguments,
                 Collection<? extends Attribute> attributes) {
             super(attributes);
 
@@ -263,7 +247,7 @@ public abstract class ExprNode extends Node {
             return arguments;
         }
 
-        public String getName() {
+        public Identifier getName() {
             return name;
         }
     }
@@ -308,16 +292,18 @@ public abstract class ExprNode extends Node {
      */
     public static final class Meta extends ExprNode {
 
-        private final String id;
+        private final ImmutableList<Identifier> id;
 
-        public Meta(String id, Attribute... attributes) {
+        public Meta(java.util.List<Identifier> id, Attribute... attributes) {
             this(id, Arrays.asList(attributes));
         }
 
-        public Meta(String id, Collection<? extends Attribute> attributes) {
+        public Meta(java.util.List<Identifier> id, Collection<? extends Attribute> attributes) {
             super(attributes);
 
-            this.id = checkNotNull(id, "id cannot be null");
+            checkArgument(id.size() > 1, "id must have 2 or more elements");
+
+            this.id = ImmutableList.copyOf(id);
         }
 
         /**
@@ -328,8 +314,84 @@ public abstract class ExprNode extends Node {
             ev.visitExprMeta(this);
         }
 
-        public String getId() {
+        public ImmutableList<Identifier> getId() {
             return id;
+        }
+    }
+
+    /**
+     * TODO: Documentation
+     *
+     * @author Henry J. Wylde
+     * @since 0.2.4
+     */
+    public static final class Record extends ExprNode {
+
+        private final ImmutableMap<Identifier, ExprNode> fields;
+
+        public Record(Map<Identifier, ExprNode> fields, Attribute... attributes) {
+            this(fields, Arrays.asList(attributes));
+        }
+
+        public Record(Map<Identifier, ExprNode> fields,
+                Collection<? extends Attribute> attributes) {
+            super(attributes);
+
+            checkArgument(!fields.isEmpty(), "fields must contain at least 1 element");
+
+            this.fields = ImmutableMap.copyOf(fields);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void accept(ExprVisitor ev) {
+            ev.visitExprRecord(this);
+        }
+
+        public ImmutableMap<Identifier, ExprNode> getFields() {
+            return fields;
+        }
+    }
+
+    /**
+     * TODO: Documentation
+     *
+     * @author Henry J. Wylde
+     * @since 0.2.4
+     */
+    public static final class RecordAccess extends ExprNode {
+
+        private final ExprNode target;
+        private final Identifier field;
+
+        public RecordAccess(ExprNode target, Identifier field, Attribute... attributes) {
+            this(target, field, Arrays.asList(attributes));
+        }
+
+        public RecordAccess(ExprNode target, Identifier field,
+                Collection<? extends Attribute> attributes) {
+            super(attributes);
+
+            this.target = checkNotNull(target, "target cannot be null");
+            this.field = checkNotNull(field, "field cannot be null");
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void accept(ExprVisitor ev) {
+            ev.visitExprRecordAccess(this);
+        }
+
+        public Identifier getField() {
+            return field;
+        }
+
+        public ExprNode getTarget() {
+            return target;
         }
     }
 
@@ -458,13 +520,13 @@ public abstract class ExprNode extends Node {
      */
     public static final class Variable extends ExprNode {
 
-        private final String name;
+        private final Identifier name;
 
-        public Variable(String name, Attribute... attributes) {
+        public Variable(Identifier name, Attribute... attributes) {
             this(name, Arrays.asList(attributes));
         }
 
-        public Variable(String name, Collection<? extends Attribute> attributes) {
+        public Variable(Identifier name, Collection<? extends Attribute> attributes) {
             super(attributes);
 
             this.name = checkNotNull(name, "name cannot be null");
@@ -478,7 +540,7 @@ public abstract class ExprNode extends Node {
             ev.visitExprVariable(this);
         }
 
-        public String getName() {
+        public Identifier getName() {
             return name;
         }
     }

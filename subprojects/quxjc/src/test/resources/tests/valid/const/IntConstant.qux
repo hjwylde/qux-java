@@ -1,13 +1,14 @@
-[int] A is [0, 1]
-[int] B is [0, 1]
-[int] C is [5]
+package valid.const
 
-[int] f([int] a):
+int A is 5
+int B is 5
+int C is -5
+
+int f(int a):
     return a + A
 
-[int] g([int] A):
+int g(int A):
     return A
-
 
 void main([str] args):
     print A

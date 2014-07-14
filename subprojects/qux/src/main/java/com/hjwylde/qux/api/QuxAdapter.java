@@ -2,9 +2,10 @@ package com.hjwylde.qux.api;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.hjwylde.qux.util.Identifier;
 import com.hjwylde.qux.util.Type;
 
-import javax.annotation.Nullable;
+import java.util.List;
 
 /**
  * TODO: Documentation.
@@ -28,7 +29,7 @@ public abstract class QuxAdapter implements QuxVisitor {
      * {@inheritDoc}
      */
     @Override
-    public void visit(int version, String name) {
+    public void visit(int version, Identifier name) {
         next.visit(version, name);
     }
 
@@ -36,7 +37,7 @@ public abstract class QuxAdapter implements QuxVisitor {
      * {@inheritDoc}
      */
     @Override
-    public ConstantVisitor visitConstant(int flags, String name, Type type) {
+    public ConstantVisitor visitConstant(int flags, Identifier name, Type type) {
         return next.visitConstant(flags, name, type);
     }
 
@@ -52,7 +53,7 @@ public abstract class QuxAdapter implements QuxVisitor {
      * {@inheritDoc}
      */
     @Override
-    public FunctionVisitor visitFunction(int flags, String name, Type.Function type) {
+    public FunctionVisitor visitFunction(int flags, Identifier name, Type.Function type) {
         return next.visitFunction(flags, name, type);
     }
 
@@ -60,15 +61,15 @@ public abstract class QuxAdapter implements QuxVisitor {
      * {@inheritDoc}
      */
     @Override
-    public void visitImport(String id) {
-        next.visitImport(id);
+    public void visitPackage(List<Identifier> pkg) {
+        next.visitPackage(pkg);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void visitPackage(@Nullable String pkg) {
-        next.visitPackage(pkg);
+    public TypeVisitor visitType(int flags, Identifier name) {
+        return next.visitType(flags, name);
     }
 }

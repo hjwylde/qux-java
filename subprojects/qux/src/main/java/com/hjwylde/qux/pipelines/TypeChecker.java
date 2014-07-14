@@ -1,6 +1,7 @@
 package com.hjwylde.qux.pipelines;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.hjwylde.qux.util.Type.TYPE_ANY;
 import static com.hjwylde.qux.util.Type.TYPE_BOOL;
 import static com.hjwylde.qux.util.Type.TYPE_INT;
 import static com.hjwylde.qux.util.Type.TYPE_ITERABLE;
@@ -27,9 +28,16 @@ import com.hjwylde.qux.tree.QuxNode;
 import com.hjwylde.qux.tree.StmtNode;
 import com.hjwylde.qux.util.Attribute;
 import com.hjwylde.qux.util.Attributes;
+import com.hjwylde.qux.util.Identifier;
 import com.hjwylde.qux.util.Type;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
+
+import org.jgrapht.event.VertexTraversalEvent;
+
+import java.util.Arrays;
+import java.util.Map;
 
 /**
  * TODO: Documentation
@@ -166,23 +174,12 @@ public final class TypeChecker extends Pipeline {
          * {@inheritDoc}
          */
         @Override
-        public void visitExprAccess(ExprNode.Access expr) {
-            visitExpr(expr.getTarget());
-            checkSubtype(expr.getTarget(), TYPE_ITERABLE);
-
-            visitExpr(expr.getIndex());
-            checkSubtype(expr.getIndex(), TYPE_INT);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
         public void visitExprBinary(ExprNode.Binary expr) {
             visitExpr(expr.getLhs());
             visitExpr(expr.getRhs());
 
-            Type rhsType = getType(expr.getLhs());
+            Type lhsType = getType(expr.getLhs());
+            Type rhsType = getType(expr.getRhs());
 
             // TODO: Properly type check using references to methods that exist
             switch (expr.getOp()) {
@@ -191,7 +188,7 @@ public final class TypeChecker extends Pipeline {
                 case MUL:
                 case REM:
                 case SUB:
-                    checkEquivalent(expr.getLhs(), rhsType);
+                    checkEquivalent(expr.getRhs(), lhsType);
                     break;
                 case EXP:
                 case IDIV:
@@ -202,6 +199,11 @@ public final class TypeChecker extends Pipeline {
                 case IN:
                     checkSubtype(expr.getRhs(), TYPE_ITERABLE);
                     checkSubtype(expr.getLhs(), getInnerType(rhsType));
+                    break;
+                case ACC:
+                    checkSubtype(expr.getLhs(), TYPE_ITERABLE);
+                    checkSubtype(expr.getRhs(), TYPE_INT);
+                    break;
                 case EQ:
                 case GT:
                 case GTE:
@@ -270,6 +272,28 @@ public final class TypeChecker extends Pipeline {
          * {@inheritDoc}
          */
         @Override
+        public void visitExprRecord(ExprNode.Record expr) {
+            for (Map.Entry<Identifier, ExprNode> field : expr.getFields().entrySet()) {
+                visitExpr(field.getValue());
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void visitExprRecordAccess(ExprNode.RecordAccess expr) {
+            visitExpr(expr.getTarget());
+
+            Type expected = Type.forRecord(ImmutableMap.<Identifier, Type>of(expr.getField(),
+                    TYPE_ANY));
+            checkSubtype(expr.getTarget(), expected);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
         public void visitExprSet(ExprNode.Set expr) {
             for (ExprNode value : expr.getValues()) {
                 visitExpr(value);
@@ -311,7 +335,8 @@ public final class TypeChecker extends Pipeline {
                     checkSubtype(expr.getTarget(), TYPE_ITERABLE);
                     break;
                 case NEG:
-                    checkSubtype(expr.getTarget(), Type.forUnion(TYPE_INT, TYPE_REAL));
+                    checkSubtype(expr.getTarget(), Type.forUnion(Arrays.asList(TYPE_INT,
+                            TYPE_REAL)));
                     break;
                 case NOT:
                     checkSubtype(expr.getTarget(), TYPE_BOOL);
@@ -353,9 +378,8 @@ public final class TypeChecker extends Pipeline {
          * {@inheritDoc}
          */
         @Override
-        public void visitStmtAccessAssign(StmtNode.AccessAssign stmt) {
-            check(stmt.getAccess());
-            check(stmt.getExpr());
+        public void vertexTraversed(VertexTraversalEvent<StmtNode> e) {
+            e.getVertex().accept(this);
         }
 
         /**
@@ -363,6 +387,16 @@ public final class TypeChecker extends Pipeline {
          */
         @Override
         public void visitStmtAssign(StmtNode.Assign stmt) {
+            switch (stmt.getType()) {
+                case ACCESS:
+                    check(stmt.getLhs());
+                    break;
+                case VARIABLE:
+                    break;
+                default:
+                    throw new MethodNotImplementedError(stmt.getType().toString());
+            }
+
             check(stmt.getExpr());
         }
 
@@ -406,6 +440,7 @@ public final class TypeChecker extends Pipeline {
         @Override
         public void visitStmtReturn(StmtNode.Return stmt) {
             if (stmt.getExpr().isPresent()) {
+                check(stmt.getExpr().get());
                 Type returnType = function.getReturnType();
                 checkSubtype(stmt.getExpr().get(), returnType);
             }

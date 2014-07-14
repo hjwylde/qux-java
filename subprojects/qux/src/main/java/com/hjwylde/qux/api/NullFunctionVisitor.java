@@ -1,6 +1,7 @@
 package com.hjwylde.qux.api;
 
 import com.hjwylde.qux.tree.StmtNode;
+import com.hjwylde.qux.util.Identifier;
 import com.hjwylde.qux.util.Type;
 
 /**
@@ -27,19 +28,13 @@ final class NullFunctionVisitor implements FunctionVisitor {
      * {@inheritDoc}
      */
     @Override
-    public void visitParameter(String var, Type type) {}
+    public void visitParameter(Identifier var, Type type) {}
 
     /**
      * {@inheritDoc}
      */
     @Override
     public void visitReturnType(Type type) {}
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void visitStmtAccessAssign(StmtNode.AccessAssign stmt) {}
 
     /**
      * {@inheritDoc}

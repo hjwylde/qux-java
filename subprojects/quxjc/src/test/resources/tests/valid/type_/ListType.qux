@@ -1,0 +1,13 @@
+package valid.type_
+
+type A is [int]
+type B is [bool]
+type C is [A]
+
+int f(A a, B b, C c):
+    return c[0][0] + a[0]
+
+void main([str] args):
+    print f([0], [], [[5]])
+    print f([-2], [true, false], [[1], [0]])
+

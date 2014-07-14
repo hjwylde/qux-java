@@ -1,3 +1,5 @@
+package valid.const
+
 obj A is obj
 obj B is obj
 

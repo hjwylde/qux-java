@@ -1,0 +1,15 @@
+package valid.type_
+
+type A is int
+type B is [int]
+type C is A
+
+int f(C a, B b):
+    return b[a]
+
+void main([str] args):
+    print f(3, [0, 1, 2, 3])
+    print f(0, [5])
+    b = [-5]
+    print f(0, b)
+

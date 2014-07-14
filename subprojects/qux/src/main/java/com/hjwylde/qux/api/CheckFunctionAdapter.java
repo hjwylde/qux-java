@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.hjwylde.qux.tree.StmtNode;
+import com.hjwylde.qux.util.Identifier;
 import com.hjwylde.qux.util.Type;
 
 /**
@@ -56,7 +57,7 @@ public class CheckFunctionAdapter extends FunctionAdapter {
      * {@inheritDoc}
      */
     @Override
-    public void visitParameter(String var, Type type) {
+    public void visitParameter(Identifier var, Type type) {
         checkState(!visitedCode, "must call visitParameter(String, Type) before visitCode()");
         checkState(!visitedEnd, "must call visitParameter(String, Type) before visitEnd()");
         checkNotNull(var, "var cannot be null");
@@ -78,20 +79,6 @@ public class CheckFunctionAdapter extends FunctionAdapter {
         visitedReturnType = true;
 
         super.visitReturnType(type);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void visitStmtAccessAssign(StmtNode.AccessAssign stmt) {
-        checkState(visitedCode,
-                "must call visitCode() before visitStmtAccessAssign(StmtNode.AccessAssign)");
-        checkState(!visitedEnd,
-                "must call visitStmtAccessAssign(StmtNode.AccessAssign) before visitEnd()");
-        checkNotNull(stmt, "stmt cannot be null");
-
-        super.visitStmtAccessAssign(stmt);
     }
 
     /**
