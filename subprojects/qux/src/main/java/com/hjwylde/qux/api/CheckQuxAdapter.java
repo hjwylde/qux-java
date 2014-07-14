@@ -3,7 +3,6 @@ package com.hjwylde.qux.api;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static com.hjwylde.qux.util.Constants.SUPPORTED_VERSIONS;
 
 import com.hjwylde.qux.util.Identifier;
 import com.hjwylde.qux.util.Type;
@@ -18,9 +17,9 @@ import java.util.List;
  */
 public class CheckQuxAdapter extends QuxAdapter {
 
-    private boolean visitedStart = false;
-    private boolean visitedPackage = false;
-    private boolean visitedEnd = false;
+    private boolean visitedStart;
+    private boolean visitedPackage;
+    private boolean visitedEnd;
 
     private List<CheckConstantAdapter> ccas = new ArrayList<>();
     private List<CheckFunctionAdapter> cfas = new ArrayList<>();
@@ -34,16 +33,15 @@ public class CheckQuxAdapter extends QuxAdapter {
      * {@inheritDoc}
      */
     @Override
-    public void visit(int version, Identifier name) {
+    public void visit(Identifier name) {
         checkState(!visitedStart, "may only call visit(int, String) once");
         checkState(!visitedPackage, "must call visit(int, String) before visitPackage(String)");
         checkState(!visitedEnd, "must call visit(int, String) before visitEnd()");
-        checkArgument(SUPPORTED_VERSIONS.contains(version), "version %s not supported", version);
         checkNotNull(name, "name cannot be null");
 
         visitedStart = true;
 
-        super.visit(version, name);
+        super.visit(name);
     }
 
     /**

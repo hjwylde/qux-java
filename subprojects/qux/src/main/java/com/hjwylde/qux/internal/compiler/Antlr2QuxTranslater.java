@@ -2,7 +2,6 @@ package com.hjwylde.qux.internal.compiler;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Verify.verify;
-import static com.hjwylde.qux.util.Constants.QUX0_2_4;
 import static com.hjwylde.qux.util.Op.ACC_FINAL;
 import static com.hjwylde.qux.util.Op.ACC_PUBLIC;
 import static com.hjwylde.qux.util.Op.ACC_STATIC;
@@ -126,17 +125,12 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
     public Void visitDeclFunction(@NotNull QuxParser.DeclFunctionContext ctx) {
         Identifier name = visitIdentifier(ctx.Identifier(0));
 
-        List<Identifier> parameterNames = new ArrayList<>();
-        for (int i = 1; i < ctx.Identifier().size(); i++) {
-            parameterNames.add(visitIdentifier(ctx.Identifier(i)));
-        }
+        Type returnType = visitTypeReturn(ctx.typeReturn());
 
         List<Type> parameterTypes = new ArrayList<>();
         for (QuxParser.TypeContext tctx : ctx.type()) {
             parameterTypes.add(visitType(tctx));
         }
-
-        Type returnType = visitTypeReturn(ctx.typeReturn());
 
         Type.Function functionType = Type.forFunction(returnType, parameterTypes,
                 generateAttributeSource(ctx.typeReturn(), ctx.type(ctx.type().size() - 1)));
@@ -145,12 +139,12 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
 
         FunctionVisitor fv = qv.visitFunction(ACC_PUBLIC | ACC_STATIC, name, functionType);
 
-        for (int i = 0; i < parameterNames.size(); i++) {
-            fv.visitParameter(parameterNames.get(i), parameterTypes.get(i));
-            namespace.put(parameterNames.get(i), Arrays.asList(parameterNames.get(i)));
-        }
+        for (int i = 1; i < ctx.Identifier().size(); i++) {
+            Identifier parameter = visitIdentifier(ctx.Identifier(i));
 
-        fv.visitReturnType(functionType.getReturnType());
+            fv.visitParameter(parameter);
+            namespace.put(parameter, Arrays.asList(parameter));
+        }
 
         for (StmtNode stmt : visitBlock(ctx.block())) {
             stmt.accept(fv);
@@ -814,7 +808,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
      */
     @Override
     public Void visitFile(@NotNull QuxParser.FileContext ctx) {
-        qv.visit(QUX0_2_4, new Identifier(Files.getNameWithoutExtension(source)));
+        qv.visit(new Identifier(Files.getNameWithoutExtension(source)));
 
         super.visitFile(ctx);
 

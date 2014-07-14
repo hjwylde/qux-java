@@ -4,7 +4,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.hjwylde.qux.tree.StmtNode;
 import com.hjwylde.qux.util.Identifier;
-import com.hjwylde.qux.util.Type;
 
 /**
  * TODO: Documentation.
@@ -44,16 +43,8 @@ public abstract class FunctionAdapter implements FunctionVisitor {
      * {@inheritDoc}
      */
     @Override
-    public void visitParameter(Identifier var, Type type) {
-        next.visitParameter(var, type);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void visitReturnType(Type type) {
-        next.visitReturnType(type);
+    public void visitParameter(Identifier var) {
+        next.visitParameter(var);
     }
 
     /**

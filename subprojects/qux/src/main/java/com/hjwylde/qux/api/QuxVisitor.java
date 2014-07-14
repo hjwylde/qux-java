@@ -14,7 +14,7 @@ public interface QuxVisitor {
 
     QuxVisitor NULL_INSTANCE = new NullQuxVisitor();
 
-    void visit(int version, Identifier name);
+    void visit(Identifier name);
 
     ConstantVisitor visitConstant(int flags, Identifier name, Type type);
 

@@ -1,7 +1,6 @@
 package com.hjwylde.qux.tree;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
 
 import com.hjwylde.qux.api.FunctionVisitor;
 import com.hjwylde.qux.api.QuxVisitor;
@@ -10,14 +9,11 @@ import com.hjwylde.qux.util.Identifier;
 import com.hjwylde.qux.util.Type;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * TODO: Documentation
@@ -30,8 +26,7 @@ public final class FunctionNode extends Node implements FunctionVisitor {
     private final Identifier name;
     private final Type.Function type;
 
-    private Map<Identifier, Type> parameters = new LinkedHashMap<>();
-    private Type returnType;
+    private List<Identifier> parameters = new ArrayList<>();
 
     private List<StmtNode> stmts = new ArrayList<>();
 
@@ -57,11 +52,9 @@ public final class FunctionNode extends Node implements FunctionVisitor {
     }
 
     public void accept(FunctionVisitor fv) {
-        for (Map.Entry<Identifier, Type> parameter : parameters.entrySet()) {
-            fv.visitParameter(parameter.getKey(), parameter.getValue());
+        for (Identifier parameter : parameters) {
+            fv.visitParameter(parameter);
         }
-
-        fv.visitReturnType(getReturnType());
 
         fv.visitCode();
 
@@ -78,14 +71,8 @@ public final class FunctionNode extends Node implements FunctionVisitor {
         return name;
     }
 
-    public ImmutableMap<Identifier, Type> getParameters() {
-        return ImmutableMap.copyOf(parameters);
-    }
-
-    public Type getReturnType() {
-        checkState(returnType != null, "returnType has not been set");
-
-        return returnType;
+    public ImmutableList<Identifier> getParameters() {
+        return ImmutableList.copyOf(parameters);
     }
 
     public ImmutableList<StmtNode> getStmts() {
@@ -112,19 +99,10 @@ public final class FunctionNode extends Node implements FunctionVisitor {
      * {@inheritDoc}
      */
     @Override
-    public void visitParameter(Identifier var, Type type) {
+    public void visitParameter(Identifier var) {
         checkNotNull(var, "var cannot be null");
-        checkNotNull(type, "type cannot be null");
 
-        parameters.put(var, type);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void visitReturnType(Type type) {
-        returnType = checkNotNull(type, "type cannot be null");
+        parameters.add(var);
     }
 
     /**

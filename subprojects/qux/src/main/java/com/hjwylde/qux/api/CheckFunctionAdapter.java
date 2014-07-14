@@ -5,7 +5,6 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.hjwylde.qux.tree.StmtNode;
 import com.hjwylde.qux.util.Identifier;
-import com.hjwylde.qux.util.Type;
 
 /**
  * TODO: Documentation
@@ -14,9 +13,8 @@ import com.hjwylde.qux.util.Type;
  */
 public class CheckFunctionAdapter extends FunctionAdapter {
 
-    private boolean visitedCode = false;
-    private boolean visitedReturnType = false;
-    private boolean visitedEnd = false;
+    private boolean visitedCode;
+    private boolean visitedEnd;
 
     public CheckFunctionAdapter(FunctionVisitor next) {
         super(next);
@@ -32,7 +30,6 @@ public class CheckFunctionAdapter extends FunctionAdapter {
     @Override
     public void visitCode() {
         checkState(!visitedCode, "may only call visitCode() once");
-        checkState(visitedReturnType, "must call visitReturnType(Type) before visitCode()");
         checkState(!visitedEnd, "must call visitCode() before visitEnd()");
 
         visitedCode = true;
@@ -57,28 +54,12 @@ public class CheckFunctionAdapter extends FunctionAdapter {
      * {@inheritDoc}
      */
     @Override
-    public void visitParameter(Identifier var, Type type) {
+    public void visitParameter(Identifier var) {
         checkState(!visitedCode, "must call visitParameter(String, Type) before visitCode()");
         checkState(!visitedEnd, "must call visitParameter(String, Type) before visitEnd()");
         checkNotNull(var, "var cannot be null");
-        checkNotNull(type, "type cannot be null");
 
-        super.visitParameter(var, type);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void visitReturnType(Type type) {
-        checkState(!visitedCode, "must call visitReturnType(Type) before visitCode()");
-        checkState(!visitedReturnType, "may only call visitReturnType(Type) once");
-        checkState(!visitedEnd, "must call visitReturnType(Type) before visitEnd()");
-        checkNotNull(type, "type cannot be null");
-
-        visitedReturnType = true;
-
-        super.visitReturnType(type);
+        super.visitParameter(var);
     }
 
     /**
