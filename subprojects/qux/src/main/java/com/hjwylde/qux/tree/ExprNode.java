@@ -170,9 +170,6 @@ public abstract class ExprNode extends Node {
                 Collection<? extends Attribute> attributes) {
             super(attributes);
 
-            checkArgument(expr instanceof Function || expr instanceof Variable,
-                    "expr must be a function or variable");
-
             checkArgument(type != Type.CONSTANT || expr instanceof Variable,
                     "expr must be of class Variable for external constant");
             checkArgument(type != Type.FUNCTION || expr instanceof Function,

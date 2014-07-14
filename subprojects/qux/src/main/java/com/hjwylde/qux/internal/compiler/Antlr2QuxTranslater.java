@@ -888,8 +888,8 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
 
         ExprNode expr = visitExpr(ctx.expr(ctx.expr().size() - 1));
 
-        return new StmtNode.AccessAssign((ExprNode.Binary) access, expr, generateAttributeSource(
-                ctx));
+        return new StmtNode.Assign(StmtNode.Assign.Type.ACCESS, access, expr,
+                generateAttributeSource(ctx));
     }
 
     /**
@@ -929,7 +929,8 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
 
         namespace.put(var.getName(), Arrays.asList(var.getName()));
 
-        return new StmtNode.Assign(var.getName(), expr, generateAttributeSource(ctx));
+        return new StmtNode.Assign(StmtNode.Assign.Type.VARIABLE, var, expr,
+                generateAttributeSource(ctx));
     }
 
     /**

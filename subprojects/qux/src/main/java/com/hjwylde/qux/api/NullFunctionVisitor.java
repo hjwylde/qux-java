@@ -40,12 +40,6 @@ final class NullFunctionVisitor implements FunctionVisitor {
      * {@inheritDoc}
      */
     @Override
-    public void visitStmtAccessAssign(StmtNode.AccessAssign stmt) {}
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public void visitStmtAssign(StmtNode.Assign stmt) {}
 
     /**

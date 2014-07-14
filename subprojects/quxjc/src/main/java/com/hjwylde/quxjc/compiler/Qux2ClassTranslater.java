@@ -962,32 +962,35 @@ public final class Qux2ClassTranslater extends QuxAdapter {
          * {@inheritDoc}
          */
         @Override
-        public void visitStmtAccessAssign(StmtNode.AccessAssign stmt) {
-            visitLineNumber(stmt);
-
-            visitExpr(stmt.getAccess().getLhs());
-            visitExpr(stmt.getAccess().getRhs());
-            visitExpr(stmt.getExpr());
-
-            mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Assign.class), "_assign_",
-                    getMethodDescriptor(Assign.class, "_assign_", Int.class, AbstractObj.class),
-                    true);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
         public void visitStmtAssign(StmtNode.Assign stmt) {
             visitLineNumber(stmt);
 
-            visitExpr(stmt.getExpr());
+            switch (stmt.getType()) {
+                case ACCESS:
+                    ExprNode.Binary access = (ExprNode.Binary) stmt.getLhs();
 
-            if (!locals.contains(stmt.getVar())) {
-                locals.add(stmt.getVar());
+                    visitExpr(access.getLhs());
+                    visitExpr(access.getRhs());
+                    visitExpr(stmt.getExpr());
+
+                    mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Assign.class),
+                            "_assign_", getMethodDescriptor(Assign.class, "_assign_", Int.class,
+                                    AbstractObj.class), true);
+                    break;
+                case VARIABLE:
+                    ExprNode.Variable variable = (ExprNode.Variable) stmt.getLhs();
+
+                    visitExpr(stmt.getExpr());
+
+                    if (!locals.contains(variable.getName())) {
+                        locals.add(variable.getName());
+                    }
+
+                    mv.visitVarInsn(ASTORE, locals.indexOf(variable.getName()));
+                    break;
+                default:
+                    throw new MethodNotImplementedError(stmt.getType().toString());
             }
-
-            mv.visitVarInsn(ASTORE, locals.indexOf(stmt.getVar()));
         }
 
         /**

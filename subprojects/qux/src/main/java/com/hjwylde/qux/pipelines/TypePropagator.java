@@ -362,7 +362,8 @@ public final class TypePropagator extends Pipeline {
                     setType(expr, Type.forList(TYPE_INT));
                     break;
                 case ACC:
-                    // Sanity check, if it fails then we don't care - the type checker should pick it up
+                    // Sanity check, if it fails then we don't care - the type checker should pick
+                    // it up
                     if (isSubtype(getType(expr.getLhs()), TYPE_ITERABLE)) {
                         setType(expr, getInnerType(getType(expr.getLhs())));
                     }
@@ -638,19 +639,19 @@ public final class TypePropagator extends Pipeline {
          * {@inheritDoc}
          */
         @Override
-        public void visitStmtAccessAssign(StmtNode.AccessAssign stmt) {
-            propagate(stmt.getAccess());
-            propagate(stmt.getExpr());
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
         public void visitStmtAssign(StmtNode.Assign stmt) {
             propagate(stmt.getExpr());
 
-            env.put(stmt.getVar(), getType(stmt.getExpr()));
+            switch (stmt.getType()) {
+                case ACCESS:
+                    propagate(stmt.getLhs());
+                    break;
+                case VARIABLE:
+                    env.put(((ExprNode.Variable) stmt.getLhs()).getName(), getType(stmt.getExpr()));
+                    break;
+                default:
+                    throw new MethodNotImplementedError(stmt.getType().toString());
+            }
         }
 
         /**

@@ -27,15 +27,6 @@ final class ControlFlowGraphGenerator extends FunctionAdapter {
      * {@inheritDoc}
      */
     @Override
-    public void visitStmtAccessAssign(StmtNode.AccessAssign stmt) {
-        addStmt(stmt);
-        setPreviousStmts(stmt);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public void visitStmtAssign(StmtNode.Assign stmt) {
         addStmt(stmt);
         setPreviousStmts(stmt);
