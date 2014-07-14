@@ -1,4 +1,4 @@
-package valid.real_
+package valid.rat_
 
 void main([str] args):
     print 0.0 + 0.0

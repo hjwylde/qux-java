@@ -284,7 +284,7 @@ exprMeta : Identifier ('.' Identifier)*
 
 value : valueKeyword
       | ValueInt
-      | ValueReal
+      | ValueRat
       | ValueString
       ;
 
@@ -308,7 +308,7 @@ typeKeyword : ANY
             | INT
             | NULL
             | OBJ
-            | REAL
+            | RAT
             | STR
             ;
 
@@ -350,9 +350,9 @@ ValueInt : '-'? Numeral
          | HexNumeral
          ;
 
-ValueReal : '-'? Numeral '.' Numeral Exponent ?
-          | '-'? Numeral Exponent
-          ;
+ValueRat : '-'? Numeral '.' Numeral Exponent ?
+         | '-'? Numeral Exponent
+         ;
 
 fragment
 Numeral : Digit+;
@@ -398,7 +398,7 @@ NULL    : 'null' ;
 OBJ     : 'obj' ;
 PACKAGE : 'package' ;
 PRINT   : 'print' ;
-REAL    : 'real' ;
+RAT     : 'rat' ;
 RECORD  : 'record' ;
 RETURN  : 'return' ;
 SET     : 'set' ;

@@ -10,7 +10,7 @@ import static com.hjwylde.qux.util.Type.TYPE_LIST_ANY;
 import static com.hjwylde.qux.util.Type.TYPE_META;
 import static com.hjwylde.qux.util.Type.TYPE_NULL;
 import static com.hjwylde.qux.util.Type.TYPE_OBJ;
-import static com.hjwylde.qux.util.Type.TYPE_REAL;
+import static com.hjwylde.qux.util.Type.TYPE_RAT;
 import static com.hjwylde.qux.util.Type.TYPE_SET_ANY;
 import static com.hjwylde.qux.util.Type.TYPE_STR;
 import static com.hjwylde.qux.util.Type.getFieldType;
@@ -352,7 +352,7 @@ public final class TypePropagator extends Pipeline {
                     setType(expr, getType(expr.getLhs()));
                     break;
                 case DIV:
-                    setType(expr, TYPE_REAL);
+                    setType(expr, TYPE_RAT);
                     break;
                 case EXP:
                 case IDIV:
@@ -405,8 +405,8 @@ public final class TypePropagator extends Pipeline {
                 case OBJ:
                     setType(expr, TYPE_OBJ);
                     break;
-                case REAL:
-                    setType(expr, TYPE_REAL);
+                case RAT:
+                    setType(expr, TYPE_RAT);
                     break;
                 case STR:
                     setType(expr, TYPE_STR);

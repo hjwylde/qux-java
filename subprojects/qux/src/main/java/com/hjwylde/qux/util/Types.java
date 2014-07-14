@@ -176,8 +176,8 @@ public final class Types {
      * Normalises the given record type. The purpose of this is to have a consistent form for
      * comparing different types (specifically, subtype relations). A normalised record will have
      * all element types normalised, along with any union types brought out to the upper most level.
-     * For example, {@code {int|null a, real b}} would be normalised to {@code {int a, real b}|{null
-     * a, real b}}. This maintains all properties of the type while making it easy to do subtype
+     * For example, {@code {int|null a, rat b}} would be normalised to {@code {int a, rat b}|{null
+     * a, rat b}}. This maintains all properties of the type while making it easy to do subtype
      * comparisons between records.
      *
      * @param type the record type to normalise.
@@ -186,10 +186,10 @@ public final class Types {
     public static Type normalise(Type.Record type) {
         // We're going to split up all the inner unions of the record
         // An example of how it will be represented:
-        // {int|null a, real b} = [{("a", int), ("a", null)}, {("b", real)}]
+        // {int|null a, rat b} = [{("a", int), ("a", null)}, {("b", rat)}]
         // That way when we do a cartesian product on all of the sets, we will get all possible
         // record types
-        // The final result will be: {int a, real b}|{null a, real b}
+        // The final result will be: {int a, rat b}|{null a, rat b}
 
         // Split up the record as per the example above
         List<Set<Pair<Identifier, Type>>> split = new ArrayList<>();
@@ -211,7 +211,7 @@ public final class Types {
         // Cartesian product time!
         Set<List<Pair<Identifier, Type>>> product = Sets.cartesianProduct(split);
 
-        // Recreate the union of records now, so we'll have {int a, real b}|{null a, real b}
+        // Recreate the union of records now, so we'll have {int a, rat b}|{null a, rat b}
         List<Type.Record> union = new ArrayList<>();
         for (List<Pair<Identifier, Type>> inner : product) {
             Map<Identifier, Type> record = new HashMap<>();

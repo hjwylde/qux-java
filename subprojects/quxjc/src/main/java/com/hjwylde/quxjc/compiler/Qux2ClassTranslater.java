@@ -79,7 +79,7 @@ import qux.lang.Int;
 import qux.lang.List;
 import qux.lang.Null;
 import qux.lang.Obj;
-import qux.lang.Real;
+import qux.lang.Rat;
 import qux.lang.Record;
 import qux.lang.Set;
 import qux.lang.Str;
@@ -252,8 +252,8 @@ public final class Qux2ClassTranslater extends QuxAdapter {
             return Type.getType(Null.class);
         } else if (type instanceof com.hjwylde.qux.util.Type.Obj) {
             return Type.getType(Obj.class);
-        } else if (type instanceof com.hjwylde.qux.util.Type.Real) {
-            return Type.getType(Real.class);
+        } else if (type instanceof com.hjwylde.qux.util.Type.Rat) {
+            return Type.getType(Rat.class);
         } else if (type instanceof com.hjwylde.qux.util.Type.Record) {
             return Type.getType(Record.class);
         } else if (type instanceof com.hjwylde.qux.util.Type.Set) {
@@ -523,13 +523,13 @@ public final class Qux2ClassTranslater extends QuxAdapter {
                     mv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(Obj.class), "valueOf",
                             getMethodDescriptor(Obj.class, "valueOf", String.class), false);
                     break;
-                case REAL:
+                case RAT:
                     value = expr.getValue();
 
                     visitValue((BigDecimal) value);
 
-                    mv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(Real.class), "valueOf",
-                            getMethodDescriptor(Real.class, "valueOf", String.class), false);
+                    mv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(Rat.class), "valueOf",
+                            getMethodDescriptor(Rat.class, "valueOf", String.class), false);
                     break;
                 case STR:
                     value = expr.getValue();

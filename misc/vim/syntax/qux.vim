@@ -21,7 +21,7 @@ syn keyword externals import package
 syn keyword keywords is type
 syn keyword operators and iff implies in nin or xor
 syn keyword statements elif else for if print return while
-syn keyword types any bool int list null obj real record set str void
+syn keyword types any bit bool byte int int16 int32 int64 list nat nat1 null obj rat record set str ubyte uint16 uint32 uint64 void
 syn keyword todo contained TODO FIXME
 
 " Matches
@@ -37,12 +37,12 @@ syn match int '0b[01]\+'
 syn match int '0o[0-7]\+'
 syn match int '0x\x\+'
 
-syn match real '\d\+\.\d\+'
-syn match real '-\d\+\.\d\+'
-syn match real '\d\+\.\d\+e[+-]\d\+'
-syn match real '-\d\+\.\d\+e[+-]\d\+'
-syn match real '\d\+e[+-]\d\+'
-syn match real '-\d\+e[+-]\d\+'
+syn match rat '\d\+\.\d\+'
+syn match rat '-\d\+\.\d\+'
+syn match rat '\d\+\.\d\+e[+-]\d\+'
+syn match rat '-\d\+\.\d\+e[+-]\d\+'
+syn match rat '\d\+e[+-]\d\+'
+syn match rat '-\d\+e[+-]\d\+'
 
 syn match delimiters '[(){}[].,;:$]'
 
@@ -96,7 +96,7 @@ hi def link identifiers     Normal
 hi def link int             Constant
 hi def link keywords        Statement
 hi def link operators       Statement
-hi def link real            Constant
+hi def link rat            Constant
 hi def link statements      Statement
 hi def link str             Constant
 hi def link tab             Error
