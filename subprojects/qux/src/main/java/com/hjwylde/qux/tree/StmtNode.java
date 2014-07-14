@@ -47,58 +47,31 @@ public abstract class StmtNode extends Node {
      *
      * @author Henry J. Wylde
      */
-    public static final class AccessAssign extends StmtNode {
+    public static final class Assign extends StmtNode {
 
-        private final ExprNode.Access access;
+        private final Type type;
+
+        private final ExprNode lhs;
         private final ExprNode expr;
 
-        public AccessAssign(ExprNode.Access access, ExprNode expr, Attribute... attributes) {
-            this(access, expr, Arrays.asList(attributes));
+        public Assign(Type type, ExprNode lhs, ExprNode expr, Attribute... attributes) {
+            this(type, lhs, expr, Arrays.asList(attributes));
         }
 
-        public AccessAssign(ExprNode.Access access, ExprNode expr,
+        public Assign(Type type, ExprNode lhs, ExprNode expr,
                 Collection<? extends Attribute> attributes) {
             super(attributes);
 
-            this.access = checkNotNull(access, "access cannot be null");
-            this.expr = checkNotNull(expr, "expr cannot be null");
-        }
+            checkArgument(type != Type.ACCESS || lhs instanceof ExprNode.Binary,
+                    "lhs must be of class Binary for access assignment");
+            checkArgument(type != Type.ACCESS || ((ExprNode.Binary) lhs).getOp() == Op.Binary.ACC,
+                    "lhs must be of class Binary with ACC operator for access assignment");
+            checkArgument(type != Type.VARIABLE || lhs instanceof ExprNode.Variable,
+                    "lhs must be of class Variable for variable assignment");
 
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void accept(StmtVisitor sv) {
-            sv.visitStmtAccessAssign(this);
-        }
+            this.type = checkNotNull(type, "type cannot be null");
 
-        public ExprNode.Access getAccess() {
-            return access;
-        }
-
-        public ExprNode getExpr() {
-            return expr;
-        }
-    }
-
-    /**
-     * TODO: Documentation.
-     *
-     * @author Henry J. Wylde
-     */
-    public static final class Assign extends StmtNode {
-
-        private final Identifier var;
-        private final ExprNode expr;
-
-        public Assign(Identifier var, ExprNode expr, Attribute... attributes) {
-            this(var, expr, Arrays.asList(attributes));
-        }
-
-        public Assign(Identifier var, ExprNode expr, Collection<? extends Attribute> attributes) {
-            super(attributes);
-
-            this.var = checkNotNull(var, "var cannot be null");
+            this.lhs = checkNotNull(lhs, "lhs cannot be null");
             this.expr = checkNotNull(expr, "expr cannot be null");
         }
 
@@ -114,8 +87,22 @@ public abstract class StmtNode extends Node {
             return expr;
         }
 
-        public Identifier getVar() {
-            return var;
+        public ExprNode getLhs() {
+            return lhs;
+        }
+
+        public Type getType() {
+            return type;
+        }
+
+        /**
+         * TODO: Documentation
+         *
+         * @author Henry J. Wylde
+         * @since TODO: SINCE
+         */
+        public static enum Type {
+            ACCESS, VARIABLE;
         }
     }
 
@@ -148,7 +135,8 @@ public abstract class StmtNode extends Node {
                     break;
                 case FUNCTION:
                     checkArgument(expr instanceof ExprNode.External);
-                    checkArgument(((ExprNode.External) expr).getType() == ExprNode.External.Type.FUNCTION);
+                    checkArgument(((ExprNode.External) expr).getType()
+                            == ExprNode.External.Type.FUNCTION);
                     break;
                 case INCREMENT:
                     checkArgument(expr instanceof ExprNode.Unary);

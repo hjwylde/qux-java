@@ -174,22 +174,11 @@ public final class TypeChecker extends Pipeline {
          * {@inheritDoc}
          */
         @Override
-        public void visitExprAccess(ExprNode.Access expr) {
-            visitExpr(expr.getTarget());
-            checkSubtype(expr.getTarget(), TYPE_ITERABLE);
-
-            visitExpr(expr.getIndex());
-            checkSubtype(expr.getIndex(), TYPE_INT);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
         public void visitExprBinary(ExprNode.Binary expr) {
             visitExpr(expr.getLhs());
             visitExpr(expr.getRhs());
 
+            Type lhsType = getType(expr.getLhs());
             Type rhsType = getType(expr.getRhs());
 
             // TODO: Properly type check using references to methods that exist
@@ -199,7 +188,7 @@ public final class TypeChecker extends Pipeline {
                 case MUL:
                 case REM:
                 case SUB:
-                    checkEquivalent(expr.getLhs(), rhsType);
+                    checkEquivalent(expr.getRhs(), lhsType);
                     break;
                 case EXP:
                 case IDIV:
@@ -210,6 +199,11 @@ public final class TypeChecker extends Pipeline {
                 case IN:
                     checkSubtype(expr.getRhs(), TYPE_ITERABLE);
                     checkSubtype(expr.getLhs(), getInnerType(rhsType));
+                    break;
+                case ACC:
+                    checkSubtype(expr.getLhs(), TYPE_ITERABLE);
+                    checkSubtype(expr.getRhs(), TYPE_INT);
+                    break;
                 case EQ:
                 case GT:
                 case GTE:
@@ -392,16 +386,17 @@ public final class TypeChecker extends Pipeline {
          * {@inheritDoc}
          */
         @Override
-        public void visitStmtAccessAssign(StmtNode.AccessAssign stmt) {
-            check(stmt.getAccess());
-            check(stmt.getExpr());
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
         public void visitStmtAssign(StmtNode.Assign stmt) {
+            switch (stmt.getType()) {
+                case ACCESS:
+                    check(stmt.getLhs());
+                    break;
+                case VARIABLE:
+                    break;
+                default:
+                    throw new MethodNotImplementedError(stmt.getType().toString());
+            }
+
             check(stmt.getExpr());
         }
 

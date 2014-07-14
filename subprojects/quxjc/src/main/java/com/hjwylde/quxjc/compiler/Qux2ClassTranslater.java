@@ -83,7 +83,6 @@ import qux.lang.Real;
 import qux.lang.Record;
 import qux.lang.Set;
 import qux.lang.Str;
-import qux.lang.op.Access;
 import qux.lang.op.Assign;
 import qux.lang.op.Eq;
 import qux.lang.op.Len;
@@ -370,19 +369,6 @@ public final class Qux2ClassTranslater extends QuxAdapter {
          * {@inheritDoc}
          */
         @Override
-        public void visitExprAccess(ExprNode.Access expr) {
-            visitExpr(expr.getTarget());
-            visitExpr(expr.getIndex());
-
-            mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Access.class), "_access_",
-                    getMethodDescriptor(Access.class, "_access_", Int.class), true);
-            visitCheckcast(expr);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
         public void visitExprBinary(ExprNode.Binary expr) {
             visitExpr(expr.getLhs());
             visitExpr(expr.getRhs());
@@ -391,6 +377,11 @@ public final class Qux2ClassTranslater extends QuxAdapter {
             Class<?> rhsClass = Qux2ClassTranslater.getClass(expr.getRhs());
 
             switch (expr.getOp()) {
+                case ACC:
+                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(lhsClass), "_access_",
+                            getMethodDescriptor(lhsClass, "_access_", Int.class), false);
+                    visitCheckcast(expr);
+                    break;
                 case ADD:
                     mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(lhsClass), "_add_",
                             getMethodDescriptor(lhsClass, "_add_", rhsClass), false);
@@ -971,32 +962,35 @@ public final class Qux2ClassTranslater extends QuxAdapter {
          * {@inheritDoc}
          */
         @Override
-        public void visitStmtAccessAssign(StmtNode.AccessAssign stmt) {
-            visitLineNumber(stmt);
-
-            visitExpr(stmt.getAccess().getTarget());
-            visitExpr(stmt.getAccess().getIndex());
-            visitExpr(stmt.getExpr());
-
-            mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Assign.class), "_assign_",
-                    getMethodDescriptor(Assign.class, "_assign_", Int.class, AbstractObj.class),
-                    true);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
         public void visitStmtAssign(StmtNode.Assign stmt) {
             visitLineNumber(stmt);
 
-            visitExpr(stmt.getExpr());
+            switch (stmt.getType()) {
+                case ACCESS:
+                    ExprNode.Binary access = (ExprNode.Binary) stmt.getLhs();
 
-            if (!locals.contains(stmt.getVar())) {
-                locals.add(stmt.getVar());
+                    visitExpr(access.getLhs());
+                    visitExpr(access.getRhs());
+                    visitExpr(stmt.getExpr());
+
+                    mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Assign.class),
+                            "_assign_", getMethodDescriptor(Assign.class, "_assign_", Int.class,
+                                    AbstractObj.class), true);
+                    break;
+                case VARIABLE:
+                    ExprNode.Variable variable = (ExprNode.Variable) stmt.getLhs();
+
+                    visitExpr(stmt.getExpr());
+
+                    if (!locals.contains(variable.getName())) {
+                        locals.add(variable.getName());
+                    }
+
+                    mv.visitVarInsn(ASTORE, locals.indexOf(variable.getName()));
+                    break;
+                default:
+                    throw new MethodNotImplementedError(stmt.getType().toString());
             }
-
-            mv.visitVarInsn(ASTORE, locals.indexOf(stmt.getVar()));
         }
 
         /**
