@@ -760,7 +760,7 @@ public final class TypePropagator extends Pipeline {
      * TODO: Documentation.
      *
      * @author Henry J. Wylde
-     * @since TODO: SINCE
+     * @since 0.2.4
      */
     private final class TypeTypePropagator extends TypeAdapter {
 

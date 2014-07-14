@@ -16,7 +16,7 @@ import java.util.Collection;
  * TODO: Documentation
  *
  * @author Henry J. Wylde
- * @since TODO: SINCE
+ * @since 0.2.4
  */
 public final class TypeNode extends Node implements TypeVisitor {
 

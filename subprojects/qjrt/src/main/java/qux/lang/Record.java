@@ -16,7 +16,7 @@ import java.util.TreeMap;
  * TODO: Implement reference counting
  *
  * @author Henry J. Wylde
- * @since TODO: SINCE
+ * @since 0.2.4
  */
 public final class Record extends AbstractObj {
 
