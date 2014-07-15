@@ -1152,7 +1152,31 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
 
         if (ctx.ValueInt() != null) {
             type = ExprNode.Constant.Type.INT;
-            value = new BigInteger(ctx.ValueInt().getText());
+
+            // Determine format of the integer, e.g., base 2, 8, 10 or 16
+            if (ctx.getText().length() > 2) {
+                int radix;
+                int offset = 2;
+
+                switch (ctx.getText().charAt(1)) {
+                    case 'b':
+                        radix = 2;
+                        break;
+                    case 'o':
+                        radix = 8;
+                        break;
+                    case 'x':
+                        radix = 16;
+                        break;
+                    default:
+                        radix = 10;
+                        offset = 0;
+                }
+
+                value = new BigInteger(ctx.ValueInt().getText().substring(offset), radix);
+            } else {
+                value = new BigInteger(ctx.ValueInt().getText(), 10);
+            }
         } else if (ctx.ValueRat() != null) {
             type = ExprNode.Constant.Type.RAT;
             value = new BigDecimal(ctx.ValueRat().getText());

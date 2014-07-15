@@ -387,8 +387,8 @@ public final class Qux2ClassTranslater extends QuxAdapter {
                             getMethodDescriptor(lhsClass, "_add_", rhsClass), false);
                     break;
                 case AND:
-                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(Bool.class), "_and_",
-                            getMethodDescriptor(Bool.class, "_and_", Bool.class), false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(lhsClass), "_and_",
+                            getMethodDescriptor(lhsClass, "_and_", rhsClass), false);
                     break;
                 case DIV:
                     mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(lhsClass), "_div_",
@@ -448,8 +448,8 @@ public final class Qux2ClassTranslater extends QuxAdapter {
                             getMethodDescriptor(Neq.class, "_neq_", AbstractObj.class), true);
                     break;
                 case OR:
-                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(Bool.class), "_or_",
-                            getMethodDescriptor(Bool.class, "_or_", Bool.class), false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(lhsClass), "_or_",
+                            getMethodDescriptor(lhsClass, "_or_", rhsClass), false);
                     break;
                 case RNG:
                     mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(Int.class), "_rng_",
@@ -464,8 +464,8 @@ public final class Qux2ClassTranslater extends QuxAdapter {
                             getMethodDescriptor(lhsClass, "_sub_", rhsClass), false);
                     break;
                 case XOR:
-                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(Bool.class), "_xor_",
-                            getMethodDescriptor(Bool.class, "_xor_", Bool.class), false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(lhsClass), "_xor_",
+                            getMethodDescriptor(lhsClass, "_xor_", rhsClass), false);
                     break;
                 default:
                     throw new MethodNotImplementedError(expr.getOp().toString());

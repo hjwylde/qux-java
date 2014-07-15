@@ -212,10 +212,18 @@ public final class TypeChecker extends Pipeline {
                 case NEQ:
                     break;
                 case AND:
-                case IFF:
-                case IMP:
                 case OR:
                 case XOR:
+                    // Check if we are doing a bitwise or a boolean operation
+                    if (isSubtype(lhsType, TYPE_INT)) {
+                        checkSubtype(expr.getLhs(), TYPE_INT);
+                        checkSubtype(expr.getRhs(), TYPE_INT);
+                        break;
+                    }
+
+                    // else lhsType <: TYPE_BOOL
+                case IFF:
+                case IMP:
                     checkSubtype(expr.getLhs(), TYPE_BOOL);
                     checkSubtype(expr.getRhs(), TYPE_BOOL);
                     break;
@@ -335,7 +343,8 @@ public final class TypeChecker extends Pipeline {
                     checkSubtype(expr.getTarget(), TYPE_ITERABLE);
                     break;
                 case NEG:
-                    checkSubtype(expr.getTarget(), Type.forUnion(Arrays.asList(TYPE_INT, TYPE_RAT)));
+                    checkSubtype(expr.getTarget(), Type.forUnion(Arrays.asList(TYPE_INT,
+                            TYPE_RAT)));
                     break;
                 case NOT:
                     checkSubtype(expr.getTarget(), TYPE_BOOL);
