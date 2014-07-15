@@ -19,7 +19,7 @@ let foldmethod='indent'
 syn keyword bool false true
 syn keyword externals import package
 syn keyword keywords is type
-syn keyword operators and iff implies in nin or xor
+syn keyword operators and iff implies in nin not or xor
 syn keyword statements elif else for if print return while
 syn keyword types any bit bool byte int int16 int32 int64 list nat nat1 null obj rat record set str ubyte uint16 uint32 uint64 void
 syn keyword todo contained TODO FIXME

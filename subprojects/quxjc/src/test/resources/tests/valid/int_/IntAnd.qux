@@ -1,0 +1,14 @@
+package valid.int_
+
+void main([str] args):
+    print 0 and 1
+    print 1 and 2 and 4
+    print 0xff and 0xff
+    print 1 and 1
+    print 0 and 0
+    print -1 and 0
+    print -1 and 1
+    print -1 and 2
+    print 0xff and 0xffff
+    print 0xffff and 0xff
+

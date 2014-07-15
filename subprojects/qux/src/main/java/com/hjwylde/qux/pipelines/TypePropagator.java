@@ -377,6 +377,17 @@ public final class TypePropagator extends Pipeline {
                     }
                     break;
                 case AND:
+                case OR:
+                case XOR:
+                    Type lhsType = getType(expr.getLhs());
+
+                    // Check if we are doing a bitwise or a boolean operation
+                    if (isSubtype(lhsType, TYPE_INT)) {
+                        setType(expr, TYPE_INT);
+                        break;
+                    }
+
+                    // else lhsType <: TYPE_BOOL
                 case EQ:
                 case IFF:
                 case IMP:
@@ -386,8 +397,6 @@ public final class TypePropagator extends Pipeline {
                 case LT:
                 case LTE:
                 case NEQ:
-                case OR:
-                case XOR:
                     setType(expr, TYPE_BOOL);
                     break;
                 default:
