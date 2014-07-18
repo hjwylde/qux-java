@@ -6,7 +6,7 @@ import static com.hjwylde.qux.util.Type.TYPE_BOOL;
 import static com.hjwylde.qux.util.Type.TYPE_INT;
 import static com.hjwylde.qux.util.Type.TYPE_ITERABLE;
 import static com.hjwylde.qux.util.Type.TYPE_META;
-import static com.hjwylde.qux.util.Type.TYPE_REAL;
+import static com.hjwylde.qux.util.Type.TYPE_RAT;
 import static com.hjwylde.qux.util.Type.getInnerType;
 import static com.hjwylde.qux.util.Types.isEquivalent;
 import static com.hjwylde.qux.util.Types.isSubtype;
@@ -212,10 +212,18 @@ public final class TypeChecker extends Pipeline {
                 case NEQ:
                     break;
                 case AND:
-                case IFF:
-                case IMP:
                 case OR:
                 case XOR:
+                    // Check if we are doing a bitwise or a boolean operation
+                    if (isSubtype(lhsType, TYPE_INT)) {
+                        checkSubtype(expr.getLhs(), TYPE_INT);
+                        checkSubtype(expr.getRhs(), TYPE_INT);
+                        break;
+                    }
+
+                    // else lhsType <: TYPE_BOOL
+                case IFF:
+                case IMP:
                     checkSubtype(expr.getLhs(), TYPE_BOOL);
                     checkSubtype(expr.getRhs(), TYPE_BOOL);
                     break;
@@ -336,7 +344,7 @@ public final class TypeChecker extends Pipeline {
                     break;
                 case NEG:
                     checkSubtype(expr.getTarget(), Type.forUnion(Arrays.asList(TYPE_INT,
-                            TYPE_REAL)));
+                            TYPE_RAT)));
                     break;
                 case NOT:
                     checkSubtype(expr.getTarget(), TYPE_BOOL);
@@ -441,7 +449,7 @@ public final class TypeChecker extends Pipeline {
         public void visitStmtReturn(StmtNode.Return stmt) {
             if (stmt.getExpr().isPresent()) {
                 check(stmt.getExpr().get());
-                Type returnType = function.getReturnType();
+                Type returnType = ((Type.Function) getType(function.getType())).getReturnType();
                 checkSubtype(stmt.getExpr().get(), returnType);
             }
         }

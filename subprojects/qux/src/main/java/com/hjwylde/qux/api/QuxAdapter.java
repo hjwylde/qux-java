@@ -29,8 +29,8 @@ public abstract class QuxAdapter implements QuxVisitor {
      * {@inheritDoc}
      */
     @Override
-    public void visit(int version, Identifier name) {
-        next.visit(version, name);
+    public void visit(Identifier name) {
+        next.visit(name);
     }
 
     /**

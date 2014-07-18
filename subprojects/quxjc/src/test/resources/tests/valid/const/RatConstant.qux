@@ -1,13 +1,13 @@
 package valid.const
 
-real A is 5.0
-real B is 5.0
-real C is -5.0
+rat A is 5.0
+rat B is 5.0
+rat C is -5.0
 
-real f(real a):
+rat f(rat a):
     return a + A + 0.5
 
-real g(real A):
+rat g(rat A):
     return A + 0.5
 
 void main([str] args):

@@ -34,6 +34,8 @@ public class DirectoryResource extends AbstractResourceCollection {
 
     private final Path root;
 
+    private List<Resource> resources;
+
     /**
      * Creates a new directory resource with the given root directory.
      *
@@ -79,9 +81,16 @@ public class DirectoryResource extends AbstractResourceCollection {
      * {@inheritDoc}
      */
     @Override
-    public Iterator<Resource> iterator() {
-        // TODO: Consider caching this list of resources
-        final List<Resource> resources = new ArrayList<>();
+    public synchronized Iterator<Resource> iterator() {
+        if (resources == null) {
+            loadResources();
+        }
+
+        return resources.iterator();
+    }
+
+    private synchronized void loadResources() {
+        resources = new ArrayList<>();
 
         SimpleFileVisitor<Path> visitor = new SimpleFileVisitor<Path>() {
 
@@ -121,7 +130,5 @@ public class DirectoryResource extends AbstractResourceCollection {
         } catch (IOException e) {
             logger.warn("i/o exception when trying to read resource directory: " + root, e);
         }
-
-        return resources.iterator();
     }
 }

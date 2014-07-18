@@ -31,8 +31,6 @@ public final class LocalQuxResourceReader implements Resource.Reader<QuxResource
      */
     @Override
     public QuxResource read(InputStream in) throws IOException {
-        checkState(charset != null, "charset has not been set");
-
         QuxNode node = new QuxNode();
         new QuxReader(in, charset).accept(node);
 
@@ -44,8 +42,6 @@ public final class LocalQuxResourceReader implements Resource.Reader<QuxResource
      */
     @Override
     public QuxResource read(Path path) throws IOException {
-        checkState(charset != null, "charset has not been set");
-
         QuxNode node = new QuxNode();
         new QuxReader(path, charset).accept(node);
 

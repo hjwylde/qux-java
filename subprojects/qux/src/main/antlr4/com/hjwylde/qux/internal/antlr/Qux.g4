@@ -110,8 +110,6 @@ decl : declConstant
      | declType
      ;
 
-// TODO: It would be nice to remove the type declaration here, I think it will be possible once we
-// move the name propagation to the lexer
 declConstant : type Identifier 'is' expr NEWLINE
              ;
 
@@ -133,7 +131,7 @@ stmt : stmtAccessAssign
      | stmtWhile
      ;
 
-stmtAccessAssign : Identifier ('[' expr ']')+ '=' expr NEWLINE
+stmtAccessAssign : Identifier ('[' expr ']')+ AOP expr NEWLINE
                  ;
 
 stmtAssign : Identifier (AOP | AOP_ADD | AOP_SUB | AOP_MUL | AOP_DIV | AOP_REM) expr NEWLINE
@@ -277,14 +275,14 @@ exprExternalConstant : exprMeta '$' exprVariable
 exprExternalFunction : exprMeta '$' exprFunction
                      ;
 
-exprMeta : Identifier ('.' Identifier)*
+exprMeta : Identifier ('.' Identifier)+
          ;
 
 // Values
 
 value : valueKeyword
       | ValueInt
-      | ValueReal
+      | ValueRat
       | ValueString
       ;
 
@@ -308,7 +306,7 @@ typeKeyword : ANY
             | INT
             | NULL
             | OBJ
-            | REAL
+            | RAT
             | STR
             ;
 
@@ -350,9 +348,9 @@ ValueInt : '-'? Numeral
          | HexNumeral
          ;
 
-ValueReal : '-'? Numeral '.' Numeral Exponent ?
-          | '-'? Numeral Exponent
-          ;
+ValueRat : '-'? Numeral '.' Numeral Exponent ?
+         | '-'? Numeral Exponent
+         ;
 
 fragment
 Numeral : Digit+;
@@ -398,7 +396,7 @@ NULL    : 'null' ;
 OBJ     : 'obj' ;
 PACKAGE : 'package' ;
 PRINT   : 'print' ;
-REAL    : 'real' ;
+RAT     : 'rat' ;
 RECORD  : 'record' ;
 RETURN  : 'return' ;
 SET     : 'set' ;
@@ -420,7 +418,7 @@ DOT         : '.' ;
 COMMA       : ',' ;
 SEMI_COLON  : ';' ;
 COLON       : ':' ;
-DOLAR       : '$' ;
+DOLLAR      : '$' ;
 
 // Binary operators
 

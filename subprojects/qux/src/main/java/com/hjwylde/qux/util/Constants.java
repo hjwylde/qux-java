@@ -1,7 +1,5 @@
 package com.hjwylde.qux.util;
 
-import com.google.common.collect.ImmutableList;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,20 +27,16 @@ public final class Constants {
      */
     public static final String VERSION_NAME;
 
-    public static final int QUX0_1_0 = 0 << 16 | 1 << 8 | 0;
-    public static final int QUX0_1_1 = 0 << 16 | 1 << 8 | 1;
-    public static final int QUX0_1_2 = 0 << 16 | 1 << 8 | 2;
-    public static final int QUX0_1_3 = 0 << 16 | 1 << 8 | 3;
-    public static final int QUX0_2_0 = 0 << 16 | 2 << 8 | 0;
-    public static final int QUX0_2_1 = 0 << 16 | 2 << 8 | 1;
-    public static final int QUX0_2_2 = 0 << 16 | 2 << 8 | 2;
-    public static final int QUX0_2_3 = 0 << 16 | 2 << 8 | 3;
-    public static final int QUX0_2_4 = 0 << 16 | 2 << 8 | 4;
-
-    /**
-     * A list of supported Qux versions for this API.
-     */
-    public static final ImmutableList<Integer> SUPPORTED_VERSIONS = ImmutableList.of(QUX0_2_4);
+    public static final int QUX_0_1_0 = 0 << 16 | 1 << 8 | 0;
+    public static final int QUX_0_1_1 = 0 << 16 | 1 << 8 | 1;
+    public static final int QUX_0_1_2 = 0 << 16 | 1 << 8 | 2;
+    public static final int QUX_0_1_3 = 0 << 16 | 1 << 8 | 3;
+    public static final int QUX_0_2_0 = 0 << 16 | 2 << 8 | 0;
+    public static final int QUX_0_2_1 = 0 << 16 | 2 << 8 | 1;
+    public static final int QUX_0_2_2 = 0 << 16 | 2 << 8 | 2;
+    public static final int QUX_0_2_3 = 0 << 16 | 2 << 8 | 3;
+    public static final int QUX_0_2_4 = 0 << 16 | 2 << 8 | 4;
+    public static final int QUX_0_2_5 = 0 << 16 | 2 << 8 | 5;
 
     private static final Logger logger = LoggerFactory.getLogger(Constants.class);
 

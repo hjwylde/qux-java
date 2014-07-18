@@ -13,8 +13,8 @@ import com.hjwylde.qux.util.Type;
  */
 public class CheckTypeAdapter extends TypeAdapter {
 
-    private boolean visitedType = false;
-    private boolean visitedEnd = false;
+    private boolean visitedType;
+    private boolean visitedEnd;
 
     public CheckTypeAdapter(TypeVisitor next) {
         super(next);

@@ -3,7 +3,7 @@ package qux.lang;
 import static com.google.common.base.Preconditions.checkArgument;
 import static qux.lang.Bool.FALSE;
 import static qux.lang.Bool.TRUE;
-import static qux.lang.Meta.META_REAL;
+import static qux.lang.Meta.META_RAT;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -13,15 +13,15 @@ import java.math.BigInteger;
  *
  * @author Henry J. Wylde
  */
-public final class Real extends AbstractObj {
+public final class Rat extends AbstractObj {
 
     // TODO: Add this back in once tuples are implemented
-    /*private static final LoadingCache<Tuple, Real> cache =
-            CacheBuilder.<Tuple, Real>newBuilder().weakKeys().build(
-                    new CacheLoader<Tuple, Real>() {
+    /*private static final LoadingCache<Tuple, Rat> cache =
+            CacheBuilder.<Tuple, Rat>newBuilder().weakKeys().build(
+                    new CacheLoader<Tuple, Rat>() {
                         @Override
-                        public Real load(Tuple key) throws Exception {
-                            return new Real(key);
+                        public Rat load(Tuple key) throws Exception {
+                            return new Rat(key);
                         }
                     }
             );*/
@@ -29,7 +29,7 @@ public final class Real extends AbstractObj {
     private final Int num;
     private final Int den;
 
-    private Real(Int num, Int den) {
+    private Rat(Int num, Int den) {
         if (num.equals(Int.ZERO)) {
             den = Int.ONE;
         }
@@ -50,7 +50,7 @@ public final class Real extends AbstractObj {
         this.den = den;
     }
 
-    public Real _add_(Real t) {
+    public Rat _add_(Rat t) {
         Int a = num._mul_(t.den)._add_(den._mul_(t.num));
         Int b = den._mul_(t.den);
 
@@ -62,11 +62,11 @@ public final class Real extends AbstractObj {
      */
     @Override
     public Int _comp_(AbstractObj obj) {
-        if (!(obj instanceof Real)) {
+        if (!(obj instanceof Rat)) {
             return meta()._comp_(obj.meta());
         }
 
-        Real that = (Real) obj;
+        Rat that = (Rat) obj;
 
         Int a = num._mul_(that.den);
         Int b = den._mul_(that.num);
@@ -82,7 +82,7 @@ public final class Real extends AbstractObj {
         return Str.valueOf(num + "/" + den);
     }
 
-    public Real _div_(Real t) {
+    public Rat _div_(Rat t) {
         if (t.den.equals(Int.ZERO)) {
             throw new InternalError("attempted division by zero");
         }
@@ -97,7 +97,7 @@ public final class Real extends AbstractObj {
      * {@inheritDoc}
      */
     @Override
-    public Real _dup_() {
+    public Rat _dup_() {
         return this;
     }
 
@@ -110,7 +110,7 @@ public final class Real extends AbstractObj {
             return FALSE;
         }
 
-        Real that = (Real) obj;
+        Rat that = (Rat) obj;
 
         return num.equals(that.num) && den.equals(that.den) ? TRUE : FALSE;
     }
@@ -123,18 +123,18 @@ public final class Real extends AbstractObj {
         return num._hash_()._mul_(den._hash_());
     }
 
-    public Real _mul_(Real t) {
+    public Rat _mul_(Rat t) {
         Int a = num._mul_(t.num);
         Int b = den._mul_(t.den);
 
         return valueOf(a, b);
     }
 
-    public Real _neg_() {
+    public Rat _neg_() {
         return valueOf(num._neg_(), den);
     }
 
-    public Real _sub_(Real t) {
+    public Rat _sub_(Rat t) {
         Int a = num._mul_(t.den)._sub_(den._mul_(t.num));
         Int b = den._mul_(t.den);
 
@@ -150,50 +150,50 @@ public final class Real extends AbstractObj {
      */
     @Override
     public Meta meta() {
-        return META_REAL;
+        return META_RAT;
     }
 
     public Int num() {
         return num;
     }
 
-    public static Real valueOf(Int num, Int den) {
-        return new Real(num, den);
+    public static Rat valueOf(Int num, Int den) {
+        return new Rat(num, den);
     }
 
-    public static Real valueOf(BigInteger num, BigInteger den) {
+    public static Rat valueOf(BigInteger num, BigInteger den) {
         return valueOf(Int.valueOf(num), Int.valueOf(den));
     }
 
-    public static Real valueOf(short value) {
+    public static Rat valueOf(short value) {
         return valueOf(Int.valueOf(value), Int.ONE);
     }
 
-    public static Real valueOf(byte value) {
+    public static Rat valueOf(byte value) {
         return valueOf(Int.valueOf(value), Int.ONE);
     }
 
-    public static Real valueOf(int value) {
+    public static Rat valueOf(int value) {
         return valueOf(Int.valueOf(value), Int.ONE);
     }
 
-    public static Real valueOf(long value) {
+    public static Rat valueOf(long value) {
         return valueOf(Int.valueOf(value), Int.ONE);
     }
 
-    public static Real valueOf(byte[] bytes) {
+    public static Rat valueOf(byte[] bytes) {
         return valueOf(Int.valueOf(bytes), Int.ONE);
     }
 
-    public static Real valueOf(BigInteger value) {
+    public static Rat valueOf(BigInteger value) {
         return valueOf(Int.valueOf(value), Int.ONE);
     }
 
-    public static Real valueOf(String value) {
+    public static Rat valueOf(String value) {
         return valueOf(new BigDecimal(value));
     }
 
-    public static Real valueOf(BigDecimal value) {
+    public static Rat valueOf(BigDecimal value) {
         return valueOf(value.unscaledValue(), BigInteger.TEN.pow(value.scale()));
     }
 }

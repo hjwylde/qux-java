@@ -113,8 +113,8 @@ public abstract class ExprNode extends Node {
                     "value must be null for null constant");
             checkArgument(type != Type.OBJ || value instanceof String,
                     "value must be of class String for obj constant");
-            checkArgument(type != Type.REAL || value instanceof BigDecimal,
-                    "value must be of class BigDecimal for real constant");
+            checkArgument(type != Type.RAT || value instanceof BigDecimal,
+                    "value must be of class BigDecimal for rat constant");
             checkArgument(type != Type.STR || value instanceof String,
                     "value must be of class String for str constant");
 
@@ -145,7 +145,7 @@ public abstract class ExprNode extends Node {
          * @author Henry J. Wylde
          */
         public static enum Type {
-            BOOL, INT, NULL, OBJ, REAL, STR;
+            BOOL, INT, NULL, OBJ, RAT, STR;
         }
     }
 

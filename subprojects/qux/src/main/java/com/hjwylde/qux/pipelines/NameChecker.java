@@ -48,7 +48,7 @@ public final class NameChecker extends Pipeline {
             checkFunction(function.getName(), functions);
 
             Set<Identifier> parameters = new HashSet<>();
-            for (Identifier parameter : function.getParameters().keySet()) {
+            for (Identifier parameter : function.getParameters()) {
                 checkFunctionParameter(parameter, parameters, function);
             }
         }

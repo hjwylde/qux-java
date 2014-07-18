@@ -2,7 +2,6 @@ package com.hjwylde.qux.internal.compiler;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Verify.verify;
-import static com.hjwylde.qux.util.Constants.QUX0_2_4;
 import static com.hjwylde.qux.util.Op.ACC_FINAL;
 import static com.hjwylde.qux.util.Op.ACC_PUBLIC;
 import static com.hjwylde.qux.util.Op.ACC_STATIC;
@@ -126,17 +125,12 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
     public Void visitDeclFunction(@NotNull QuxParser.DeclFunctionContext ctx) {
         Identifier name = visitIdentifier(ctx.Identifier(0));
 
-        List<Identifier> parameterNames = new ArrayList<>();
-        for (int i = 1; i < ctx.Identifier().size(); i++) {
-            parameterNames.add(visitIdentifier(ctx.Identifier(i)));
-        }
+        Type returnType = visitTypeReturn(ctx.typeReturn());
 
         List<Type> parameterTypes = new ArrayList<>();
         for (QuxParser.TypeContext tctx : ctx.type()) {
             parameterTypes.add(visitType(tctx));
         }
-
-        Type returnType = visitTypeReturn(ctx.typeReturn());
 
         Type.Function functionType = Type.forFunction(returnType, parameterTypes,
                 generateAttributeSource(ctx.typeReturn(), ctx.type(ctx.type().size() - 1)));
@@ -145,12 +139,12 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
 
         FunctionVisitor fv = qv.visitFunction(ACC_PUBLIC | ACC_STATIC, name, functionType);
 
-        for (int i = 0; i < parameterNames.size(); i++) {
-            fv.visitParameter(parameterNames.get(i), parameterTypes.get(i));
-            namespace.put(parameterNames.get(i), Arrays.asList(parameterNames.get(i)));
-        }
+        for (int i = 1; i < ctx.Identifier().size(); i++) {
+            Identifier parameter = visitIdentifier(ctx.Identifier(i));
 
-        fv.visitReturnType(functionType.getReturnType());
+            fv.visitParameter(parameter);
+            namespace.put(parameter, Arrays.asList(parameter));
+        }
 
         for (StmtNode stmt : visitBlock(ctx.block())) {
             stmt.accept(fv);
@@ -814,7 +808,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
      */
     @Override
     public Void visitFile(@NotNull QuxParser.FileContext ctx) {
-        qv.visit(QUX0_2_4, new Identifier(Files.getNameWithoutExtension(source)));
+        qv.visit(new Identifier(Files.getNameWithoutExtension(source)));
 
         super.visitFile(ctx);
 
@@ -1064,8 +1058,8 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
                 return Type.forNull(generateAttributeSource(ctx));
             case "obj":
                 return Type.forObj(generateAttributeSource(ctx));
-            case "real":
-                return Type.forReal(generateAttributeSource(ctx));
+            case "rat":
+                return Type.forRat(generateAttributeSource(ctx));
             case "str":
                 return Type.forStr(generateAttributeSource(ctx));
             case "void":
@@ -1158,10 +1152,34 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
 
         if (ctx.ValueInt() != null) {
             type = ExprNode.Constant.Type.INT;
-            value = new BigInteger(ctx.ValueInt().getText());
-        } else if (ctx.ValueReal() != null) {
-            type = ExprNode.Constant.Type.REAL;
-            value = new BigDecimal(ctx.ValueReal().getText());
+
+            // Determine format of the integer, e.g., base 2, 8, 10 or 16
+            if (ctx.getText().length() > 2) {
+                int radix;
+                int offset = 2;
+
+                switch (ctx.getText().charAt(1)) {
+                    case 'b':
+                        radix = 2;
+                        break;
+                    case 'o':
+                        radix = 8;
+                        break;
+                    case 'x':
+                        radix = 16;
+                        break;
+                    default:
+                        radix = 10;
+                        offset = 0;
+                }
+
+                value = new BigInteger(ctx.ValueInt().getText().substring(offset), radix);
+            } else {
+                value = new BigInteger(ctx.ValueInt().getText(), 10);
+            }
+        } else if (ctx.ValueRat() != null) {
+            type = ExprNode.Constant.Type.RAT;
+            value = new BigDecimal(ctx.ValueRat().getText());
         } else if (ctx.ValueString() != null) {
             type = ExprNode.Constant.Type.STR;
             String text = ctx.ValueString().getText();

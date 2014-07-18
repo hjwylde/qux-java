@@ -10,7 +10,7 @@ import static com.hjwylde.qux.util.Type.TYPE_LIST_ANY;
 import static com.hjwylde.qux.util.Type.TYPE_META;
 import static com.hjwylde.qux.util.Type.TYPE_NULL;
 import static com.hjwylde.qux.util.Type.TYPE_OBJ;
-import static com.hjwylde.qux.util.Type.TYPE_REAL;
+import static com.hjwylde.qux.util.Type.TYPE_RAT;
 import static com.hjwylde.qux.util.Type.TYPE_SET_ANY;
 import static com.hjwylde.qux.util.Type.TYPE_STR;
 import static com.hjwylde.qux.util.Type.getFieldType;
@@ -102,6 +102,8 @@ public final class TypePropagator extends Pipeline {
     }
 
     private void apply(FunctionNode function) {
+        setType(function.getType(), propagate(function.getType()));
+
         ControlFlowGraph cfg = Attributes.getAttributeUnchecked(function,
                 Attribute.ControlFlowGraph.class).getControlFlowGraph();
 
@@ -124,7 +126,7 @@ public final class TypePropagator extends Pipeline {
 
         Optional<String> type = resource.getConstantType(constant.getName().getId());
         if (type.isPresent()) {
-            return Type.forDescriptor(type.get());
+            return propagate(Type.forDescriptor(type.get()));
         }
 
         Optional<Attribute.Source> opt = Attributes.getAttribute(node, Attribute.Source.class);
@@ -147,7 +149,7 @@ public final class TypePropagator extends Pipeline {
 
         Optional<String> type = resource.getFunctionType(function.getName().getId());
         if (type.isPresent()) {
-            return (Type.Function) Type.forDescriptor(type.get());
+            return (Type.Function) propagate(Type.forDescriptor(type.get()));
         }
 
         Optional<Attribute.Source> opt = Attributes.getAttribute(node, Attribute.Source.class);
@@ -211,7 +213,7 @@ public final class TypePropagator extends Pipeline {
 
         Optional<String> desc = resource.getTypeType(name.getId());
         if (desc.isPresent()) {
-            return Type.forDescriptor(desc.get());
+            return propagate(Type.forDescriptor(desc.get()));
         }
 
         throw CompilerErrors.noTypeFound(Joiner.on('.').join(owner), name.getId());
@@ -244,19 +246,25 @@ public final class TypePropagator extends Pipeline {
 
     private Type propagate(Type type) {
         if (type instanceof Type.Function) {
-            // TODO: type instanceof Type.Function
-            throw new MethodNotImplementedError("type instanceof Type.Function");
+            List<Type> parameters = new ArrayList<>();
+            for (Type parameter : ((Type.Function) type).getParameterTypes()) {
+                parameters.add(propagate(parameter));
+            }
+
+            Type returnType = propagate(((Type.Function) type).getReturnType());
+
+            return Type.forFunction(returnType, parameters, type.getAttributes());
         } else if (type instanceof Type.List) {
-            return Type.forList(propagate(((Type.List) type).getInnerType()));
+            return Type.forList(propagate(((Type.List) type).getInnerType()), type.getAttributes());
         } else if (type instanceof Type.Set) {
-            return Type.forSet(propagate(((Type.Set) type).getInnerType()));
+            return Type.forSet(propagate(((Type.Set) type).getInnerType()), type.getAttributes());
         } else if (type instanceof Type.Union) {
             List<Type> types = new ArrayList<>();
             for (Type bound : ((Type.Union) type).getTypes()) {
                 types.add(propagate(bound));
             }
 
-            return Type.forUnion(types);
+            return Type.forUnion(types, type.getAttributes());
         } else if (type instanceof Type.Named) {
             return propagate(getTypeType((Type.Named) type));
         }
@@ -352,7 +360,7 @@ public final class TypePropagator extends Pipeline {
                     setType(expr, getType(expr.getLhs()));
                     break;
                 case DIV:
-                    setType(expr, TYPE_REAL);
+                    setType(expr, TYPE_RAT);
                     break;
                 case EXP:
                 case IDIV:
@@ -369,6 +377,17 @@ public final class TypePropagator extends Pipeline {
                     }
                     break;
                 case AND:
+                case OR:
+                case XOR:
+                    Type lhsType = getType(expr.getLhs());
+
+                    // Check if we are doing a bitwise or a boolean operation
+                    if (isSubtype(lhsType, TYPE_INT)) {
+                        setType(expr, TYPE_INT);
+                        break;
+                    }
+
+                    // else lhsType <: TYPE_BOOL
                 case EQ:
                 case IFF:
                 case IMP:
@@ -378,8 +397,6 @@ public final class TypePropagator extends Pipeline {
                 case LT:
                 case LTE:
                 case NEQ:
-                case OR:
-                case XOR:
                     setType(expr, TYPE_BOOL);
                     break;
                 default:
@@ -405,8 +422,8 @@ public final class TypePropagator extends Pipeline {
                 case OBJ:
                     setType(expr, TYPE_OBJ);
                     break;
-                case REAL:
-                    setType(expr, TYPE_REAL);
+                case RAT:
+                    setType(expr, TYPE_RAT);
                     break;
                 case STR:
                     setType(expr, TYPE_STR);
@@ -583,7 +600,7 @@ public final class TypePropagator extends Pipeline {
          */
         @Override
         public void visitExprVariable(ExprNode.Variable expr) {
-            setType(expr, env.getUnchecked(expr.getName()));
+            setType(expr, propagate(env.getUnchecked(expr.getName())));
         }
 
         private void setType(Node node, Type type) {
@@ -739,10 +756,13 @@ public final class TypePropagator extends Pipeline {
         }
 
         private void initialiseBaseEnvironment() {
-            for (Map.Entry<Identifier, Type> parameter : function.getParameters().entrySet()) {
-                baseEnv.put(parameter.getKey(), propagate(parameter.getValue()));
+            Type.Function type = (Type.Function) getType(function.getType());
+
+            for (int i = 0; i < function.getParameters().size(); i++) {
+                baseEnv.put(function.getParameters().get(i), type.getParameterTypes().get(i));
             }
-            baseEnv.put(RETURN, function.getReturnType());
+
+            baseEnv.put(RETURN, type.getReturnType());
         }
 
         private Type propagate(Type type) {

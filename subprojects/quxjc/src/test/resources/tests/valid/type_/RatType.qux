@@ -1,6 +1,6 @@
 package valid.type_
 
-type B is real
+type B is rat
 type C is any
 
 any f(B b, C c):

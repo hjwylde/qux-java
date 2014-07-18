@@ -31,8 +31,7 @@ public final class Int extends AbstractObj {
                         public Int load(BigInteger key) throws Exception {
                             return new Int(key);
                         }
-                    }
-            );
+                    });
     private final BigInteger value;
 
     static {
@@ -48,6 +47,11 @@ public final class Int extends AbstractObj {
 
     public Int _add_(Int t) {
         return valueOf(value.add(t.value));
+    }
+
+    public Int _and_(Int t) {
+
+        return valueOf(value.and(t.value));
     }
 
     /**
@@ -70,12 +74,12 @@ public final class Int extends AbstractObj {
         return Str.valueOf(value.toString());
     }
 
-    public Real _div_(Int t) {
+    public Rat _div_(Int t) {
         if (t.equals(Int.ZERO)) {
             throw new InternalError("attempted division by zero");
         }
 
-        return Real.valueOf(value)._div_(Real.valueOf(t.value));
+        return Rat.valueOf(value)._div_(Rat.valueOf(t.value));
     }
 
     /**
@@ -177,6 +181,10 @@ public final class Int extends AbstractObj {
         return valueOf(value.negate());
     }
 
+    public Int _or_(Int t) {
+        return valueOf(value.or(t.value));
+    }
+
     public Int _rem_(Int t) {
         return valueOf(value.remainder(t.value));
     }
@@ -202,6 +210,10 @@ public final class Int extends AbstractObj {
 
     public BigInteger _value_() {
         return value;
+    }
+
+    public Int _xor_(Int t) {
+        return valueOf(value.xor(t.value));
     }
 
     public Int gcd(Int t) {
