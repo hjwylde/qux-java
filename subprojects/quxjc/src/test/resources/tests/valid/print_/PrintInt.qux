@@ -2,4 +2,13 @@ package valid.print_
 
 void main([str] args):
     print 0
+    print -0
+    print 5
+    print -5
+    print 0b010
+    print -0b010
+    print 0o70
+    print -0o70
+    print 0xa0
+    print -0xa0
 

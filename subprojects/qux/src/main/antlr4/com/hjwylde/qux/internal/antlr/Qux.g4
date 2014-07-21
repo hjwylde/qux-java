@@ -343,9 +343,9 @@ EscapeSequence : '\\' [fnrt'\\]
                ;
 
 ValueInt : '-'? Numeral
-         | BinNumeral
-         | OctNumeral
-         | HexNumeral
+         | '-'? BinNumeral
+         | '-'? OctNumeral
+         | '-'? HexNumeral
          ;
 
 ValueRat : '-'? Numeral '.' Numeral Exponent ?

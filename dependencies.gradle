@@ -2,14 +2,19 @@ ext {
     libraries = [:]
 }
 
-libraries.antlr_runtime = 'org.antlr:antlr4-runtime:4.3'
-libraries.asm = 'org.ow2.asm:asm-all:5.0.3'
-libraries.commons_cli = 'commons-cli:commons-cli:1.2'
-libraries.groovy_all = 'org.codehaus.groovy:groovy-all:2.4.0-beta-1'
-libraries.gson = 'com.google.code.gson:gson:2.2.4'
 libraries.guava = 'com.google.guava:guava:17.0'
-libraries.jgrapht_core = 'org.jgrapht:jgrapht-core:0.9.0'
 libraries.junit = 'junit:junit:4.11'
+
+// Common libraries
+libraries.groovy_all = 'org.codehaus.groovy:groovy-all:2.4.0-beta-1'
 libraries.jsr305 = 'com.google.code.findbugs:jsr305:3.0.0'
 libraries.slf4j_log4j13 = 'org.slf4j:slf4j-log4j12:1.7.7'
+
+// Qux libraries
+libraries.antlr_runtime = 'org.antlr:antlr4-runtime:4.3'
+libraries.jgrapht_core = 'org.jgrapht:jgrapht-core:0.9.0'
+
+// Quxjc libraries
+libraries.asm = 'org.ow2.asm:asm-all:5.0.3'
+libraries.commons_cli = 'commons-cli:commons-cli:1.2'
 
