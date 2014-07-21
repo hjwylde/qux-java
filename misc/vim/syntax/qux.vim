@@ -34,8 +34,11 @@ syn match escapeError contained '\\.'
 syn match int '\d\+'
 syn match int '-\d\+'
 syn match int '0b[01]\+'
+syn match int '-0b[01]\+'
 syn match int '0o[0-7]\+'
+syn match int '-0o[0-7]\+'
 syn match int '0x\x\+'
+syn match int '-0x\x\+'
 
 syn match rat '\d\+\.\d\+'
 syn match rat '-\d\+\.\d\+'
@@ -69,6 +72,9 @@ syn match constants '[A-Z][A-Z0-9_]\+'
 syn match identifiers '[a-z_]'
 syn match identifiers '[a-z_][a-zA-Z0-9_]\+'
 
+syn match parenthesis '('
+syn match functions '\w\+\s*(\@=' contains=parenthesis
+
 " Regions
 
 syn region str          start="'" end="'" keepend contains=escapeSequence,escapeError
@@ -92,11 +98,12 @@ hi def link delimiters      Special
 hi def link escapeError     Error
 hi def link escapeSequence  Special
 hi def link externals       PreProc
+hi def link functions       Identifier
 hi def link identifiers     Normal
 hi def link int             Constant
 hi def link keywords        Statement
 hi def link operators       Statement
-hi def link rat            Constant
+hi def link rat             Constant
 hi def link statements      Statement
 hi def link str             Constant
 hi def link tab             Error
