@@ -159,7 +159,7 @@ public final class Environment<K, V> implements Iterable<Map.Entry<K, V>> {
     }
 
     public String toString() {
-        return mapping.toString();
+        return "{mapping=" + mapping.toString() + ", previous=" + previous + "}";
     }
 
     public Collection<V> values() {

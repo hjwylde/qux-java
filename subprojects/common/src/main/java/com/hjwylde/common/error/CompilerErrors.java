@@ -202,6 +202,31 @@ public final class CompilerErrors {
     }
 
     /**
+     * Creates a new {@link com.hjwylde.common.error.CompilerError} representing an invalid
+     * assignment.
+     *
+     * @return the created {@link com.hjwylde.common.error.CompilerError}.
+     */
+    public static CompilerError invalidAssignment() {
+        return new CompilerError("invalid assignment");
+    }
+
+    /**
+     * Creates a new {@link com.hjwylde.common.error.SourceCompilerError} representing an invalid
+     * assignment with the provided source information.
+     *
+     * @param source the source file name.
+     * @param line the line number.
+     * @param col the column number.
+     * @param length the length.
+     * @return the created {@link com.hjwylde.common.error.SourceCompilerError}.
+     */
+    public static SourceCompilerError invalidAssignment(String source, int line, int col,
+            int length) {
+        return new SourceCompilerError("invalid assignment", source, line, col, length);
+    }
+
+    /**
      * Creates a new {@link com.hjwylde.common.error.CompilerError} representing an invalid dedent.
      *
      * @return the created {@link com.hjwylde.common.error.CompilerError}.
@@ -485,31 +510,31 @@ public final class CompilerErrors {
 
     /**
      * Creates a new {@link com.hjwylde.common.error.CompilerError} representing an access to an
-     * undeclared variable.
+     * unassigned variable.
      *
-     * @param var the undeclared variable.
+     * @param var the unassigned variable.
      * @return the created {@link com.hjwylde.common.error.CompilerError}.
      */
-    public static CompilerError undeclaredVariableAccess(String var) {
-        String message = String.format("access to undeclared variable '%s'", var);
+    public static CompilerError unassignedVariableAccess(String var) {
+        String message = String.format("access to unassigned variable '%s'", var);
 
         return new CompilerError(message);
     }
 
     /**
      * Creates a new {@link com.hjwylde.common.error.SourceCompilerError} representing an access to
-     * an undeclared variable with the provided source information.
+     * an unassigned variable with the provided source information.
      *
-     * @param var the undeclared variable.
+     * @param var the unassigned variable.
      * @param source the source file name.
      * @param line the line number.
      * @param col the column number.
      * @param length the length.
      * @return the created {@link com.hjwylde.common.error.SourceCompilerError}.
      */
-    public static SourceCompilerError undeclaredVariableAccess(String var, String source, int line,
+    public static SourceCompilerError unassignedVariableAccess(String var, String source, int line,
             int col, int length) {
-        String message = String.format("access to undeclared variable '%s'", var);
+        String message = String.format("access to unassigned variable '%s'", var);
 
         return new SourceCompilerError(message, source, line, col, length);
     }

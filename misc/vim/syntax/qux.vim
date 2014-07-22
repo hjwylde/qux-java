@@ -2,9 +2,9 @@
 " Language:         Qux
 " Maintainer:       Henry J. Wylde
 " URL:              https://github.com/hjwylde/qux/
-" Latest Revision:  2014-07-18
+" Latest Revision:  2014-07-22
 " Filenames:        *.qux
-" Version:          0.2.3
+" Version:          0.2.5
 
 if exists("b:current_syntax")
     finish
@@ -64,16 +64,14 @@ syn match delimiters '[(){}[].,;:$]'
 
 syn match tab '\t\+'
 
-syn match types '[A-Z]'
-syn match types '[A-Z][a-zA-Z0-9_]\+'
+syn match types '[A-Z][a-zA-Z0-9_]\*'
 
 syn match constants '[A-Z][A-Z0-9_]\+'
 
-syn match identifiers '[a-z_]'
-syn match identifiers '[a-z_][a-zA-Z0-9_]\+'
+syn match identifiers '[a-z_][a-zA-Z0-9_]\*'
 
 syn match parenthesis '('
-syn match functions '\w\+\s*(\@=' contains=parenthesis
+syn match functions '[a-z_][a-zA-Z0-9_]*\s*(\@=' contains=parenthesis
 
 " Regions
 
