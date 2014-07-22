@@ -122,15 +122,17 @@ public final class TypePropagator extends Pipeline {
         }
     }
 
-    private Type getConstantType(List<Identifier> owner, ExprNode.Variable constant, Node node) {
-        Resource.Single resource = getResource(owner, node);
+    private Type getConstantType(ExprNode.Constant constant) {
+        List<Identifier> owner = constant.getOwner().getId();
+
+        Resource.Single resource = getResource(owner, constant.getOwner());
 
         Optional<String> type = resource.getConstantType(constant.getName().getId());
         if (type.isPresent()) {
             return propagate(Type.forDescriptor(type.get()));
         }
 
-        Optional<Attribute.Source> opt = Attributes.getAttribute(node, Attribute.Source.class);
+        Optional<Attribute.Source> opt = Attributes.getAttribute(constant, Attribute.Source.class);
 
         if (opt.isPresent()) {
             Attribute.Source source = opt.get();
@@ -144,16 +146,17 @@ public final class TypePropagator extends Pipeline {
         }
     }
 
-    private Type.Function getFunctionType(List<Identifier> owner, ExprNode.Function function,
-            Node node) {
-        Resource.Single resource = getResource(owner, node);
+    private Type.Function getFunctionType(ExprNode.Function function) {
+        List<Identifier> owner = function.getOwner().getId();
+
+        Resource.Single resource = getResource(owner, function.getOwner());
 
         Optional<String> type = resource.getFunctionType(function.getName().getId());
         if (type.isPresent()) {
             return (Type.Function) propagate(Type.forDescriptor(type.get()));
         }
 
-        Optional<Attribute.Source> opt = Attributes.getAttribute(node, Attribute.Source.class);
+        Optional<Attribute.Source> opt = Attributes.getAttribute(function, Attribute.Source.class);
 
         if (opt.isPresent()) {
             Attribute.Source source = opt.get();
@@ -217,7 +220,16 @@ public final class TypePropagator extends Pipeline {
             return propagate(Type.forDescriptor(desc.get()));
         }
 
-        throw CompilerErrors.noTypeFound(Joiner.on('.').join(owner), name.getId());
+        Optional<Attribute.Source> opt = Attributes.getAttribute(type, Attribute.Source.class);
+
+        if (opt.isPresent()) {
+            Attribute.Source source = opt.get();
+
+            throw CompilerErrors.noTypeFound(Joiner.on('.').join(owner), name.getId(),
+                    source.getSource(), source.getLine(), source.getCol(), source.getLength());
+        } else {
+            throw CompilerErrors.noTypeFound(Joiner.on('.').join(owner), name.getId());
+        }
     }
 
     private static Environment<Identifier, Type> mergeEnvironments(
@@ -408,51 +420,9 @@ public final class TypePropagator extends Pipeline {
          */
         @Override
         public void visitExprConstant(ExprNode.Constant expr) {
-            switch (expr.getType()) {
-                case BOOL:
-                    setType(expr, TYPE_BOOL);
-                    break;
-                case INT:
-                    setType(expr, TYPE_INT);
-                    break;
-                case NULL:
-                    setType(expr, TYPE_NULL);
-                    break;
-                case OBJ:
-                    setType(expr, TYPE_OBJ);
-                    break;
-                case RAT:
-                    setType(expr, TYPE_RAT);
-                    break;
-                case STR:
-                    setType(expr, TYPE_STR);
-                    break;
-                default:
-                    throw new MethodNotImplementedError(expr.getType().toString());
-            }
-        }
+            visitExpr(expr.getOwner());
 
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void visitExprExternal(ExprNode.External expr) {
-            visitExpr(expr.getMeta());
-
-            switch (expr.getType()) {
-                case CONSTANT:
-                    visitExprVariable(expr.getMeta().getId(), (ExprNode.Variable) expr.getExpr(),
-                            expr);
-                    break;
-                case FUNCTION:
-                    visitExprFunction(expr.getMeta().getId(), (ExprNode.Function) expr.getExpr(),
-                            expr);
-                    break;
-                default:
-                    throw new MethodNotImplementedError(expr.getType().toString());
-            }
-
-            setType(expr, getType(expr.getExpr()));
+            setType(expr, getConstantType(expr));
         }
 
         /**
@@ -460,15 +430,13 @@ public final class TypePropagator extends Pipeline {
          */
         @Override
         public void visitExprFunction(ExprNode.Function expr) {
-            visitExprFunction(node.getId(), expr, expr);
-        }
+            visitExpr(expr.getOwner());
 
-        public void visitExprFunction(List<Identifier> owner, ExprNode.Function expr, Node node) {
             for (ExprNode argument : expr.getArguments()) {
                 visitExpr(argument);
             }
 
-            setType(expr, getFunctionType(owner, expr, node).getReturnType());
+            setType(expr, getFunctionType(expr).getReturnType());
         }
 
         /**
@@ -588,8 +556,33 @@ public final class TypePropagator extends Pipeline {
             }
         }
 
-        public void visitExprVariable(List<Identifier> owner, ExprNode.Variable expr, Node node) {
-            setType(expr, getConstantType(owner, expr, node));
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void visitExprValue(ExprNode.Value expr) {
+            switch (expr.getType()) {
+                case BOOL:
+                    setType(expr, TYPE_BOOL);
+                    break;
+                case INT:
+                    setType(expr, TYPE_INT);
+                    break;
+                case NULL:
+                    setType(expr, TYPE_NULL);
+                    break;
+                case OBJ:
+                    setType(expr, TYPE_OBJ);
+                    break;
+                case RAT:
+                    setType(expr, TYPE_RAT);
+                    break;
+                case STR:
+                    setType(expr, TYPE_STR);
+                    break;
+                default:
+                    throw new MethodNotImplementedError(expr.getType().toString());
+            }
         }
 
         /**
@@ -677,8 +670,6 @@ public final class TypePropagator extends Pipeline {
                 case ACCESS:
                     propagate(stmt.getLhs());
 
-                    // TODO: Need to type check somewhere to make sure the lhs isn't a TYPE_SET
-
                     // After the access assignment, the type of the variable needs to be updated
 
                     ExprNode lhs = ((ExprNode.Binary) stmt.getLhs()).getLhs();
@@ -696,7 +687,8 @@ public final class TypePropagator extends Pipeline {
                 case RECORD_ACCESS:
                     propagate(stmt.getLhs());
 
-                    // After the record access assignment, the type of the variable needs to be updated
+                    // After the record access assignment, the type of the variable needs to be
+                    // updated
 
                     lhs = ((ExprNode.RecordAccess) stmt.getLhs()).getTarget();
                     type = getType(lhs);

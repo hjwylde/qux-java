@@ -239,15 +239,8 @@ public final class TypeChecker extends Pipeline {
          * {@inheritDoc}
          */
         @Override
-        public void visitExprConstant(ExprNode.Constant expr) {}
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void visitExprExternal(ExprNode.External expr) {
-            visitExpr(expr.getMeta());
-            visitExpr(expr.getExpr());
+        public void visitExprConstant(ExprNode.Constant expr) {
+            visitExpr(expr.getOwner());
         }
 
         /**
@@ -255,6 +248,8 @@ public final class TypeChecker extends Pipeline {
          */
         @Override
         public void visitExprFunction(ExprNode.Function expr) {
+            visitExpr(expr.getOwner());
+
             // TODO: Type check the arguments
             for (ExprNode argument : expr.getArguments()) {
                 visitExpr(argument);
@@ -355,6 +350,12 @@ public final class TypeChecker extends Pipeline {
                     throw new MethodNotImplementedError(expr.getOp().toString());
             }
         }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void visitExprValue(ExprNode.Value expr) {}
 
         /**
          * {@inheritDoc}

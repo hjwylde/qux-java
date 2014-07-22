@@ -134,7 +134,6 @@ stmtAssign : Identifier exprAccess_1* (AOP | AOP_EXP | AOP_ADD | AOP_SUB | AOP_M
            ;
 
 stmtExpr : exprDecrement NEWLINE
-         | exprExternalFunction NEWLINE
          | exprFunction NEWLINE
          | exprIncrement NEWLINE
          ;
@@ -232,9 +231,8 @@ exprAccess_1_6 : '.' Identifier
 
 exprTerm : exprBrace
          | exprBracket
+         | exprConstant
          | exprDecrement
-         | exprExternalConstant
-         | exprExternalFunction
          | exprFunction
          | exprIncrement
          | exprParen
@@ -249,11 +247,14 @@ exprBrace : '{' (expr (',' expr)*)? '}'
 exprBracket : '[' (expr (',' expr)*)? ']'
             ;
 
+exprConstant : exprMeta '$' Identifier
+             ;
+
 exprDecrement : Identifier UOP_DEC
               ;
 
-exprFunction : Identifier '(' ')'
-             | Identifier '(' expr (',' expr)* ')'
+exprFunction : (exprMeta '$')? Identifier '(' ')'
+             | (exprMeta '$')? Identifier '(' expr (',' expr)* ')'
              ;
 
 exprIncrement : Identifier UOP_INC
@@ -264,12 +265,6 @@ exprParen : '(' expr ')'
 
 exprVariable : Identifier
              ;
-
-exprExternalConstant : exprMeta '$' exprVariable
-                     ;
-
-exprExternalFunction : exprMeta '$' exprFunction
-                     ;
 
 exprMeta : Identifier ('.' Identifier)+
          ;
