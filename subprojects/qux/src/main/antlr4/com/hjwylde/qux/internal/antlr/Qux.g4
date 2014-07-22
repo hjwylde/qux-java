@@ -121,8 +121,7 @@ declType : 'type' Identifier 'is' type NEWLINE
 
 // Statements
 
-stmt : stmtAccessAssign
-     | stmtAssign
+stmt : stmtAssign
      | stmtExpr
      | stmtFor
      | stmtIf
@@ -131,10 +130,7 @@ stmt : stmtAccessAssign
      | stmtWhile
      ;
 
-stmtAccessAssign : Identifier ('[' expr ']')+ AOP expr NEWLINE
-                 ;
-
-stmtAssign : Identifier (AOP | AOP_ADD | AOP_SUB | AOP_MUL | AOP_DIV | AOP_REM) expr NEWLINE
+stmtAssign : Identifier exprAccess_1* (AOP | AOP_EXP | AOP_ADD | AOP_SUB | AOP_MUL | AOP_DIV | AOP_IDIV | AOP_REM) expr NEWLINE
            ;
 
 stmtExpr : exprDecrement NEWLINE
@@ -461,10 +457,12 @@ UOP_INC: '++' ;
 // Assignment operators
 
 AOP : '=' ;
+AOP_EXP : '**=' ;
 AOP_ADD : '+=' ;
 AOP_SUB : '-=' ;
 AOP_MUL : '*=' ;
 AOP_DIV : '/=' ;
+AOP_IDIV : '//=' ;
 AOP_REM : '%=' ;
 
 // Identifier

@@ -14,4 +14,15 @@ void main([str] args):
     print xs[0]
     xs[1] = {1, 2}
     print xs
+    xs[0] *= 3
+    print xs
+    xs[0] += 3
+    print xs
+    xs = [[[0, 1], [2, 3]]]
+    print xs
+    xs[0][1][1] //= 2
+    print xs
+    xs[0][1] = {x: [0, 1]}
+    xs[0][1].x[1] = 5
+    print xs
 

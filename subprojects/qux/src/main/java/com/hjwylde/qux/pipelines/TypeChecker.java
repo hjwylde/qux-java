@@ -5,8 +5,11 @@ import static com.hjwylde.qux.util.Type.TYPE_ANY;
 import static com.hjwylde.qux.util.Type.TYPE_BOOL;
 import static com.hjwylde.qux.util.Type.TYPE_INT;
 import static com.hjwylde.qux.util.Type.TYPE_ITERABLE;
+import static com.hjwylde.qux.util.Type.TYPE_LIST_ANY;
 import static com.hjwylde.qux.util.Type.TYPE_META;
 import static com.hjwylde.qux.util.Type.TYPE_RAT;
+import static com.hjwylde.qux.util.Type.TYPE_STR;
+import static com.hjwylde.qux.util.Type.forUnion;
 import static com.hjwylde.qux.util.Type.getInnerType;
 import static com.hjwylde.qux.util.Types.isEquivalent;
 import static com.hjwylde.qux.util.Types.isSubtype;
@@ -66,6 +69,25 @@ public final class TypeChecker extends Pipeline {
         return node;
     }
 
+    static void checkSubtype(ExprNode expr, Type rhs) {
+        Type type = getType(expr);
+
+        if (isSubtype(type, rhs)) {
+            return;
+        }
+
+        Optional<Attribute.Source> opt = Attributes.getAttribute(expr, Attribute.Source.class);
+
+        if (opt.isPresent()) {
+            Attribute.Source source = opt.get();
+
+            throw CompilerErrors.invalidType(type.toString(), rhs.toString(), source.getSource(),
+                    source.getLine(), source.getCol(), source.getLength());
+        } else {
+            throw CompilerErrors.invalidType(type.toString(), rhs.toString());
+        }
+    }
+
     private static void apply(ConstantNode constant) {
         constant.accept(new ConstantTypeChecker(constant));
     }
@@ -108,25 +130,6 @@ public final class TypeChecker extends Pipeline {
                     source.getSource(), source.getLine(), source.getCol(), source.getLength());
         } else {
             throw CompilerErrors.invalidType(type.toString(), expected.toString());
-        }
-    }
-
-    private static void checkSubtype(ExprNode expr, Type rhs) {
-        Type type = getType(expr);
-
-        if (isSubtype(type, rhs)) {
-            return;
-        }
-
-        Optional<Attribute.Source> opt = Attributes.getAttribute(expr, Attribute.Source.class);
-
-        if (opt.isPresent()) {
-            Attribute.Source source = opt.get();
-
-            throw CompilerErrors.invalidType(type.toString(), rhs.toString(), source.getSource(),
-                    source.getLine(), source.getCol(), source.getLength());
-        } else {
-            throw CompilerErrors.invalidType(type.toString(), rhs.toString());
         }
     }
 
@@ -343,8 +346,7 @@ public final class TypeChecker extends Pipeline {
                     checkSubtype(expr.getTarget(), TYPE_ITERABLE);
                     break;
                 case NEG:
-                    checkSubtype(expr.getTarget(), Type.forUnion(Arrays.asList(TYPE_INT,
-                            TYPE_RAT)));
+                    checkSubtype(expr.getTarget(), forUnion(Arrays.asList(TYPE_INT, TYPE_RAT)));
                     break;
                 case NOT:
                     checkSubtype(expr.getTarget(), TYPE_BOOL);
@@ -397,6 +399,11 @@ public final class TypeChecker extends Pipeline {
         public void visitStmtAssign(StmtNode.Assign stmt) {
             switch (stmt.getType()) {
                 case ACCESS:
+                    check(stmt.getLhs());
+                    checkSubtype(((ExprNode.Binary) stmt.getLhs()).getLhs(), forUnion(Arrays.asList(
+                            TYPE_STR, TYPE_LIST_ANY)));
+                    break;
+                case RECORD_ACCESS:
                     check(stmt.getLhs());
                     break;
                 case VARIABLE:

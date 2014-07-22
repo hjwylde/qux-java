@@ -963,6 +963,19 @@ public final class Qux2ClassTranslater extends QuxAdapter {
                             "_assign_", getMethodDescriptor(Assign.class, "_assign_", Int.class,
                                     AbstractObj.class), true);
                     break;
+                case RECORD_ACCESS:
+                    ExprNode.RecordAccess recordAccess = (ExprNode.RecordAccess) stmt.getLhs();
+
+                    visitExpr(recordAccess.getTarget());
+                    mv.visitLdcInsn(recordAccess.getField().getId());
+                    mv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(Str.class), "valueOf",
+                            getMethodDescriptor(Str.class, "valueOf", String.class), false);
+                    visitExpr(stmt.getExpr());
+
+                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(Record.class),
+                            "_assign_", getMethodDescriptor(Record.class, "_assign_", Str.class,
+                                    AbstractObj.class), false);
+                    break;
                 case VARIABLE:
                     ExprNode.Variable variable = (ExprNode.Variable) stmt.getLhs();
 

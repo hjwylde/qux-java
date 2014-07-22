@@ -2,6 +2,7 @@ package com.hjwylde.qux.pipelines;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.hjwylde.qux.pipelines.TypeChecker.checkSubtype;
 import static com.hjwylde.qux.util.Type.TYPE_ANY;
 import static com.hjwylde.qux.util.Type.TYPE_BOOL;
 import static com.hjwylde.qux.util.Type.TYPE_INT;
@@ -370,11 +371,9 @@ public final class TypePropagator extends Pipeline {
                     setType(expr, Type.forList(TYPE_INT));
                     break;
                 case ACC:
-                    // Sanity check, if it fails then we don't care - the type checker should pick
-                    // it up
-                    if (isSubtype(getType(expr.getLhs()), TYPE_ITERABLE)) {
-                        setType(expr, getInnerType(getType(expr.getLhs())));
-                    }
+                    checkSubtype(expr.getLhs(), TYPE_ITERABLE);
+
+                    setType(expr, getInnerType(getType(expr.getLhs())));
                     break;
                 case AND:
                 case OR:
@@ -520,12 +519,10 @@ public final class TypePropagator extends Pipeline {
         @Override
         public void visitExprRecordAccess(ExprNode.RecordAccess expr) {
             visitExpr(expr.getTarget());
+            checkSubtype(expr.getTarget(), Type.forRecord(ImmutableMap.<Identifier, Type>of(
+                    expr.getField(), TYPE_ANY)));
 
-            // Sanity check, if it fails then we don't care - the type checker should pick it up
-            if (isSubtype(getType(expr.getTarget()), Type.forRecord(
-                    ImmutableMap.<Identifier, Type>of(expr.getField(), TYPE_ANY)))) {
-                setType(expr, getFieldType(getType(expr.getTarget()), expr.getField()));
-            }
+            setType(expr, getFieldType(getType(expr.getTarget()), expr.getField()));
         }
 
         /**
@@ -600,7 +597,24 @@ public final class TypePropagator extends Pipeline {
          */
         @Override
         public void visitExprVariable(ExprNode.Variable expr) {
-            setType(expr, propagate(env.getUnchecked(expr.getName())));
+            setType(expr, propagate(getVariableType(expr)));
+        }
+
+        private Type getVariableType(ExprNode.Variable var) {
+            if (env.contains(var.getName())) {
+                return env.getUnchecked(var.getName());
+            }
+
+            Optional<Attribute.Source> opt = Attributes.getAttribute(var, Attribute.Source.class);
+
+            if (opt.isPresent()) {
+                Attribute.Source source = opt.get();
+
+                throw CompilerErrors.unassignedVariableAccess(var.getName().getId(),
+                        source.getSource(), source.getLine(), source.getCol(), source.getLength());
+            } else {
+                throw CompilerErrors.unassignedVariableAccess(var.getName().getId());
+            }
         }
 
         private void setType(Node node, Type type) {
@@ -662,7 +676,34 @@ public final class TypePropagator extends Pipeline {
             switch (stmt.getType()) {
                 case ACCESS:
                     propagate(stmt.getLhs());
+
+                    // TODO: Need to type check somewhere to make sure the lhs isn't a TYPE_SET
+
+                    // After the access assignment, the type of the variable needs to be updated
+
+                    ExprNode lhs = ((ExprNode.Binary) stmt.getLhs()).getLhs();
+                    Type type = getType(lhs);
+
+                    if (isSubtype(type, TYPE_STR)) {
+                        // Don't need to do anything, a string assignment results in the same type
+                    } else if (isSubtype(getType(stmt.getExpr()), getInnerType(type))) {
+                        // TODO: Temporary solution to allow for some access assignments
+                    } else {
+                        throw new MethodNotImplementedError(type.toString());
+                    }
+
                     break;
+                case RECORD_ACCESS:
+                    propagate(stmt.getLhs());
+
+                    // After the record access assignment, the type of the variable needs to be updated
+
+                    lhs = ((ExprNode.RecordAccess) stmt.getLhs()).getTarget();
+                    type = getType(lhs);
+
+                    throw new MethodNotImplementedError(type.toString());
+
+                    //                    break;
                 case VARIABLE:
                     env.put(((ExprNode.Variable) stmt.getLhs()).getName(), getType(stmt.getExpr()));
                     break;
@@ -685,11 +726,9 @@ public final class TypePropagator extends Pipeline {
         @Override
         public void visitStmtFor(StmtNode.For stmt) {
             propagate(stmt.getExpr());
+            checkSubtype(stmt.getExpr(), TYPE_ITERABLE);
 
-            // Sanity check, if it fails then we don't care - the type checker should pick it up
-            if (isSubtype(getType(stmt.getExpr()), TYPE_ITERABLE)) {
-                env.put(stmt.getVar(), getInnerType(getType(stmt.getExpr())));
-            }
+            env.put(stmt.getVar(), getInnerType(getType(stmt.getExpr())));
         }
 
         /**

@@ -63,11 +63,13 @@ public abstract class StmtNode extends Node {
             super(attributes);
 
             checkArgument(type != Type.ACCESS || lhs instanceof ExprNode.Binary,
-                    "lhs must be of class Binary for access assignment");
+                    "lhs must be of class ExprNode.Binary for access assignment");
             checkArgument(type != Type.ACCESS || ((ExprNode.Binary) lhs).getOp() == Op.Binary.ACC,
-                    "lhs must be of class Binary with ACC operator for access assignment");
+                    "lhs must be of class ExprNode.Binary with ACC operator for access assignment");
+            checkArgument(type != Type.RECORD_ACCESS || lhs instanceof ExprNode.RecordAccess,
+                    "lhs must be of class ExprNode.Binary for access assignment");
             checkArgument(type != Type.VARIABLE || lhs instanceof ExprNode.Variable,
-                    "lhs must be of class Variable for variable assignment");
+                    "lhs must be of class ExprNode.Variable for variable assignment");
 
             this.type = checkNotNull(type, "type cannot be null");
 
@@ -102,7 +104,7 @@ public abstract class StmtNode extends Node {
          * @since 0.2.4
          */
         public static enum Type {
-            ACCESS, VARIABLE;
+            ACCESS, RECORD_ACCESS, VARIABLE;
         }
     }
 

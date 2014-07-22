@@ -194,40 +194,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
 
         // Create a series of nested accesses
         for (QuxParser.ExprAccess_1Context ectx : ctx.exprAccess_1()) {
-            if (ectx.exprAccess_1_1() != null) {
-                // target[index]
-                ExprNode index = visitExpr(ectx.exprAccess_1_1().expr());
-
-                target = new ExprNode.Binary(Op.Binary.ACC, target, index, generateAttributeSource(
-                        ctx, ectx));
-            } else if (ectx.exprAccess_1_2() != null) {
-                // target[low:high]
-                ExprNode low = visitExpr(ectx.exprAccess_1_2().expr(0));
-                ExprNode high = visitExpr(ectx.exprAccess_1_2().expr(1));
-
-                target = new ExprNode.Slice(target, low, high, generateAttributeSource(ctx, ectx));
-            } else if (ectx.exprAccess_1_3() != null) {
-                // target[low:]
-                ExprNode low = visitExpr(ectx.exprAccess_1_3().expr());
-
-                target = new ExprNode.Slice(target, low, null, generateAttributeSource(ctx, ectx));
-            } else if (ectx.exprAccess_1_4() != null) {
-                // target[:high]
-                ExprNode high = visitExpr(ectx.exprAccess_1_4().expr());
-
-                target = new ExprNode.Slice(target, null, high, generateAttributeSource(ctx, ectx));
-            } else if (ectx.exprAccess_1_5() != null) {
-                // target[:]
-                target = new ExprNode.Slice(target, null, null, generateAttributeSource(ctx, ectx));
-            } else if (ectx.exprAccess_1_6() != null) {
-                // target.field
-                Identifier field = visitIdentifier(ectx.exprAccess_1_6().Identifier());
-
-                target = new ExprNode.RecordAccess(target, field, generateAttributeSource(ctx,
-                        ectx));
-            } else {
-                throw new MethodNotImplementedError(ctx.getText());
-            }
+            target = visitExprAccess_1(target, ctx, ectx);
         }
 
         return target;
@@ -870,28 +837,20 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
      * {@inheritDoc}
      */
     @Override
-    public StmtNode visitStmtAccessAssign(@NotNull QuxParser.StmtAccessAssignContext ctx) {
-        ExprNode access = visitExprVariable(ctx.Identifier());
-
-        // Create a series of nested accesses
-        for (int i = 0; i < ctx.expr().size() - 1; i++) {
-            // TODO: VERIFY: The "ctx.expr(i).getStop()" may not include the suffix "]'
-            access = new ExprNode.Binary(Op.Binary.ACC, access, visitExpr(ctx.expr(i)),
-                    generateAttributeSource(ctx, ctx.expr(i)));
-        }
-
-        ExprNode expr = visitExpr(ctx.expr(ctx.expr().size() - 1));
-
-        return new StmtNode.Assign(StmtNode.Assign.Type.ACCESS, access, expr,
-                generateAttributeSource(ctx));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public StmtNode.Assign visitStmtAssign(@NotNull QuxParser.StmtAssignContext ctx) {
-        ExprNode.Variable var = visitExprVariable(ctx.Identifier());
+        // Create a series of nested accesses
+        ExprNode lhs = visitExprVariable(ctx.Identifier());
+        for (QuxParser.ExprAccess_1Context ectx : ctx.exprAccess_1()) {
+            lhs = visitExprAccess_1(lhs, ctx, ectx);
+
+            if (lhs instanceof ExprNode.Slice) {
+                Attribute.Source source = Attributes.getAttributeUnchecked(lhs,
+                        Attribute.Source.class);
+
+                throw CompilerErrors.invalidAssignment(source.getSource(), source.getLine(),
+                        source.getCol(), source.getLength());
+            }
+        }
 
         ExprNode expr = visitExpr(ctx.expr());
 
@@ -900,9 +859,15 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         if (ctx.AOP_ADD() != null) {
             node = ctx.AOP_ADD();
             op = Op.Binary.ADD;
+        } else if (ctx.AOP_EXP() != null) {
+            node = ctx.AOP_EXP();
+            op = Op.Binary.EXP;
         } else if (ctx.AOP_DIV() != null) {
             node = ctx.AOP_DIV();
             op = Op.Binary.DIV;
+        } else if (ctx.AOP_IDIV() != null) {
+            node = ctx.AOP_IDIV();
+            op = Op.Binary.IDIV;
         } else if (ctx.AOP_MUL() != null) {
             node = ctx.AOP_MUL();
             op = Op.Binary.MUL;
@@ -917,14 +882,26 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         }
 
         if (op != null) {
-            expr = new ExprNode.Binary(op, var, expr, generateAttributeSource(node.getSymbol(),
+            expr = new ExprNode.Binary(op, lhs, expr, generateAttributeSource(node.getSymbol(),
                     ctx.getStop()));
         }
 
-        namespace.put(var.getName(), Arrays.asList(var.getName()));
+        StmtNode.Assign.Type type;
 
-        return new StmtNode.Assign(StmtNode.Assign.Type.VARIABLE, var, expr,
-                generateAttributeSource(ctx));
+        if (lhs instanceof ExprNode.Variable) {
+            ExprNode.Variable var = (ExprNode.Variable) lhs;
+            namespace.put(var.getName(), Arrays.asList(var.getName()));
+
+            type = StmtNode.Assign.Type.VARIABLE;
+        } else if (lhs instanceof ExprNode.RecordAccess) {
+            type = StmtNode.Assign.Type.RECORD_ACCESS;
+        } else if (lhs instanceof ExprNode.Binary) {
+            type = StmtNode.Assign.Type.ACCESS;
+        } else {
+            throw new MethodNotImplementedError(lhs.getClass().getName());
+        }
+
+        return new StmtNode.Assign(type, lhs, expr, generateAttributeSource(ctx));
     }
 
     /**
@@ -1183,7 +1160,6 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
             if (offset % 2 != 0) {
                 value = ((BigInteger) value).negate();
             }
-
         } else if (ctx.ValueRat() != null) {
             type = ExprNode.Constant.Type.RAT;
             value = new BigDecimal(ctx.ValueRat().getText());
@@ -1270,6 +1246,44 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         }
 
         return namespace.getUnchecked(name);
+    }
+
+    private ExprNode visitExprAccess_1(ExprNode target, ParserRuleContext targetCtx,
+            QuxParser.ExprAccess_1Context ctx) {
+        if (ctx.exprAccess_1_1() != null) {
+            // target[index]
+            ExprNode index = visitExpr(ctx.exprAccess_1_1().expr());
+
+            return new ExprNode.Binary(Op.Binary.ACC, target, index, generateAttributeSource(
+                    targetCtx, ctx));
+        } else if (ctx.exprAccess_1_2() != null) {
+            // target[low:high]
+            ExprNode low = visitExpr(ctx.exprAccess_1_2().expr(0));
+            ExprNode high = visitExpr(ctx.exprAccess_1_2().expr(1));
+
+            return new ExprNode.Slice(target, low, high, generateAttributeSource(targetCtx, ctx));
+        } else if (ctx.exprAccess_1_3() != null) {
+            // target[low:]
+            ExprNode low = visitExpr(ctx.exprAccess_1_3().expr());
+
+            return new ExprNode.Slice(target, low, null, generateAttributeSource(targetCtx, ctx));
+        } else if (ctx.exprAccess_1_4() != null) {
+            // target[:high]
+            ExprNode high = visitExpr(ctx.exprAccess_1_4().expr());
+
+            return new ExprNode.Slice(target, null, high, generateAttributeSource(targetCtx, ctx));
+        } else if (ctx.exprAccess_1_5() != null) {
+            // target[:]
+            return new ExprNode.Slice(target, null, null, generateAttributeSource(targetCtx, ctx));
+        } else if (ctx.exprAccess_1_6() != null) {
+            // target.field
+            Identifier field = visitIdentifier(ctx.exprAccess_1_6().Identifier());
+
+            return new ExprNode.RecordAccess(target, field, generateAttributeSource(targetCtx,
+                    ctx));
+        }
+
+        throw new MethodNotImplementedError(ctx.getText());
     }
 
     private ExprNode.Variable visitExprVariable(TerminalNode id) {
