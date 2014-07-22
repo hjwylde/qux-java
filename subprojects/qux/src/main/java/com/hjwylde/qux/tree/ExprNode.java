@@ -91,36 +91,24 @@ public abstract class ExprNode extends Node {
      * TODO: Documentation
      *
      * @author Henry J. Wylde
+     * @since TODO: SINCE
      */
     public static final class Constant extends ExprNode {
 
-        private final Type type;
+        private final Meta owner;
 
-        private final Object value;
+        private final Identifier name;
 
-        public Constant(Type type, Object value, Attribute... attributes) {
-            this(type, value, Arrays.asList(attributes));
+        public Constant(Meta owner, Identifier name, Attribute... attributes) {
+            this(owner, name, Arrays.asList(attributes));
         }
 
-        public Constant(Type type, Object value, Collection<? extends Attribute> attributes) {
+        public Constant(Meta owner, Identifier name, Collection<? extends Attribute> attributes) {
             super(attributes);
 
-            checkArgument(type != Type.BOOL || value instanceof Boolean,
-                    "value must be of class Boolean for bool constant");
-            checkArgument(type != Type.INT || value instanceof BigInteger,
-                    "value must be of class BigInteger for int constant");
-            checkArgument(type != Type.NULL || value == null,
-                    "value must be null for null constant");
-            checkArgument(type != Type.OBJ || value instanceof String,
-                    "value must be of class String for obj constant");
-            checkArgument(type != Type.RAT || value instanceof BigDecimal,
-                    "value must be of class BigDecimal for rat constant");
-            checkArgument(type != Type.STR || value instanceof String,
-                    "value must be of class String for str constant");
+            this.owner = checkNotNull(owner, "owner cannot be null");
 
-            this.type = checkNotNull(type, "type cannot be null");
-
-            this.value = value;
+            this.name = checkNotNull(name, "name cannot be null");
         }
 
         /**
@@ -131,84 +119,12 @@ public abstract class ExprNode extends Node {
             ev.visitExprConstant(this);
         }
 
-        public Type getType() {
-            return type;
+        public Identifier getName() {
+            return name;
         }
 
-        public Object getValue() {
-            return value;
-        }
-
-        /**
-         * TODO: Documentation
-         *
-         * @author Henry J. Wylde
-         */
-        public static enum Type {
-            BOOL, INT, NULL, OBJ, RAT, STR;
-        }
-    }
-
-    /**
-     * TODO: Documentation
-     *
-     * @author Henry J. Wylde
-     * @since 0.2.1
-     */
-    public static final class External extends ExprNode {
-
-        private final Type type;
-
-        private final Meta meta;
-        private final ExprNode expr;
-
-        public External(Type type, Meta meta, ExprNode expr, Attribute... attributes) {
-            this(type, meta, expr, Arrays.asList(attributes));
-        }
-
-        public External(Type type, Meta meta, ExprNode expr,
-                Collection<? extends Attribute> attributes) {
-            super(attributes);
-
-            checkArgument(type != Type.CONSTANT || expr instanceof Variable,
-                    "expr must be of class Variable for external constant");
-            checkArgument(type != Type.FUNCTION || expr instanceof Function,
-                    "expr must be of class Function for external function");
-
-            this.type = checkNotNull(type, "type cannot be null");
-
-            this.meta = checkNotNull(meta, "meta cannot be null");
-            this.expr = checkNotNull(expr, "expr cannot be null");
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void accept(ExprVisitor ev) {
-            ev.visitExprExternal(this);
-        }
-
-        public ExprNode getExpr() {
-            return expr;
-        }
-
-        public Meta getMeta() {
-            return meta;
-        }
-
-        public Type getType() {
-            return type;
-        }
-
-        /**
-         * TODO: Documentation
-         *
-         * @author Henry J. Wylde
-         * @since 0.2.4
-         */
-        public static enum Type {
-            CONSTANT, FUNCTION;
+        public Meta getOwner() {
+            return owner;
         }
     }
 
@@ -219,17 +135,21 @@ public abstract class ExprNode extends Node {
      */
     public static final class Function extends ExprNode {
 
+        private final Meta owner;
+
         private final Identifier name;
         private final ImmutableList<ExprNode> arguments;
 
-        public Function(Identifier name, java.util.List<ExprNode> arguments,
+        public Function(Meta owner, Identifier name, java.util.List<ExprNode> arguments,
                 Attribute... attributes) {
-            this(name, arguments, Arrays.asList(attributes));
+            this(owner, name, arguments, Arrays.asList(attributes));
         }
 
-        public Function(Identifier name, java.util.List<ExprNode> arguments,
+        public Function(Meta owner, Identifier name, java.util.List<ExprNode> arguments,
                 Collection<? extends Attribute> attributes) {
             super(attributes);
+
+            this.owner = checkNotNull(owner, "owner cannot be null");
 
             this.name = checkNotNull(name, "name cannot be null");
             this.arguments = ImmutableList.copyOf(arguments);
@@ -249,6 +169,10 @@ public abstract class ExprNode extends Node {
 
         public Identifier getName() {
             return name;
+        }
+
+        public Meta getOwner() {
+            return owner;
         }
     }
 
@@ -510,6 +434,68 @@ public abstract class ExprNode extends Node {
 
         public ExprNode getTarget() {
             return target;
+        }
+    }
+
+    /**
+     * TODO: Documentation
+     *
+     * @author Henry J. Wylde
+     */
+    public static final class Value extends ExprNode {
+
+        private final Type type;
+
+        private final Object value;
+
+        public Value(Type type, Object value, Attribute... attributes) {
+            this(type, value, Arrays.asList(attributes));
+        }
+
+        public Value(Type type, Object value, Collection<? extends Attribute> attributes) {
+            super(attributes);
+
+            checkArgument(type != Type.BOOL || value instanceof Boolean,
+                    "value must be of class Boolean for bool constant");
+            checkArgument(type != Type.INT || value instanceof BigInteger,
+                    "value must be of class BigInteger for int constant");
+            checkArgument(type != Type.NULL || value == null,
+                    "value must be null for null constant");
+            checkArgument(type != Type.OBJ || value instanceof String,
+                    "value must be of class String for obj constant");
+            checkArgument(type != Type.RAT || value instanceof BigDecimal,
+                    "value must be of class BigDecimal for rat constant");
+            checkArgument(type != Type.STR || value instanceof String,
+                    "value must be of class String for str constant");
+
+            this.type = checkNotNull(type, "type cannot be null");
+
+            this.value = value;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void accept(ExprVisitor ev) {
+            ev.visitExprValue(this);
+        }
+
+        public Type getType() {
+            return type;
+        }
+
+        public Object getValue() {
+            return value;
+        }
+
+        /**
+         * TODO: Documentation
+         *
+         * @author Henry J. Wylde
+         */
+        public static enum Type {
+            BOOL, INT, NULL, OBJ, RAT, STR;
         }
     }
 

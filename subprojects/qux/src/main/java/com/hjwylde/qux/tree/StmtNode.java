@@ -136,9 +136,7 @@ public abstract class StmtNode extends Node {
                     checkArgument(((ExprNode.Unary) expr).getOp() == Op.Unary.DEC);
                     break;
                 case FUNCTION:
-                    checkArgument(expr instanceof ExprNode.External);
-                    checkArgument(((ExprNode.External) expr).getType()
-                            == ExprNode.External.Type.FUNCTION);
+                    checkArgument(expr instanceof ExprNode.Function);
                     break;
                 case INCREMENT:
                     checkArgument(expr instanceof ExprNode.Unary);
@@ -172,6 +170,8 @@ public abstract class StmtNode extends Node {
          * @since 0.1.3
          */
         public static enum Type {
+            // TODO: A function shouldn't be allowed to be called as a statement after the print
+            // (io) statement is removed, only method calls should work as statements
             DECREMENT, FUNCTION, INCREMENT;
         }
     }

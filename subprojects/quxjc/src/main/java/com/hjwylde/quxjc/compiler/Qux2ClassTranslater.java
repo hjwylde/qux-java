@@ -477,90 +477,15 @@ public final class Qux2ClassTranslater extends QuxAdapter {
          */
         @Override
         public void visitExprConstant(ExprNode.Constant expr) {
-            Object value;
-
-            switch (expr.getType()) {
-                case BOOL:
-                    if ((boolean) expr.getValue()) {
-                        mv.visitFieldInsn(GETSTATIC, Type.getInternalName(Bool.class), "TRUE",
-                                Type.getDescriptor(Bool.class));
-                    } else {
-                        mv.visitFieldInsn(GETSTATIC, Type.getInternalName(Bool.class), "FALSE",
-                                Type.getDescriptor(Bool.class));
-                    }
-                    break;
-                case INT:
-                    value = expr.getValue();
-
-                    visitValue((BigInteger) value);
-
-                    Class<?> argumentClass;
-
-                    int bitLength = ((BigInteger) value).bitLength();
-                    if (bitLength < 8) {
-                        argumentClass = byte.class;
-                    } else if (bitLength < 16) {
-                        argumentClass = short.class;
-                    } else if (bitLength < 32) {
-                        argumentClass = int.class;
-                    } else if (bitLength < 64) {
-                        argumentClass = long.class;
-                    } else {
-                        argumentClass = byte[].class;
-                    }
-
-                    mv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(Int.class), "valueOf",
-                            getMethodDescriptor(Int.class, "valueOf", argumentClass), false);
-                    break;
-                case NULL:
-                    mv.visitFieldInsn(GETSTATIC, Type.getInternalName(Null.class), "INSTANCE",
-                            Type.getDescriptor(Null.class));
-                    break;
-                case OBJ:
-                    value = expr.getValue();
-
-                    mv.visitLdcInsn(value);
-                    mv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(Obj.class), "valueOf",
-                            getMethodDescriptor(Obj.class, "valueOf", String.class), false);
-                    break;
-                case RAT:
-                    value = expr.getValue();
-
-                    visitValue((BigDecimal) value);
-
-                    mv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(Rat.class), "valueOf",
-                            getMethodDescriptor(Rat.class, "valueOf", String.class), false);
-                    break;
-                case STR:
-                    value = expr.getValue();
-
-                    mv.visitLdcInsn(value);
-                    mv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(Str.class), "valueOf",
-                            getMethodDescriptor(Str.class, "valueOf", String.class), false);
-                    break;
-                default:
-                    throw new MethodNotImplementedError(expr.getType().toString());
-            }
+            mv.visitFieldInsn(GETSTATIC, Joiner.on('/').join(expr.getOwner().getId()),
+                    expr.getName().getId(), getType(expr).getDescriptor());
         }
 
         /**
          * {@inheritDoc}
          */
         @Override
-        public void visitExprExternal(ExprNode.External expr) {
-            switch (expr.getType()) {
-                case CONSTANT:
-                    visitExprVariable(expr.getMeta().getId(), (ExprNode.Variable) expr.getExpr());
-                    break;
-                case FUNCTION:
-                    visitExprFunction(expr.getMeta().getId(), (ExprNode.Function) expr.getExpr());
-                    break;
-                default:
-                    throw new MethodNotImplementedError(expr.getType().toString());
-            }
-        }
-
-        public void visitExprFunction(java.util.List<Identifier> owner, ExprNode.Function expr) {
+        public void visitExprFunction(ExprNode.Function expr) {
             Type returnType = getType(expr);
             java.util.List<Type> argumentTypes = new ArrayList<>();
 
@@ -579,16 +504,8 @@ public final class Qux2ClassTranslater extends QuxAdapter {
 
             Type type = Type.getMethodType(returnType, argumentTypes.toArray(new Type[0]));
 
-            mv.visitMethodInsn(INVOKESTATIC, Joiner.on('/').join(owner), expr.getName().getId(),
-                    type.getDescriptor(), false);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void visitExprFunction(ExprNode.Function expr) {
-            visitExprFunction(getId(), expr);
+            mv.visitMethodInsn(INVOKESTATIC, Joiner.on('/').join(expr.getOwner().getId()),
+                    expr.getName().getId(), type.getDescriptor(), false);
         }
 
         /**
@@ -684,7 +601,7 @@ public final class Qux2ClassTranslater extends QuxAdapter {
             if (expr.getFrom().isPresent()) {
                 visitExpr(expr.getFrom().get());
             } else {
-                visitExpr(new ExprNode.Constant(ExprNode.Constant.Type.INT, BigInteger.ZERO));
+                visitExpr(new ExprNode.Value(ExprNode.Value.Type.INT, BigInteger.ZERO));
             }
             if (expr.getTo().isPresent()) {
                 visitExpr(expr.getTo().get());
@@ -711,7 +628,7 @@ public final class Qux2ClassTranslater extends QuxAdapter {
                     int index = locals.indexOf(((ExprNode.Variable) expr.getTarget()).getName());
 
                     mv.visitInsn(DUP);
-                    visitExpr(new ExprNode.Constant(ExprNode.Constant.Type.INT, BigInteger.ONE));
+                    visitExpr(new ExprNode.Value(ExprNode.Value.Type.INT, BigInteger.ONE));
                     mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(Int.class), "_sub_",
                             getMethodDescriptor(Int.class, "_sub_", Int.class), false);
                     mv.visitVarInsn(ASTORE, index);
@@ -720,7 +637,7 @@ public final class Qux2ClassTranslater extends QuxAdapter {
                     index = locals.indexOf(((ExprNode.Variable) expr.getTarget()).getName());
 
                     mv.visitInsn(DUP);
-                    visitExpr(new ExprNode.Constant(ExprNode.Constant.Type.INT, BigInteger.ONE));
+                    visitExpr(new ExprNode.Value(ExprNode.Value.Type.INT, BigInteger.ONE));
                     mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(Int.class), "_add_",
                             getMethodDescriptor(Int.class, "_add_", Int.class), false);
                     mv.visitVarInsn(ASTORE, index);
@@ -743,9 +660,75 @@ public final class Qux2ClassTranslater extends QuxAdapter {
             }
         }
 
-        public void visitExprVariable(java.util.List<Identifier> owner, ExprNode.Variable expr) {
-            mv.visitFieldInsn(GETSTATIC, Joiner.on('/').join(owner), expr.getName().getId(),
-                    getType(expr).getDescriptor());
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void visitExprValue(ExprNode.Value expr) {
+            Object value;
+
+            switch (expr.getType()) {
+                case BOOL:
+                    if ((boolean) expr.getValue()) {
+                        mv.visitFieldInsn(GETSTATIC, Type.getInternalName(Bool.class), "TRUE",
+                                Type.getDescriptor(Bool.class));
+                    } else {
+                        mv.visitFieldInsn(GETSTATIC, Type.getInternalName(Bool.class), "FALSE",
+                                Type.getDescriptor(Bool.class));
+                    }
+                    break;
+                case INT:
+                    value = expr.getValue();
+
+                    visitValue((BigInteger) value);
+
+                    Class<?> argumentClass;
+
+                    int bitLength = ((BigInteger) value).bitLength();
+                    if (bitLength < 8) {
+                        argumentClass = byte.class;
+                    } else if (bitLength < 16) {
+                        argumentClass = short.class;
+                    } else if (bitLength < 32) {
+                        argumentClass = int.class;
+                    } else if (bitLength < 64) {
+                        argumentClass = long.class;
+                    } else {
+                        argumentClass = byte[].class;
+                    }
+
+                    mv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(Int.class), "valueOf",
+                            getMethodDescriptor(Int.class, "valueOf", argumentClass), false);
+                    break;
+                case NULL:
+                    mv.visitFieldInsn(GETSTATIC, Type.getInternalName(Null.class), "INSTANCE",
+                            Type.getDescriptor(Null.class));
+                    break;
+                case OBJ:
+                    value = expr.getValue();
+
+                    mv.visitLdcInsn(value);
+                    mv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(Obj.class), "valueOf",
+                            getMethodDescriptor(Obj.class, "valueOf", String.class), false);
+                    break;
+                case RAT:
+                    value = expr.getValue();
+
+                    visitValue((BigDecimal) value);
+
+                    mv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(Rat.class), "valueOf",
+                            getMethodDescriptor(Rat.class, "valueOf", String.class), false);
+                    break;
+                case STR:
+                    value = expr.getValue();
+
+                    mv.visitLdcInsn(value);
+                    mv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(Str.class), "valueOf",
+                            getMethodDescriptor(Str.class, "valueOf", String.class), false);
+                    break;
+                default:
+                    throw new MethodNotImplementedError(expr.getType().toString());
+            }
         }
 
         /**

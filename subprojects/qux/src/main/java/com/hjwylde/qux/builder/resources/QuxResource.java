@@ -1,4 +1,4 @@
-package com.hjwylde.qux.builder;
+package com.hjwylde.qux.builder.resources;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 

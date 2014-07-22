@@ -592,8 +592,20 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
      * {@inheritDoc}
      */
     @Override
+    public ExprNode.Constant visitExprConstant(@NotNull QuxParser.ExprConstantContext ctx) {
+        ExprNode.Meta owner = visitExprMeta(ctx.exprMeta());
+        Identifier name = visitIdentifier(ctx.Identifier());
+
+        return new ExprNode.Constant(owner, name, generateAttributeSource(ctx));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public ExprNode visitExprDecrement(@NotNull QuxParser.ExprDecrementContext ctx) {
-        ExprNode.Variable target = visitExprVariable(ctx.Identifier());
+        ExprNode.Variable target = new ExprNode.Variable(visitIdentifier(ctx.Identifier()),
+                generateAttributeSource(ctx.Identifier()));
 
         return new ExprNode.Unary(Op.Unary.DEC, target, generateAttributeSource(ctx));
     }
@@ -602,53 +614,24 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
      * {@inheritDoc}
      */
     @Override
-    public ExprNode.External visitExprExternalConstant(
-            @NotNull QuxParser.ExprExternalConstantContext ctx) {
-        ExprNode.Meta meta = visitExprMeta(ctx.exprMeta());
-        ExprNode.Variable constant = visitExprVariable(ctx.exprVariable().Identifier());
-
-        return new ExprNode.External(ExprNode.External.Type.CONSTANT, meta, constant,
-                generateAttributeSource(ctx));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ExprNode.External visitExprExternalFunction(
-            @NotNull QuxParser.ExprExternalFunctionContext ctx) {
-        ExprNode.Meta meta = visitExprMeta(ctx.exprMeta());
-        ExprNode expr = visitExprFunction(ctx.exprFunction());
-        if (expr instanceof ExprNode.External) {
-            expr = ((ExprNode.External) expr).getExpr();
-        }
-
-        return new ExprNode.External(ExprNode.External.Type.FUNCTION, meta, expr,
-                generateAttributeSource(ctx));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ExprNode visitExprFunction(@NotNull QuxParser.ExprFunctionContext ctx) {
+    public ExprNode.Function visitExprFunction(@NotNull QuxParser.ExprFunctionContext ctx) {
         Identifier name = visitIdentifier(ctx.Identifier());
+
+        ExprNode.Meta owner;
+        if (ctx.exprMeta() != null) {
+            owner = visitExprMeta(ctx.exprMeta());
+        } else {
+            List<Identifier> id = resolveName(name);
+
+            owner = new ExprNode.Meta(id.subList(0, id.size() - 1), generateAttributeSource(ctx));
+        }
 
         List<ExprNode> arguments = new ArrayList<>();
         for (QuxParser.ExprContext expr : ctx.expr()) {
             arguments.add(visitExpr(expr));
         }
 
-        ExprNode.Function function = new ExprNode.Function(name, arguments, generateAttributeSource(
-                ctx));
-
-        List<Identifier> id = resolveName(name);
-
-        ExprNode.Meta meta = new ExprNode.Meta(id.subList(0, id.size() - 1),
-                generateAttributeSource(ctx));
-
-        return new ExprNode.External(ExprNode.External.Type.FUNCTION, meta, function,
-                generateAttributeSource(ctx));
+        return new ExprNode.Function(owner, name, arguments, generateAttributeSource(ctx));
     }
 
     /**
@@ -656,7 +639,8 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
      */
     @Override
     public ExprNode visitExprIncrement(@NotNull QuxParser.ExprIncrementContext ctx) {
-        ExprNode.Variable target = visitExprVariable(ctx.Identifier());
+        ExprNode.Variable target = new ExprNode.Variable(visitIdentifier(ctx.Identifier()),
+                generateAttributeSource(ctx.Identifier()));
 
         return new ExprNode.Unary(Op.Unary.INC, target, generateAttributeSource(ctx));
     }
@@ -706,12 +690,10 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
             return visitExprBrace(ctx.exprBrace());
         } else if (ctx.exprBracket() != null) {
             return visitExprBracket(ctx.exprBracket());
+        } else if (ctx.exprConstant() != null) {
+            return visitExprConstant(ctx.exprConstant());
         } else if (ctx.exprDecrement() != null) {
             return visitExprDecrement(ctx.exprDecrement());
-        } else if (ctx.exprExternalConstant() != null) {
-            return visitExprExternalConstant(ctx.exprExternalConstant());
-        } else if (ctx.exprExternalFunction() != null) {
-            return visitExprExternalFunction(ctx.exprExternalFunction());
         } else if (ctx.exprFunction() != null) {
             return visitExprFunction(ctx.exprFunction());
         } else if (ctx.exprIncrement() != null) {
@@ -753,21 +735,20 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
      */
     @Override
     public ExprNode visitExprVariable(@NotNull QuxParser.ExprVariableContext ctx) {
-        ExprNode.Variable variable = visitExprVariable(ctx.Identifier());
+        Identifier name = visitIdentifier(ctx.Identifier());
 
-        if (namespace.contains(variable.getName())) {
-            if (namespace.getUnchecked(variable.getName()).size() == 1) {
-                return variable;
+        if (namespace.contains(name)) {
+            if (namespace.getUnchecked(name).size() == 1) {
+                return new ExprNode.Variable(name, generateAttributeSource(ctx));
             }
         }
 
-        List<Identifier> id = resolveName(variable.getName());
+        List<Identifier> id = resolveName(name);
 
-        ExprNode.Meta meta = new ExprNode.Meta(id.subList(0, id.size() - 1),
+        ExprNode.Meta owner = new ExprNode.Meta(id.subList(0, id.size() - 1),
                 generateAttributeSource(ctx));
 
-        return new ExprNode.External(ExprNode.External.Type.CONSTANT, meta, variable,
-                generateAttributeSource(ctx));
+        return new ExprNode.Constant(owner, name, generateAttributeSource(ctx));
     }
 
     /**
@@ -839,7 +820,8 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
     @Override
     public StmtNode.Assign visitStmtAssign(@NotNull QuxParser.StmtAssignContext ctx) {
         // Create a series of nested accesses
-        ExprNode lhs = visitExprVariable(ctx.Identifier());
+        ExprNode lhs = new ExprNode.Variable(visitIdentifier(ctx.Identifier()),
+                generateAttributeSource(ctx.Identifier()));
         for (QuxParser.ExprAccess_1Context ectx : ctx.exprAccess_1()) {
             lhs = visitExprAccess_1(lhs, ctx, ectx);
 
@@ -912,9 +894,6 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         if (ctx.exprDecrement() != null) {
             return new StmtNode.Expr(StmtNode.Expr.Type.DECREMENT, visitExprDecrement(
                     ctx.exprDecrement()), generateAttributeSource(ctx));
-        } else if (ctx.exprExternalFunction() != null) {
-            return new StmtNode.Expr(StmtNode.Expr.Type.FUNCTION, visitExprExternalFunction(
-                    ctx.exprExternalFunction()), generateAttributeSource(ctx));
         } else if (ctx.exprFunction() != null) {
             return new StmtNode.Expr(StmtNode.Expr.Type.FUNCTION, visitExprFunction(
                     ctx.exprFunction()), generateAttributeSource(ctx));
@@ -1124,11 +1103,11 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
      */
     @Override
     public ExprNode visitValue(@NotNull QuxParser.ValueContext ctx) {
-        ExprNode.Constant.Type type = null;
+        ExprNode.Value.Type type = null;
         Object value = null;
 
         if (ctx.ValueInt() != null) {
-            type = ExprNode.Constant.Type.INT;
+            type = ExprNode.Value.Type.INT;
 
             // Determine format of the integer, e.g., base 2, 8, 10 or 16
             int radix = 10;
@@ -1161,10 +1140,10 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
                 value = ((BigInteger) value).negate();
             }
         } else if (ctx.ValueRat() != null) {
-            type = ExprNode.Constant.Type.RAT;
+            type = ExprNode.Value.Type.RAT;
             value = new BigDecimal(ctx.ValueRat().getText());
         } else if (ctx.ValueString() != null) {
-            type = ExprNode.Constant.Type.STR;
+            type = ExprNode.Value.Type.STR;
             String text = ctx.ValueString().getText();
 
             value = text.substring(1, text.length() - 1);
@@ -1173,7 +1152,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         }
 
         if (type != null) {
-            return new ExprNode.Constant(type, value, generateAttributeSource(ctx));
+            return new ExprNode.Value(type, value, generateAttributeSource(ctx));
         }
 
         throw new MethodNotImplementedError(ctx.getText());
@@ -1184,25 +1163,25 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
      */
     @Override
     public ExprNode visitValueKeyword(@NotNull QuxParser.ValueKeywordContext ctx) {
-        ExprNode.Constant.Type type = null;
+        ExprNode.Value.Type type = null;
         Object value = null;
 
         if (ctx.FALSE() != null) {
-            type = ExprNode.Constant.Type.BOOL;
+            type = ExprNode.Value.Type.BOOL;
             value = false;
         } else if (ctx.NULL() != null) {
-            type = ExprNode.Constant.Type.NULL;
+            type = ExprNode.Value.Type.NULL;
             value = null;
         } else if (ctx.TRUE() != null) {
-            type = ExprNode.Constant.Type.BOOL;
+            type = ExprNode.Value.Type.BOOL;
             value = true;
         } else if (ctx.OBJ() != null) {
-            type = ExprNode.Constant.Type.OBJ;
+            type = ExprNode.Value.Type.OBJ;
             value = generateObjId();
         }
 
         if (type != null) {
-            return new ExprNode.Constant(type, value, generateAttributeSource(ctx));
+            return new ExprNode.Value(type, value, generateAttributeSource(ctx));
         }
 
         throw new MethodNotImplementedError(ctx.getText());
@@ -1284,10 +1263,6 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         }
 
         throw new MethodNotImplementedError(ctx.getText());
-    }
-
-    private ExprNode.Variable visitExprVariable(TerminalNode id) {
-        return new ExprNode.Variable(visitIdentifier(id), generateAttributeSource(id));
     }
 
     private Identifier visitIdentifier(TerminalNode node) {

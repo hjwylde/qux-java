@@ -11,8 +11,8 @@ import com.hjwylde.qbs.builder.QuxContext;
 import com.hjwylde.qbs.builder.resources.Resource;
 import com.hjwylde.qbs.builder.resources.ResourceManager;
 import com.hjwylde.qux.api.QuxReader;
-import com.hjwylde.qux.builder.LocalQuxResourceReader;
-import com.hjwylde.qux.builder.QuxResource;
+import com.hjwylde.qux.builder.resources.LocalQuxResourceReader;
+import com.hjwylde.qux.builder.resources.QuxResource;
 import com.hjwylde.qux.pipelines.Pipeline;
 import com.hjwylde.qux.tree.QuxNode;
 
