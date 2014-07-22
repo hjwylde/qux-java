@@ -30,6 +30,8 @@ public class ZipResource extends AbstractResourceCollection {
 
     private final ZipFile file;
 
+    private List<Resource> resources;
+
     public ZipResource(ZipFile file) {
         this.file = checkNotNull(file, "file cannot be null");
     }
@@ -65,9 +67,16 @@ public class ZipResource extends AbstractResourceCollection {
      * {@inheritDoc}
      */
     @Override
-    public Iterator<Resource> iterator() {
-        // TODO: Consider caching this list of resources
-        final List<Resource> resources = new ArrayList<>();
+    public synchronized Iterator<Resource> iterator() {
+        if (resources == null) {
+            loadResources();
+        }
+
+        return resources.iterator();
+    }
+
+    private synchronized void loadResources() {
+        resources = new ArrayList<>();
 
         Enumeration<? extends ZipEntry> entries = file.entries();
         while (entries.hasMoreElements()) {
@@ -97,7 +106,5 @@ public class ZipResource extends AbstractResourceCollection {
                 }
             });
         }
-
-        return resources.iterator();
     }
 }
