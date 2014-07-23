@@ -85,7 +85,7 @@ tokens { INDENT, DEDENT }
 
 }
 
-// Grammar section
+// Parser section
 
 start : NEWLINE? file EOF
       ;
@@ -109,6 +109,7 @@ imp : 'import' Identifier ('.' Identifier)+ ('$' Identifier)? NEWLINE
 
 decl : declConstant
      | declFunction
+     | declMethod
      | declType
      ;
 
@@ -117,6 +118,9 @@ declConstant : type Identifier 'is' expr NEWLINE
 
 declFunction : typeReturn Identifier '(' (type Identifier (',' type Identifier)*)? ')' block
              ;
+
+declMethod : typeReturn type '::' Identifier '(' (type Identifier (',' type Identifier)*)? ')' block
+           ;
 
 declType : 'type' Identifier 'is' type NEWLINE
          ;
@@ -135,9 +139,7 @@ stmt : stmtAssign
 stmtAssign : Identifier exprAccess_1* (AOP | AOP_EXP | AOP_ADD | AOP_SUB | AOP_MUL | AOP_DIV | AOP_IDIV | AOP_REM) expr NEWLINE
            ;
 
-stmtExpr : exprDecrement NEWLINE
-         | exprFunction NEWLINE
-         | exprIncrement NEWLINE
+stmtExpr : expr NEWLINE
          ;
 
 stmtFor : 'for' Identifier BOP_IN expr block
@@ -197,10 +199,17 @@ exprBinary_9 : exprBinary_10 (BOP_EXP exprBinary_10)*
 exprBinary_10 : exprUnary (BOP_RNG exprUnary)?
              ;
 
-exprUnary : UOP_NEG? exprAccess
-          | UOP_NOT? exprAccess
-          | UOP_LEN exprAccess UOP_LEN
+exprUnary : exprMethod UOP_DEC?
+          | exprMethod UOP_INC?
+          | UOP_NEG? exprMethod
+          | UOP_NOT? exprMethod
+          | UOP_LEN exprMethod UOP_LEN
           ;
+
+exprMethod : exprAccess '::' exprMeta? Identifier '(' ')'
+           | exprAccess '::' exprMeta? Identifier '(' expr (',' expr)* ')'
+           | exprAccess
+           ;
 
 exprAccess : exprTerm exprAccess_1*
            ;
@@ -233,10 +242,7 @@ exprAccess_1_6 : '.' Identifier
 
 exprTerm : exprBrace
          | exprBracket
-         | exprConstant
-         | exprDecrement
          | exprFunction
-         | exprIncrement
          | exprParen
          | exprVariable
          | value
@@ -249,26 +255,17 @@ exprBrace : '{' (expr (',' expr)*)? '}'
 exprBracket : '[' (expr (',' expr)*)? ']'
             ;
 
-exprConstant : exprMeta '$' Identifier
+exprFunction : exprMeta? Identifier '(' ')'
+             | exprMeta? Identifier '(' expr (',' expr)* ')'
              ;
-
-exprDecrement : Identifier UOP_DEC
-              ;
-
-exprFunction : (exprMeta '$')? Identifier '(' ')'
-             | (exprMeta '$')? Identifier '(' expr (',' expr)* ')'
-             ;
-
-exprIncrement : Identifier UOP_INC
-              ;
 
 exprParen : '(' expr ')'
           ;
 
-exprVariable : Identifier
+exprVariable : exprMeta? Identifier
              ;
 
-exprMeta : Identifier ('.' Identifier)+
+exprMeta : Identifier ('.' Identifier)+ '$'
          ;
 
 // Values
@@ -312,7 +309,7 @@ typeRecord : '{' type Identifier (',' type Identifier)* '}'
 typeSet : '{' type '}'
          ;
 
-typeNamed : (exprMeta '$')? Identifier
+typeNamed : exprMeta? Identifier
           ;
 
 typeReturn : type
@@ -410,6 +407,7 @@ RBRACKET    : ']' ;
 DOT         : '.' ;
 COMMA       : ',' ;
 SEMI_COLON  : ';' ;
+COLON_COLON : '::' ;
 COLON       : ':' ;
 DOLLAR      : '$' ;
 

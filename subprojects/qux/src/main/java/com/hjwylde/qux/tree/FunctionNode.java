@@ -22,6 +22,8 @@ import java.util.List;
  */
 public final class FunctionNode extends Node implements FunctionVisitor {
 
+    public static final String RECEIVER_NAME = "this";
+
     private final int flags;
     private final Identifier name;
     private final Type.Function type;
@@ -81,6 +83,10 @@ public final class FunctionNode extends Node implements FunctionVisitor {
 
     public Type.Function getType() {
         return type;
+    }
+
+    public boolean isMethod() {
+        return !parameters.isEmpty() && parameters.get(0).getId().equals(RECEIVER_NAME);
     }
 
     /**

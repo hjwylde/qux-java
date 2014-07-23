@@ -1,0 +1,17 @@
+package valid.method
+
+int int::gcd(int b):
+    if (b == 0):
+        return this
+
+    return b::gcd(this % b)
+
+void main([str] args):
+    print 1::gcd(5)
+    print 2::gcd(2)
+    print 5::gcd(50)
+    print 8::gcd(50)
+    print 10::gcd(88)
+    print 7::gcd(31)
+    print 8::gcd(0)
+

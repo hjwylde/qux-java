@@ -140,19 +140,23 @@ public abstract class ExprNode extends Node {
         private final Identifier name;
         private final ImmutableList<ExprNode> arguments;
 
+        private final boolean isMethodCall;
+
         public Function(Meta owner, Identifier name, java.util.List<ExprNode> arguments,
-                Attribute... attributes) {
-            this(owner, name, arguments, Arrays.asList(attributes));
+                boolean isMethodCall, Attribute... attributes) {
+            this(owner, name, arguments, isMethodCall, Arrays.asList(attributes));
         }
 
         public Function(Meta owner, Identifier name, java.util.List<ExprNode> arguments,
-                Collection<? extends Attribute> attributes) {
+                boolean isMethodCall, Collection<? extends Attribute> attributes) {
             super(attributes);
 
             this.owner = checkNotNull(owner, "owner cannot be null");
 
             this.name = checkNotNull(name, "name cannot be null");
             this.arguments = ImmutableList.copyOf(arguments);
+
+            this.isMethodCall = isMethodCall;
         }
 
         /**
@@ -173,6 +177,10 @@ public abstract class ExprNode extends Node {
 
         public Meta getOwner() {
             return owner;
+        }
+
+        public boolean isMethodCall() {
+            return isMethodCall;
         }
     }
 

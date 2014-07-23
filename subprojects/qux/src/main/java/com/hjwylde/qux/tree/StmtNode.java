@@ -3,7 +3,6 @@ package com.hjwylde.qux.tree;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.hjwylde.common.error.MethodNotImplementedError;
 import com.hjwylde.common.lang.annotation.Alpha;
 import com.hjwylde.qux.api.StmtVisitor;
 import com.hjwylde.qux.util.Attribute;
@@ -116,35 +115,16 @@ public abstract class StmtNode extends Node {
      */
     public static final class Expr extends StmtNode {
 
-        private final StmtNode.Expr.Type type;
         private final ExprNode expr;
 
-        public Expr(StmtNode.Expr.Type type, ExprNode expr, Attribute... attributes) {
-            this(type, expr, Arrays.asList(attributes));
+        public Expr(ExprNode expr, Attribute... attributes) {
+            this(expr, Arrays.asList(attributes));
         }
 
-        public Expr(StmtNode.Expr.Type type, ExprNode expr,
-                Collection<? extends Attribute> attributes) {
+        public Expr(ExprNode expr, Collection<? extends Attribute> attributes) {
             super(attributes);
 
-            this.type = checkNotNull(type, "type cannot be null");
             this.expr = checkNotNull(expr, "expr cannot be null");
-
-            switch (type) {
-                case DECREMENT:
-                    checkArgument(expr instanceof ExprNode.Unary);
-                    checkArgument(((ExprNode.Unary) expr).getOp() == Op.Unary.DEC);
-                    break;
-                case FUNCTION:
-                    checkArgument(expr instanceof ExprNode.Function);
-                    break;
-                case INCREMENT:
-                    checkArgument(expr instanceof ExprNode.Unary);
-                    checkArgument(((ExprNode.Unary) expr).getOp() == Op.Unary.INC);
-                    break;
-                default:
-                    throw new MethodNotImplementedError(type.toString());
-            }
         }
 
         /**
@@ -157,22 +137,6 @@ public abstract class StmtNode extends Node {
 
         public ExprNode getExpr() {
             return expr;
-        }
-
-        public Type getType() {
-            return type;
-        }
-
-        /**
-         * TODO: Documentation
-         *
-         * @author Henry J. Wylde
-         * @since 0.1.3
-         */
-        public static enum Type {
-            // TODO: A function shouldn't be allowed to be called as a statement after the print
-            // (io) statement is removed, only method calls should work as statements
-            DECREMENT, FUNCTION, INCREMENT;
         }
     }
 
