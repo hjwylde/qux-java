@@ -27,7 +27,9 @@ tokens { INDENT, DEDENT }
 
             pending.offer(next);
             if (next.getType() == QuxParser.NEWLINE) {
-                next = super.nextToken();
+                do {
+                    next = super.nextToken();
+                } while (next.getType() == QuxParser.NEWLINE);
             } else {
                 continue;
             }
@@ -466,11 +468,11 @@ Identifier : [a-zA-Z_][a-zA-Z0-9_]* ;
 
 // Miscellaneous
 
-COMMENT_LINE : '#' ~[\r\n]*? -> skip ;
+COMMENT_LINE : ' '* '#' ~[\r\n]* -> skip ;
 
-COMMENT_DOC : '/**' .*? '*/' -> skip ;
+COMMENT_DOC : ' '* '/**' .*? '*/' -> skip ;
 
-COMMENT_BLOCK : '/*' .*? '*/' -> skip ;
+COMMENT_BLOCK : ' '* '/*' .*? '*/' -> skip ;
 
 NEWLINE : (' '* '\r'? '\n')+ ;
 
