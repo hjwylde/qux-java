@@ -1,0 +1,36 @@
+package valid.method
+
+[any] [any]::sort():
+    return this::mergesort()
+
+[any] [any]::mergesort():
+    if |this| <= 1:
+        return this
+
+    mid = |this| // 2
+
+    return mergesort(this[:mid])::merge(mergesort(this[mid:]))
+
+[any] [any]::merge([any] rhs):
+    sorted = []
+
+    i = 0
+    j = 0
+    while i < |this| and j < |rhs|:
+        if this[i] <= rhs[j]:
+            sorted += [this[i++]]
+        else:
+            sorted += [rhs[j++]]
+
+    sorted += this[i:]
+    sorted += rhs[j:]
+
+    return sorted
+
+void main([str] args):
+    print []::sort()
+    print [4, 3, 6, 1, -5, null]::sort()
+    print [4, 3, 6, null, 1, -5]::sort()
+    print [9000, 12, 5, 12, 50, 43, -5]::sort()
+    print [9, 8, 7, 6, 5, 4, 3, 2, 1, 0]::sort()
+

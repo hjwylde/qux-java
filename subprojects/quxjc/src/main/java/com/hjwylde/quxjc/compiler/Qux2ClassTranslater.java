@@ -494,10 +494,14 @@ public final class Qux2ClassTranslater extends QuxAdapter {
 
                 Type argumentType = getType(expr.getArguments().get(i));
 
-                // Ensures pass-by-value semantics by cloning the values
-                mv.visitMethodInsn(INVOKEVIRTUAL, argumentType.getInternalName(), "_dup_",
-                        getMethodDescriptor(Qux2ClassTranslater.getClass(argumentType), "_dup_"),
-                        false);
+                // Check to see if this argument is not the receiver, if it isn't, then we want to
+                // pass by value
+                if (i != 0 || !expr.isMethodCall()) {
+                    // Ensures pass-by-value semantics by cloning the values
+                    mv.visitMethodInsn(INVOKEVIRTUAL, argumentType.getInternalName(), "_dup_",
+                            getMethodDescriptor(Qux2ClassTranslater.getClass(argumentType),
+                                    "_dup_"), false);
+                }
 
                 argumentTypes.add(argumentType);
             }
@@ -625,22 +629,66 @@ public final class Qux2ClassTranslater extends QuxAdapter {
 
             switch (expr.getOp()) {
                 case DEC:
-                    int index = locals.indexOf(((ExprNode.Variable) expr.getTarget()).getName());
+                    // A decrement can be on a variable or record field, all others we should just
+                    // compute the value
+                    if (expr.getTarget() instanceof ExprNode.Variable) {
+                        int index = locals.indexOf(
+                                ((ExprNode.Variable) expr.getTarget()).getName());
 
-                    mv.visitInsn(DUP);
-                    visitExpr(new ExprNode.Value(ExprNode.Value.Type.INT, BigInteger.ONE));
-                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(Int.class), "_sub_",
-                            getMethodDescriptor(Int.class, "_sub_", Int.class), false);
-                    mv.visitVarInsn(ASTORE, index);
+                        mv.visitInsn(DUP);
+                        visitExpr(new ExprNode.Value(ExprNode.Value.Type.INT, BigInteger.ONE));
+                        mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(Int.class), "_sub_",
+                                getMethodDescriptor(Int.class, "_sub_", Int.class), false);
+
+                        mv.visitVarInsn(ASTORE, index);
+                    } else if (expr.getTarget() instanceof ExprNode.RecordAccess) {
+                        ExprNode.RecordAccess access = (ExprNode.RecordAccess) expr.getTarget();
+
+                        mv.visitInsn(DUP);
+                        visitExpr(new ExprNode.Value(ExprNode.Value.Type.INT, BigInteger.ONE));
+                        mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(Int.class), "_sub_",
+                                getMethodDescriptor(Int.class, "_sub_", Int.class), false);
+
+                        visitExpr(access.getTarget());
+                        mv.visitInsn(SWAP);
+                        mv.visitLdcInsn(access.getField().getId());
+                        mv.visitInsn(SWAP);
+
+                        mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(Record.class),
+                                "_assign_", getMethodDescriptor(Record.class, "_assign_",
+                                        String.class, AbstractObj.class), false);
+                    }
                     break;
                 case INC:
-                    index = locals.indexOf(((ExprNode.Variable) expr.getTarget()).getName());
+                    // An increment can be on a variable or record field, all others we should just
+                    // compute the value
+                    if (expr.getTarget() instanceof ExprNode.Variable) {
+                        int index = locals.indexOf(
+                                ((ExprNode.Variable) expr.getTarget()).getName());
 
-                    mv.visitInsn(DUP);
-                    visitExpr(new ExprNode.Value(ExprNode.Value.Type.INT, BigInteger.ONE));
-                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(Int.class), "_add_",
-                            getMethodDescriptor(Int.class, "_add_", Int.class), false);
-                    mv.visitVarInsn(ASTORE, index);
+                        mv.visitInsn(DUP);
+                        visitExpr(new ExprNode.Value(ExprNode.Value.Type.INT, BigInteger.ONE));
+                        mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(Int.class), "_add_",
+                                getMethodDescriptor(Int.class, "_add_", Int.class), false);
+
+                        mv.visitVarInsn(ASTORE, index);
+                    } else if (expr.getTarget() instanceof ExprNode.RecordAccess) {
+                        ExprNode.RecordAccess access = (ExprNode.RecordAccess) expr.getTarget();
+
+                        mv.visitInsn(DUP);
+                        visitExpr(new ExprNode.Value(ExprNode.Value.Type.INT, BigInteger.ONE));
+                        mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(Int.class), "_add_",
+                                getMethodDescriptor(Int.class, "_add_", Int.class), false);
+
+                        visitExpr(access.getTarget());
+                        mv.visitInsn(SWAP);
+                        mv.visitLdcInsn(access.getField().getId());
+                        mv.visitInsn(SWAP);
+
+                        mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(Record.class),
+                                "_assign_", getMethodDescriptor(Record.class, "_assign_",
+                                        String.class, AbstractObj.class), false);
+                    }
                     break;
                 case LEN:
                     mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Len.class), "_len_",
@@ -951,12 +999,10 @@ public final class Qux2ClassTranslater extends QuxAdapter {
 
                     visitExpr(recordAccess.getTarget());
                     mv.visitLdcInsn(recordAccess.getField().getId());
-                    mv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(Str.class), "valueOf",
-                            getMethodDescriptor(Str.class, "valueOf", String.class), false);
                     visitExpr(stmt.getExpr());
 
                     mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(Record.class),
-                            "_assign_", getMethodDescriptor(Record.class, "_assign_", Str.class,
+                            "_assign_", getMethodDescriptor(Record.class, "_assign_", String.class,
                                     AbstractObj.class), false);
                     break;
                 case VARIABLE:

@@ -16,6 +16,7 @@ import com.hjwylde.qux.builder.Environment;
 import com.hjwylde.qux.internal.antlr.QuxBaseVisitor;
 import com.hjwylde.qux.internal.antlr.QuxParser;
 import com.hjwylde.qux.tree.ExprNode;
+import com.hjwylde.qux.tree.FunctionNode;
 import com.hjwylde.qux.tree.StmtNode;
 import com.hjwylde.qux.util.Attribute;
 import com.hjwylde.qux.util.Attributes;
@@ -138,6 +139,51 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         namespace = namespace.push();
 
         FunctionVisitor fv = qv.visitFunction(ACC_PUBLIC | ACC_STATIC, name, functionType);
+
+        for (int i = 1; i < ctx.Identifier().size(); i++) {
+            Identifier parameter = visitIdentifier(ctx.Identifier(i));
+
+            fv.visitParameter(parameter);
+            namespace.put(parameter, Arrays.asList(parameter));
+        }
+
+        for (StmtNode stmt : visitBlock(ctx.block())) {
+            stmt.accept(fv);
+        }
+
+        fv.visitEnd();
+
+        namespace = namespace.pop();
+
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Void visitDeclMethod(@NotNull QuxParser.DeclMethodContext ctx) {
+        Identifier name = visitIdentifier(ctx.Identifier(0));
+
+        Type returnType = visitTypeReturn(ctx.typeReturn());
+
+        List<Type> parameterTypes = new ArrayList<>();
+        for (QuxParser.TypeContext tctx : ctx.type()) {
+            parameterTypes.add(visitType(tctx));
+        }
+
+        Type.Function functionType = Type.forFunction(returnType, parameterTypes,
+                generateAttributeSource(ctx.typeReturn(), ctx.type(ctx.type().size() - 1)));
+
+        namespace = namespace.push();
+
+        FunctionVisitor fv = qv.visitFunction(ACC_PUBLIC | ACC_STATIC, name, functionType);
+
+        // Visit the receiver parameter first
+        Identifier receiver = new Identifier(FunctionNode.RECEIVER_NAME);
+
+        fv.visitParameter(receiver);
+        namespace.put(receiver, Arrays.asList(receiver));
 
         for (int i = 1; i < ctx.Identifier().size(); i++) {
             Identifier parameter = visitIdentifier(ctx.Identifier(i));
@@ -592,28 +638,6 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
      * {@inheritDoc}
      */
     @Override
-    public ExprNode.Constant visitExprConstant(@NotNull QuxParser.ExprConstantContext ctx) {
-        ExprNode.Meta owner = visitExprMeta(ctx.exprMeta());
-        Identifier name = visitIdentifier(ctx.Identifier());
-
-        return new ExprNode.Constant(owner, name, generateAttributeSource(ctx));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ExprNode visitExprDecrement(@NotNull QuxParser.ExprDecrementContext ctx) {
-        ExprNode.Variable target = new ExprNode.Variable(visitIdentifier(ctx.Identifier()),
-                generateAttributeSource(ctx.Identifier()));
-
-        return new ExprNode.Unary(Op.Unary.DEC, target, generateAttributeSource(ctx));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public ExprNode.Function visitExprFunction(@NotNull QuxParser.ExprFunctionContext ctx) {
         Identifier name = visitIdentifier(ctx.Identifier());
 
@@ -631,18 +655,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
             arguments.add(visitExpr(expr));
         }
 
-        return new ExprNode.Function(owner, name, arguments, generateAttributeSource(ctx));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ExprNode visitExprIncrement(@NotNull QuxParser.ExprIncrementContext ctx) {
-        ExprNode.Variable target = new ExprNode.Variable(visitIdentifier(ctx.Identifier()),
-                generateAttributeSource(ctx.Identifier()));
-
-        return new ExprNode.Unary(Op.Unary.INC, target, generateAttributeSource(ctx));
+        return new ExprNode.Function(owner, name, arguments, false, generateAttributeSource(ctx));
     }
 
     /**
@@ -670,7 +683,38 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
             }
         }
 
-        return new ExprNode.Meta(id, generateAttributeSource(ctx));
+        return new ExprNode.Meta(id, generateAttributeSource(ctx.Identifier(0), ctx.Identifier(
+                id.size() - 1)));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ExprNode visitExprMethod(@NotNull QuxParser.ExprMethodContext ctx) {
+        if (ctx.Identifier() == null) {
+            return visitExprAccess(ctx.exprAccess());
+        }
+
+        Identifier name = visitIdentifier(ctx.Identifier());
+
+        ExprNode.Meta owner;
+        if (ctx.exprMeta() != null) {
+            owner = visitExprMeta(ctx.exprMeta());
+        } else {
+            List<Identifier> id = resolveName(name);
+
+            owner = new ExprNode.Meta(id.subList(0, id.size() - 1), generateAttributeSource(ctx));
+        }
+
+        List<ExprNode> arguments = new ArrayList<>();
+        // Add the receiver as the first argument
+        arguments.add(visitExprAccess(ctx.exprAccess()));
+        for (QuxParser.ExprContext expr : ctx.expr()) {
+            arguments.add(visitExpr(expr));
+        }
+
+        return new ExprNode.Function(owner, name, arguments, true, generateAttributeSource(ctx));
     }
 
     /**
@@ -690,14 +734,8 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
             return visitExprBrace(ctx.exprBrace());
         } else if (ctx.exprBracket() != null) {
             return visitExprBracket(ctx.exprBracket());
-        } else if (ctx.exprConstant() != null) {
-            return visitExprConstant(ctx.exprConstant());
-        } else if (ctx.exprDecrement() != null) {
-            return visitExprDecrement(ctx.exprDecrement());
         } else if (ctx.exprFunction() != null) {
             return visitExprFunction(ctx.exprFunction());
-        } else if (ctx.exprIncrement() != null) {
-            return visitExprIncrement(ctx.exprIncrement());
         } else if (ctx.exprParen() != null) {
             return visitExprParen(ctx.exprParen());
         } else if (ctx.exprVariable() != null) {
@@ -716,17 +754,21 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
     public ExprNode visitExprUnary(@NotNull QuxParser.ExprUnaryContext ctx) {
         Op.Unary op;
 
-        if (ctx.UOP_NEG() != null) {
+        if (ctx.UOP_DEC() != null) {
+            op = Op.Unary.DEC;
+        } else if (ctx.UOP_INC() != null) {
+            op = Op.Unary.INC;
+        } else if (ctx.UOP_NEG() != null) {
             op = Op.Unary.NEG;
         } else if (ctx.UOP_NOT() != null) {
             op = Op.Unary.NOT;
         } else if (!ctx.UOP_LEN().isEmpty()) {
             op = Op.Unary.LEN;
         } else {
-            return visitExprAccess(ctx.exprAccess());
+            return visitExprMethod(ctx.exprMethod());
         }
 
-        return new ExprNode.Unary(op, visitExprAccess(ctx.exprAccess()), generateAttributeSource(
+        return new ExprNode.Unary(op, visitExprMethod(ctx.exprMethod()), generateAttributeSource(
                 ctx));
     }
 
@@ -735,15 +777,27 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
      */
     @Override
     public ExprNode visitExprVariable(@NotNull QuxParser.ExprVariableContext ctx) {
+        // TODO: Tidy this messy code up once I force the naming convention
         Identifier name = visitIdentifier(ctx.Identifier());
 
-        if (namespace.contains(name)) {
-            if (namespace.getUnchecked(name).size() == 1) {
-                return new ExprNode.Variable(name, generateAttributeSource(ctx));
-            }
+        if (ctx.exprMeta() != null) {
+            ExprNode.Meta owner = visitExprMeta(ctx.exprMeta());
+
+            return new ExprNode.Constant(owner, name, generateAttributeSource(ctx));
         }
 
+        // A variable should always be in lowercase, so we use this to distinguish between a
+        // variable and an implicitly qualified constant
+        if (Character.isLowerCase(name.getId().charAt(0))) {
+            return new ExprNode.Variable(name, generateAttributeSource(ctx));
+        }
+
+
         List<Identifier> id = resolveName(name);
+
+        if (id.size() == 1) {
+            return new ExprNode.Variable(name, generateAttributeSource(ctx));
+        }
 
         ExprNode.Meta owner = new ExprNode.Meta(id.subList(0, id.size() - 1),
                 generateAttributeSource(ctx));
@@ -891,18 +945,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
      */
     @Override
     public StmtNode.Expr visitStmtExpr(@NotNull QuxParser.StmtExprContext ctx) {
-        if (ctx.exprDecrement() != null) {
-            return new StmtNode.Expr(StmtNode.Expr.Type.DECREMENT, visitExprDecrement(
-                    ctx.exprDecrement()), generateAttributeSource(ctx));
-        } else if (ctx.exprFunction() != null) {
-            return new StmtNode.Expr(StmtNode.Expr.Type.FUNCTION, visitExprFunction(
-                    ctx.exprFunction()), generateAttributeSource(ctx));
-        } else if (ctx.exprIncrement() != null) {
-            return new StmtNode.Expr(StmtNode.Expr.Type.INCREMENT, visitExprIncrement(
-                    ctx.exprIncrement()), generateAttributeSource(ctx));
-        } else {
-            throw new MethodNotImplementedError(ctx.getText());
-        }
+        return new StmtNode.Expr(visitExpr(ctx.expr()), generateAttributeSource(ctx));
     }
 
     /**
@@ -1202,6 +1245,10 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         int length = (end.getStopIndex() + 1) - start.getStartIndex();
 
         return new Attribute.Source(source, line, col, length);
+    }
+
+    private Attribute.Source generateAttributeSource(TerminalNode start, TerminalNode end) {
+        return generateAttributeSource(start.getSymbol(), end.getSymbol());
     }
 
     private Attribute.Source generateAttributeSource(TerminalNode node) {

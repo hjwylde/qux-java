@@ -1,0 +1,15 @@
+package valid.method
+
+int [int]::average():
+    total = 0
+    for i in this:
+        total += i
+
+    return total // |this|
+
+void main([str] args):
+    print [0, 1, 2, 3]::average()
+    print [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]::average()
+    print [5, 5, 10, 10, 10]::average()
+    print [7, 5, 3]::average()
+

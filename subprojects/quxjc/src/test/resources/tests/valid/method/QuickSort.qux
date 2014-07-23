@@ -1,0 +1,31 @@
+package valid.method
+
+[any] [any]::sort():
+    return this::quicksort()
+
+[any] [any]::quicksort():
+    if |this| <= 1:
+        return this
+
+    mid = |this| // 2
+    pivot = this[mid]
+
+    lhs = []
+    rhs = []
+    pivots = []
+    for datum in this:
+        if datum < pivot:
+            lhs = lhs + [datum]
+        elif datum > pivot:
+            rhs = rhs + [datum]
+        else:
+            pivots = pivots + [datum]
+
+    return lhs::sort() + pivots + rhs::sort()
+
+void main([str] args):
+    print []::sort()
+    print [4, 3, 6, 1, -5, null]::sort()
+    print [9000, 12, 5, 12, 50, 43, -5]::sort()
+    print [9, 8, 7, 6, 5, 4, 3, 2, 1, 0]::sort()
+

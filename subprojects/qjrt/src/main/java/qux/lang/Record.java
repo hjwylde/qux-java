@@ -36,6 +36,10 @@ public final class Record extends AbstractObj {
         this.fields = new TreeMap<>(fields);
     }
 
+    public void _assign_(String field, AbstractObj value) {
+        put(field, value);
+    }
+
     /**
      * {@inheritDoc}
      */

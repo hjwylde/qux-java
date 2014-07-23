@@ -680,7 +680,7 @@ public final class TypePropagator extends Pipeline {
                     } else if (isSubtype(getType(stmt.getExpr()), getInnerType(type))) {
                         // TODO: Temporary solution to allow for some access assignments
                     } else {
-                        throw new MethodNotImplementedError(type.toString());
+                        //                        throw new MethodNotImplementedError(type.toString());
                     }
 
                     break;
@@ -690,12 +690,10 @@ public final class TypePropagator extends Pipeline {
                     // After the record access assignment, the type of the variable needs to be
                     // updated
 
-                    lhs = ((ExprNode.RecordAccess) stmt.getLhs()).getTarget();
-                    type = getType(lhs);
+                    // lhs = ((ExprNode.RecordAccess) stmt.getLhs()).getTarget();
+                    // type = getType(lhs);
 
-                    throw new MethodNotImplementedError(type.toString());
-
-                    //                    break;
+                    break;
                 case VARIABLE:
                     env.put(((ExprNode.Variable) stmt.getLhs()).getName(), getType(stmt.getExpr()));
                     break;
