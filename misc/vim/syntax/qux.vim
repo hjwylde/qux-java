@@ -64,7 +64,8 @@ syn match delimiters '[(){}[].,;:$]'
 
 syn match tab '\t\+'
 
-syn match types '[A-Z][a-zA-Z0-9_]\*'
+syn match types '[A-Z]'
+syn match types '[A-Z][a-zA-Z0-9_]\+'
 
 syn match constants '[A-Z][A-Z0-9_]\+'
 

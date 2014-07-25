@@ -1,9 +1,9 @@
 package valid.type_
 
-type A is {int}
-type B is {any}
+type Foo is {int}
+type Bar is {any}
 
-{any} f(A a, B b):
+{any} f(Foo a, Bar b):
     return a + b
 
 void main([str] args):

@@ -227,6 +227,41 @@ public final class CompilerErrors {
     }
 
     /**
+     * Creates a new {@link com.hjwylde.common.error.CompilerError} representing an invalid constant
+     * identifier.
+     *
+     * @param id the constant identifier.
+     * @param regex the expected regular expression.
+     * @return the created {@link com.hjwylde.common.error.CompilerError}.
+     */
+    public static CompilerError invalidConstantIdentifier(String id, String regex) {
+        String message = String.format(
+                "invalid constant identifier, received '%s' but expected '%s'", id, regex);
+
+        return new CompilerError(message);
+    }
+
+    /**
+     * Creates a new {@link com.hjwylde.common.error.SourceCompilerError} representing an invalid
+     * constant identifier with the provided source information.
+     *
+     * @param id the constant identifier.
+     * @param regex the expected regular expression.
+     * @param source the source file name.
+     * @param line the line number.
+     * @param col the column number.
+     * @param length the length.
+     * @return the created {@link com.hjwylde.common.error.SourceCompilerError}.
+     */
+    public static SourceCompilerError invalidConstantIdentifier(String id, String regex,
+            String source, int line, int col, int length) {
+        String message = String.format(
+                "invalid constant identifier, received '%s' but expected '%s'", id, regex);
+
+        return new SourceCompilerError(message, source, line, col, length);
+    }
+
+    /**
      * Creates a new {@link com.hjwylde.common.error.CompilerError} representing an invalid dedent.
      *
      * @return the created {@link com.hjwylde.common.error.CompilerError}.
@@ -250,19 +285,89 @@ public final class CompilerErrors {
     }
 
     /**
-     * Creates a new {@link com.hjwylde.common.error.SourceCompilerError} representing an invalid
-     * import with the provided source information.
+     * Creates a new {@link com.hjwylde.common.error.CompilerError} representing an invalid generic
+     * identifier.
      *
-     * @param id the import id.
+     * @param id the generic identifier.
+     * @param regex the expected regular expression.
+     * @return the created {@link com.hjwylde.common.error.CompilerError}.
+     */
+    public static CompilerError invalidGenericIdentifier(String id, String regex) {
+        String message = String.format(
+                "invalid generic identifier, received '%s' but expected '%s'", id, regex);
+
+        return new CompilerError(message);
+    }
+
+    /**
+     * Creates a new {@link com.hjwylde.common.error.SourceCompilerError} representing an invalid
+     * generic identifier with the provided source information.
+     *
+     * @param id the generic identifier.
+     * @param regex the expected regular expression.
      * @param source the source file name.
      * @param line the line number.
      * @param col the column number.
      * @param length the length.
      * @return the created {@link com.hjwylde.common.error.SourceCompilerError}.
      */
-    public static SourceCompilerError invalidImport(String id, String source, int line, int col,
-            int length) {
-        String message = String.format("invalid import '%s'", id);
+    public static SourceCompilerError invalidGenericIdentifier(String id, String regex,
+            String source, int line, int col, int length) {
+        String message = String.format(
+                "invalid generic identifier, received '%s' but expected '%s'", id, regex);
+
+        return new SourceCompilerError(message, source, line, col, length);
+    }
+
+    /**
+     * Creates a new {@link com.hjwylde.common.error.CompilerError} representing an invalid
+     * identifier.
+     *
+     * @param id the identifier.
+     * @param regex the expected regular expression.
+     * @return the created {@link com.hjwylde.common.error.CompilerError}.
+     */
+    public static CompilerError invalidIdentifier(String id, String regex) {
+        String message = String.format("invalid identifier, received '%s' but expected '%s'", id);
+
+        return new CompilerError(message);
+    }
+
+    /**
+     * Creates a new {@link com.hjwylde.common.error.SourceCompilerError} representing an invalid
+     * identifier with the provided source information.
+     *
+     * @param id the identifier.
+     * @param regex the expected regular expression.
+     * @param source the source file name.
+     * @param line the line number.
+     * @param col the column number.
+     * @param length the length.
+     * @return the created {@link com.hjwylde.common.error.SourceCompilerError}.
+     */
+    public static SourceCompilerError invalidIdentifier(String id, String regex, String source,
+            int line, int col, int length) {
+        String message = String.format("invalid identifier, received '%s' but expected '%s'", id,
+                regex);
+
+        return new SourceCompilerError(message, source, line, col, length);
+    }
+
+    /**
+     * Creates a new {@link com.hjwylde.common.error.SourceCompilerError} representing an invalid
+     * import with the provided source information.
+     *
+     * @param id the import id.
+     * @param regex the expected regular expression.
+     * @param source the source file name.
+     * @param line the line number.
+     * @param col the column number.
+     * @param length the length.
+     * @return the created {@link com.hjwylde.common.error.SourceCompilerError}.
+     */
+    public static SourceCompilerError invalidImport(String id, String regex, String source,
+            int line, int col, int length) {
+        String message = String.format("invalid import received '%s' but expected '%s'", id, regex);
 
         return new SourceCompilerError(message, source, line, col, length);
     }
@@ -345,6 +450,41 @@ public final class CompilerErrors {
     }
 
     /**
+     * Creates a new {@link com.hjwylde.common.error.CompilerError} representing an invalid
+     * namespace identifier.
+     *
+     * @param id the namespace identifier.
+     * @param regex the expected regular expression.
+     * @return the created {@link com.hjwylde.common.error.CompilerError}.
+     */
+    public static CompilerError invalidNamespaceIdentifier(String id, String regex) {
+        String message = String.format(
+                "invalid namespace identifier, received '%s' but expected '%s'", id, regex);
+
+        return new CompilerError(message);
+    }
+
+    /**
+     * Creates a new {@link com.hjwylde.common.error.SourceCompilerError} representing an invalid
+     * namespace identifier with the provided source information.
+     *
+     * @param id the namespace identifier.
+     * @param regex the expected regular expression.
+     * @param source the source file name.
+     * @param line the line number.
+     * @param col the column number.
+     * @param length the length.
+     * @return the created {@link com.hjwylde.common.error.SourceCompilerError}.
+     */
+    public static SourceCompilerError invalidNamespaceIdentifier(String id, String regex,
+            String source, int line, int col, int length) {
+        String message = String.format(
+                "invalid namespace identifier, received '%s' but expected '%s'", id, regex);
+
+        return new SourceCompilerError(message, source, line, col, length);
+    }
+
+    /**
      * Creates a new {@link com.hjwylde.common.error.CompilerError} representing an invalid type.
      *
      * @param received the received type.
@@ -374,6 +514,41 @@ public final class CompilerErrors {
             int line, int col, int length) {
         String message = String.format("invalid type, received '%s' but expected '%s'", received,
                 expected);
+
+        return new SourceCompilerError(message, source, line, col, length);
+    }
+
+    /**
+     * Creates a new {@link com.hjwylde.common.error.CompilerError} representing an invalid type
+     * identifier.
+     *
+     * @param id the type identifier.
+     * @param regex the expected regular expression.
+     * @return the created {@link com.hjwylde.common.error.CompilerError}.
+     */
+    public static CompilerError invalidTypeIdentifier(String id, String regex) {
+        String message = String.format("invalid type identifier, received '%s' but expected '%s'",
+                id, regex);
+
+        return new CompilerError(message);
+    }
+
+    /**
+     * Creates a new {@link com.hjwylde.common.error.SourceCompilerError} representing an invalid
+     * type identifier with the provided source information.
+     *
+     * @param id the type identifier.
+     * @param regex the expected regular expression.
+     * @param source the source file name.
+     * @param line the line number.
+     * @param col the column number.
+     * @param length the length.
+     * @return the created {@link com.hjwylde.common.error.SourceCompilerError}.
+     */
+    public static SourceCompilerError invalidTypeIdentifier(String id, String regex, String source,
+            int line, int col, int length) {
+        String message = String.format("invalid type identifier, received '%s' but expected '%s'",
+                id, regex);
 
         return new SourceCompilerError(message, source, line, col, length);
     }

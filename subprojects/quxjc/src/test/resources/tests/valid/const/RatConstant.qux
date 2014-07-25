@@ -1,22 +1,22 @@
 package valid.const
 
-rat A is 5.0
-rat B is 5.0
-rat C is -5.0
+rat FOO is 5.0
+rat BAR is 5.0
+rat BAZ is -5.0
 
 rat f(rat a):
-    return a + A + 0.5
+    return a + FOO + 0.5
 
-rat g(rat A):
-    return A + 0.5
+rat g(rat a):
+    return a + 0.5
 
 void main([str] args):
-    print A
-    print B
-    print C
-    print A == B
-    print A == C
-    print B == C
-    print f(C)
-    print g(C)
+    print FOO
+    print BAR
+    print BAZ
+    print FOO == BAR
+    print FOO == BAZ
+    print BAR == BAZ
+    print f(BAZ)
+    print g(BAZ)
 

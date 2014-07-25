@@ -39,6 +39,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * TODO: Documentation
@@ -46,6 +47,12 @@ import java.util.Map;
  * @author Henry J. Wylde
  */
 public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
+
+    private static final Pattern IDENTIFIER_PATTERN = Pattern.compile("[a-z_][a-zA-Z0-9_]*");
+    private static final Pattern CONSTANT_IDENTIFIER_PATTERN = Pattern.compile("[A-Z_][A-Z0-9_]+");
+    private static final Pattern GENERIC_IDENTIFIER_PATTERN = Pattern.compile("[A-Z]");
+    private static final Pattern NAMESPACE_IDENTIFIER_PATTERN = Pattern.compile("[a-z_][a-z0-9_]*");
+    private static final Pattern TYPE_IDENTIFIER_PATTERN = Pattern.compile("[A-Z_][a-zA-Z0-9_]+");
 
     /**
      * The source file name, inclusive of the extension.
@@ -109,6 +116,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         Type type = visitType(ctx.type());
 
         Identifier name = visitIdentifier(ctx.Identifier());
+        checkConstantIdentifier(name);
 
         ConstantVisitor cv = qv.visitConstant(ACC_PUBLIC | ACC_STATIC | ACC_FINAL, name, type);
 
@@ -125,6 +133,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
     @Override
     public Void visitDeclFunction(@NotNull QuxParser.DeclFunctionContext ctx) {
         Identifier name = visitIdentifier(ctx.Identifier(0));
+        checkIdentifier(name);
 
         Type returnType = visitTypeReturn(ctx.typeReturn());
 
@@ -142,6 +151,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
 
         for (int i = 1; i < ctx.Identifier().size(); i++) {
             Identifier parameter = visitIdentifier(ctx.Identifier(i));
+            checkIdentifier(parameter);
 
             fv.visitParameter(parameter);
             namespace.put(parameter, Arrays.asList(parameter));
@@ -164,6 +174,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
     @Override
     public Void visitDeclMethod(@NotNull QuxParser.DeclMethodContext ctx) {
         Identifier name = visitIdentifier(ctx.Identifier(0));
+        checkIdentifier(name);
 
         Type returnType = visitTypeReturn(ctx.typeReturn());
 
@@ -187,6 +198,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
 
         for (int i = 1; i < ctx.Identifier().size(); i++) {
             Identifier parameter = visitIdentifier(ctx.Identifier(i));
+            checkIdentifier(parameter);
 
             fv.visitParameter(parameter);
             namespace.put(parameter, Arrays.asList(parameter));
@@ -209,6 +221,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
     @Override
     public Void visitDeclType(@NotNull QuxParser.DeclTypeContext ctx) {
         Identifier name = visitIdentifier(ctx.Identifier());
+        checkTypeIdentifier(name);
 
         TypeVisitor tv = qv.visitType(ACC_PUBLIC | ACC_STATIC | ACC_FINAL, name);
 
@@ -606,6 +619,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         Map<Identifier, ExprNode> fields = new HashMap<>();
         for (int i = 0; i < ctx.expr().size(); i++) {
             Identifier field = visitIdentifier(ctx.Identifier(i));
+            checkIdentifier(field);
 
             if (fields.containsKey(field)) {
                 Attribute.Source source = Attributes.getAttributeUnchecked(field,
@@ -640,6 +654,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
     @Override
     public ExprNode.Function visitExprFunction(@NotNull QuxParser.ExprFunctionContext ctx) {
         Identifier name = visitIdentifier(ctx.Identifier());
+        checkIdentifier(name);
 
         ExprNode.Meta owner;
         if (ctx.exprMeta() != null) {
@@ -666,6 +681,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         List<Identifier> id = new ArrayList<>();
         for (int i = 0; i < ctx.Identifier().size(); i++) {
             id.add(visitIdentifier(ctx.Identifier(i)));
+            checkNamespaceIdentifier(id.get(id.size() - 1));
         }
 
         // A meta of size 1 means the id must be imported
@@ -697,6 +713,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         }
 
         Identifier name = visitIdentifier(ctx.Identifier());
+        checkIdentifier(name);
 
         ExprNode.Meta owner;
         if (ctx.exprMeta() != null) {
@@ -777,32 +794,25 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
      */
     @Override
     public ExprNode visitExprVariable(@NotNull QuxParser.ExprVariableContext ctx) {
-        // TODO: Tidy this messy code up once I force the naming convention
         Identifier name = visitIdentifier(ctx.Identifier());
 
-        if (ctx.exprMeta() != null) {
-            ExprNode.Meta owner = visitExprMeta(ctx.exprMeta());
+        if (isIdentifier(name)) {
+            return new ExprNode.Variable(name, generateAttributeSource(ctx));
+        } else if (isConstantIdentifier(name)) {
+            ExprNode.Meta owner;
+            if (ctx.exprMeta() != null) {
+                owner = visitExprMeta(ctx.exprMeta());
+            } else {
+                List<Identifier> id = resolveName(name);
+
+                owner = new ExprNode.Meta(id.subList(0, id.size() - 1), generateAttributeSource(
+                        ctx));
+            }
 
             return new ExprNode.Constant(owner, name, generateAttributeSource(ctx));
+        } else {
+            throw new MethodNotImplementedError(ctx.getText());
         }
-
-        // A variable should always be in lowercase, so we use this to distinguish between a
-        // variable and an implicitly qualified constant
-        if (Character.isLowerCase(name.getId().charAt(0))) {
-            return new ExprNode.Variable(name, generateAttributeSource(ctx));
-        }
-
-
-        List<Identifier> id = resolveName(name);
-
-        if (id.size() == 1) {
-            return new ExprNode.Variable(name, generateAttributeSource(ctx));
-        }
-
-        ExprNode.Meta owner = new ExprNode.Meta(id.subList(0, id.size() - 1),
-                generateAttributeSource(ctx));
-
-        return new ExprNode.Constant(owner, name, generateAttributeSource(ctx));
     }
 
     /**
@@ -827,6 +837,9 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         List<Identifier> id = new ArrayList<>();
         for (int i = 0; i < ctx.Identifier().size(); i++) {
             id.add(visitIdentifier(ctx.Identifier(i)));
+            if (i < ctx.Identifier().size() - 1) {
+                checkNamespaceIdentifier(id.get(id.size() - 1));
+            }
         }
 
         Identifier key = id.get(id.size() - 1);
@@ -851,6 +864,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         List<Identifier> pkg = new ArrayList<>();
         for (int i = 0; i < ctx.Identifier().size(); i++) {
             pkg.add(visitIdentifier(ctx.Identifier(i)));
+            checkNamespaceIdentifier(pkg.get(pkg.size() - 1));
         }
 
         qv.visitPackage(pkg);
@@ -874,8 +888,11 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
     @Override
     public StmtNode.Assign visitStmtAssign(@NotNull QuxParser.StmtAssignContext ctx) {
         // Create a series of nested accesses
+        // TODO: Go through from here and add in all the "checkIdentifier"s etc where needed
         ExprNode lhs = new ExprNode.Variable(visitIdentifier(ctx.Identifier()),
                 generateAttributeSource(ctx.Identifier()));
+        checkIdentifier(((ExprNode.Variable) lhs).getName());
+
         for (QuxParser.ExprAccess_1Context ectx : ctx.exprAccess_1()) {
             lhs = visitExprAccess_1(lhs, ctx, ectx);
 
@@ -954,6 +971,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
     @Override
     public StmtNode.For visitStmtFor(@NotNull QuxParser.StmtForContext ctx) {
         Identifier var = visitIdentifier(ctx.Identifier());
+        checkIdentifier(var);
 
         ExprNode expr = visitExpr(ctx.expr());
 
@@ -1085,6 +1103,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
     public Type visitTypeNamed(@NotNull QuxParser.TypeNamedContext ctx) {
         List<Identifier> id = new ArrayList<>();
         id.add(visitIdentifier(ctx.Identifier()));
+        checkTypeIdentifier(id.get(0));
 
         if (ctx.exprMeta() != null) {
             ExprNode.Meta meta = visitExprMeta(ctx.exprMeta());
@@ -1104,6 +1123,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         Map<Identifier, Type> fields = new HashMap<>();
         for (int i = 0; i < ctx.type().size(); i++) {
             Identifier field = visitIdentifier(ctx.Identifier(i));
+            checkIdentifier(field);
 
             if (fields.containsKey(field)) {
                 Attribute.Source source = Attributes.getAttributeUnchecked(field,
@@ -1230,6 +1250,64 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         throw new MethodNotImplementedError(ctx.getText());
     }
 
+    private void checkConstantIdentifier(Identifier id) {
+        if (isConstantIdentifier(id)) {
+            return;
+        }
+
+        Attribute.Source source = Attributes.getAttributeUnchecked(id, Attribute.Source.class);
+
+        throw CompilerErrors.invalidConstantIdentifier(id.getId(),
+                CONSTANT_IDENTIFIER_PATTERN.pattern(), source.getSource(), source.getLine(),
+                source.getCol(), source.getLength());
+    }
+
+    private void checkGenericIdentifier(Identifier id) {
+        if (isGenericIdentifier(id)) {
+            return;
+        }
+
+        Attribute.Source source = Attributes.getAttributeUnchecked(id, Attribute.Source.class);
+
+        throw CompilerErrors.invalidGenericIdentifier(id.getId(),
+                GENERIC_IDENTIFIER_PATTERN.pattern(), source.getSource(), source.getLine(),
+                source.getCol(), source.getLength());
+    }
+
+    private void checkIdentifier(Identifier id) {
+        if (isIdentifier(id)) {
+            return;
+        }
+
+        Attribute.Source source = Attributes.getAttributeUnchecked(id, Attribute.Source.class);
+
+        throw CompilerErrors.invalidIdentifier(id.getId(), IDENTIFIER_PATTERN.pattern(),
+                source.getSource(), source.getLine(), source.getCol(), source.getLength());
+    }
+
+    private void checkNamespaceIdentifier(Identifier id) {
+        if (isNamespaceIdentifier(id)) {
+            return;
+        }
+
+        Attribute.Source source = Attributes.getAttributeUnchecked(id, Attribute.Source.class);
+
+        throw CompilerErrors.invalidNamespaceIdentifier(id.getId(),
+                NAMESPACE_IDENTIFIER_PATTERN.pattern(), source.getSource(), source.getLine(),
+                source.getCol(), source.getLength());
+    }
+
+    private void checkTypeIdentifier(Identifier id) {
+        if (isTypeIdentifier(id)) {
+            return;
+        }
+
+        Attribute.Source source = Attributes.getAttributeUnchecked(id, Attribute.Source.class);
+
+        throw CompilerErrors.invalidTypeIdentifier(id.getId(), TYPE_IDENTIFIER_PATTERN.pattern(),
+                source.getSource(), source.getLine(), source.getCol(), source.getLength());
+    }
+
     private Attribute.Source generateAttributeSource(ParserRuleContext start,
             ParserRuleContext end) {
         return generateAttributeSource(start.getStart(), end.getStop());
@@ -1261,6 +1339,26 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
 
     private String generateObjId() {
         return source + "$obj" + objCounter++;
+    }
+
+    private boolean isConstantIdentifier(Identifier id) {
+        return CONSTANT_IDENTIFIER_PATTERN.matcher(id.getId()).matches();
+    }
+
+    private boolean isGenericIdentifier(Identifier id) {
+        return GENERIC_IDENTIFIER_PATTERN.matcher(id.getId()).matches();
+    }
+
+    private boolean isIdentifier(Identifier id) {
+        return IDENTIFIER_PATTERN.matcher(id.getId()).matches();
+    }
+
+    private boolean isNamespaceIdentifier(Identifier id) {
+        return NAMESPACE_IDENTIFIER_PATTERN.matcher(id.getId()).matches();
+    }
+
+    private boolean isTypeIdentifier(Identifier id) {
+        return TYPE_IDENTIFIER_PATTERN.matcher(id.getId()).matches();
     }
 
     private List<Identifier> resolveName(Identifier name) {

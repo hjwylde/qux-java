@@ -1,9 +1,9 @@
 package valid.type_
 
-type B is rat
-type C is any
+type Foo is rat
+type Bar is any
 
-any f(B b, C c):
+any f(Foo b, Bar c):
     if c == null:
         return b
 
