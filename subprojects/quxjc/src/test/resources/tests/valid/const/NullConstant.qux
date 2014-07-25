@@ -1,18 +1,18 @@
 package valid.const
 
-null A is null
-int B is 5
+null FOO is null
+int BAR is 5
 
 null f(int a):
-    return A
+    return FOO
 
-null g(null A):
-    return A
+null g(null a):
+    return a
 
 void main([str] args):
-    print A
-    print B
-    print A == B
-    print f(B)
+    print FOO
+    print BAR
+    print FOO == BAR
+    print f(BAR)
     print g(null)
 

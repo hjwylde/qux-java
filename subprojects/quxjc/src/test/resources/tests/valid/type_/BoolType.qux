@@ -1,10 +1,10 @@
 package valid.type_
 
-type A is bool
-type B is bool
-type C is int
+type Foo is bool
+type Bar is bool
+type Baz is int
 
-bool f(A a, B b, C c):
+bool f(Foo a, Bar b, Baz c):
     return a and b or c > 5
 
 void main([str] args):

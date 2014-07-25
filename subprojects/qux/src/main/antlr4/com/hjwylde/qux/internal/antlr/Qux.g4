@@ -102,7 +102,7 @@ pkg : 'package' Identifier ('.' Identifier)* NEWLINE
 
 // Import statement
 
-imp : 'import' Identifier ('.' Identifier)+ ('$' Identifier)? NEWLINE
+imp : 'import' Identifier ('.' Identifier)+ ('$' (Identifier | Identifier | Identifier))? NEWLINE
     ;
 
 // Declarations

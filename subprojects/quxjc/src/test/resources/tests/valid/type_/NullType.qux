@@ -1,9 +1,9 @@
 package valid.type_
 
-type A is null
-type B is any
+type Foo is null
+type Bar is any
 
-any f(A a, B b):
+any f(Foo a, Bar b):
     return a
 
 void main([str] args):

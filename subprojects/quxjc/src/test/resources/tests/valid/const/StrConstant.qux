@@ -1,22 +1,22 @@
 package valid.const
 
-str A is 'foo'
-str B is 'foo'
-str C is 'bar'
+str FOO is 'foo'
+str BAR is 'foo'
+str BAZ is 'bar'
 
 str f(str a):
-    return a + A
+    return a + FOO
 
-str g(str A):
-    return A
+str g(str a):
+    return a
 
 void main([str] args):
-    print A
-    print B
-    print C
-    print A == B
-    print A == C
-    print B == C
-    print f(C)
-    print g(C)
+    print FOO
+    print BAR
+    print BAZ
+    print FOO == BAR
+    print FOO == BAZ
+    print BAR == BAZ
+    print f(BAZ)
+    print g(BAZ)
 
