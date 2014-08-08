@@ -1,6 +1,7 @@
 package com.hjwylde.qbs.builder;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.Arrays.asList;
 
 import com.hjwylde.qbs.compiler.QuxCompileOptions;
 import com.hjwylde.qbs.compiler.QuxCompileSpec;
@@ -9,13 +10,13 @@ import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
 /**
- * TODO: Documentation.
+ * A Qux project builds on the configuration settings of a {@link com.hjwylde.qbs.builder.Project}
+ * by adding in a {@link com.hjwylde.qbs.compiler.QuxCompileOptions} and a classpath.
  *
  * @author Henry J. Wylde
  */
@@ -27,6 +28,12 @@ public class QuxProject extends Project {
 
     private final ImmutableSet<Path> classpath;
 
+    /**
+     * Creates a new project using the given builder. No elements inside the builder are allowed to
+     * be null.
+     *
+     * @param builder the builder.
+     */
     protected QuxProject(Builder builder) {
         super(builder);
 
@@ -39,18 +46,42 @@ public class QuxProject extends Project {
         this.classpath = classpathBuilder.build();
     }
 
+    /**
+     * Gets a new builder for a project.
+     *
+     * @return a new builder.
+     */
     public static Builder builder() {
         return new Builder();
     }
 
+    /**
+     * Gets a new builder for a project, initialising it with the given compile specification
+     * settings.
+     *
+     * @param spec the specification to initialise from.
+     * @return a new initialised builder.
+     */
     public static Builder builder(QuxCompileSpec spec) {
         return new Builder(spec);
     }
 
+    /**
+     * Gets a new builder for a project, initialising it with the given projects settings.
+     *
+     * @param project the project to initialise from.
+     * @return a new initialised builder.
+     */
     public static Builder builder(QuxProject project) {
         return new Builder(project);
     }
 
+    /**
+     * Gets a new builder for a project, initialising it with the given projects settings.
+     *
+     * @param project the project to initialise from.
+     * @return a new initialised builder.
+     */
     public static Builder builder(Project project) {
         if (project instanceof QuxProject) {
             return new Builder((QuxProject) project);
@@ -73,7 +104,7 @@ public class QuxProject extends Project {
     }
 
     /**
-     * TODO: Documentation.
+     * A builder for creating a {@link com.hjwylde.qbs.builder.QuxProject}.
      *
      * @author Henry J. Wylde
      */
@@ -83,12 +114,27 @@ public class QuxProject extends Project {
 
         private Set<Path> classpath = new HashSet<>();
 
+        /**
+         * Creates a new {@code Builder}.
+         */
         protected Builder() {}
 
+        /**
+         * Creates a new {@code Builder}, initialising the defaults with the values from the given
+         * project.
+         *
+         * @param project the project to initialise the defaults from.
+         */
         protected Builder(Project project) {
             super(project);
         }
 
+        /**
+         * Creates a new {@code Builder}, initialising the defaults with the values from the given
+         * compile specification.
+         *
+         * @param spec the compile specification to initialise the defaults from.
+         */
         protected Builder(QuxCompileSpec spec) {
             super(spec);
 
@@ -97,6 +143,12 @@ public class QuxProject extends Project {
             this.classpath = new HashSet<>(spec.getClasspath());
         }
 
+        /**
+         * Creates a new {@code Builder}, initialising the defaults with the values from the given
+         * project.
+         *
+         * @param project the project to initialise the defaults from.
+         */
         protected Builder(QuxProject project) {
             super(project);
 
@@ -120,7 +172,7 @@ public class QuxProject extends Project {
          * @return this builder for chaining.
          */
         public final Builder classpath(Path... classpath) {
-            return classpath(Arrays.asList(classpath));
+            return classpath(asList(classpath));
         }
 
         /**

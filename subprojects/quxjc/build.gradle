@@ -12,4 +12,5 @@ dependencies {
 mainClassName = 'com.hjwylde.quxjc.Quxjc' 
 
 test.dependsOn ':quxjc:installApp'
+test.maxParallelForks = 8
 

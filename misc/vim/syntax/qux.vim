@@ -21,8 +21,9 @@ syn keyword externals import package
 syn keyword keywords is type
 syn keyword operators and iff implies in nin not or xor
 syn keyword statements elif else for if print return while
-syn keyword types any bit bool byte int int16 int32 int64 list nat nat1 null obj rat record set str ubyte uint16 uint32 uint64 void
+syn keyword this this
 syn keyword todo contained TODO FIXME
+syn keyword types any bit bool byte int int16 int32 int64 list nat nat1 null obj rat record set str ubyte uint16 uint32 uint64 void
 
 " Matches
 
@@ -64,12 +65,13 @@ syn match delimiters '[(){}[].,;:$]'
 
 syn match tab '\t\+'
 
+syn match identifiers '[a-z_]'
+syn match identifiers '[a-z_][a-zA-Z0-9_]\+'
+
 syn match types '[A-Z]'
 syn match types '[A-Z][a-zA-Z0-9_]\+'
 
 syn match constants '[A-Z][A-Z0-9_]\+'
-
-syn match identifiers '[a-z_][a-zA-Z0-9_]\*'
 
 syn match parenthesis '('
 syn match functions '[a-z_][a-zA-Z0-9_]*\s*(\@=' contains=parenthesis
@@ -106,6 +108,7 @@ hi def link rat             Constant
 hi def link statements      Statement
 hi def link str             Constant
 hi def link tab             Error
+hi def link this            Constant
 hi def link todo            Todo
 hi def link types           Type
 

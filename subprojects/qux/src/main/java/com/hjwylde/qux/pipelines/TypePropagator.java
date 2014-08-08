@@ -17,6 +17,7 @@ import static com.hjwylde.qux.util.Type.TYPE_STR;
 import static com.hjwylde.qux.util.Type.getFieldType;
 import static com.hjwylde.qux.util.Type.getInnerType;
 import static com.hjwylde.qux.util.Types.isSubtype;
+import static java.util.Arrays.asList;
 
 import com.hjwylde.common.error.CompilerErrors;
 import com.hjwylde.common.error.MethodNotImplementedError;
@@ -50,7 +51,6 @@ import com.google.common.collect.ImmutableMap;
 import org.jgrapht.event.VertexTraversalEvent;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -248,7 +248,7 @@ public final class TypePropagator extends Pipeline {
                 if (!next.contains(key)) {
                     merged.remove(key);
                 } else {
-                    merged.put(key, Type.forUnion(Arrays.asList(merged.getUnchecked(key),
+                    merged.put(key, Type.forUnion(asList(merged.getUnchecked(key),
                             next.getUnchecked(key))));
                 }
             }
@@ -308,7 +308,7 @@ public final class TypePropagator extends Pipeline {
         Attribute.Type attribute = opt.get();
 
         // Combine the two types and create a normalised union of them
-        Type ntype = Type.forUnion(Arrays.asList(type, attribute.getType()));
+        Type ntype = Type.forUnion(asList(type, attribute.getType()));
         attribute.setType(ntype);
 
         // Return true if the type was updated

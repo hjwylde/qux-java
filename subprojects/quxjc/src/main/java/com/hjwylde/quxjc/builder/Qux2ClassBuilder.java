@@ -81,7 +81,7 @@ public final class Qux2ClassBuilder implements Builder {
         Stopwatch stopwatch = Stopwatch.createStarted();
 
         // Build all the files concurrently
-        int threads = Runtime.getRuntime().availableProcessors() * 4;
+        int threads = Runtime.getRuntime().availableProcessors() * 2;
         ExecutorService executor = Executors.newFixedThreadPool(threads);
         CompletionService<BuildResult> completion = new ExecutorCompletionService<BuildResult>(
                 executor);

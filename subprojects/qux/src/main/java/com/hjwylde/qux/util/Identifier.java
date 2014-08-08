@@ -1,10 +1,10 @@
 package com.hjwylde.qux.util;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.Arrays.asList;
 
 import com.hjwylde.qux.tree.Node;
 
-import java.util.Arrays;
 import java.util.Collection;
 
 /**
@@ -18,7 +18,7 @@ public final class Identifier extends Node implements Comparable<Identifier> {
     private final String id;
 
     public Identifier(String id, Attribute... attributes) {
-        this(id, Arrays.asList(attributes));
+        this(id, asList(attributes));
     }
 
     public Identifier(String id, Collection<? extends Attribute> attributes) {

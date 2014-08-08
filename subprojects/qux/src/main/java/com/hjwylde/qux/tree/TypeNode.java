@@ -2,6 +2,7 @@ package com.hjwylde.qux.tree;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static java.util.Arrays.asList;
 
 import com.hjwylde.qux.api.QuxVisitor;
 import com.hjwylde.qux.api.TypeVisitor;
@@ -9,7 +10,6 @@ import com.hjwylde.qux.util.Attribute;
 import com.hjwylde.qux.util.Identifier;
 import com.hjwylde.qux.util.Type;
 
-import java.util.Arrays;
 import java.util.Collection;
 
 /**
@@ -26,7 +26,7 @@ public final class TypeNode extends Node implements TypeVisitor {
     private Type type;
 
     public TypeNode(int flags, Identifier name, Attribute... attributes) {
-        this(flags, name, Arrays.asList(attributes));
+        this(flags, name, asList(attributes));
     }
 
     public TypeNode(int flags, Identifier name, Collection<? extends Attribute> attributes) {

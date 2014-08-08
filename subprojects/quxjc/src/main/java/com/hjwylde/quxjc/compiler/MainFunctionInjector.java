@@ -3,6 +3,7 @@ package com.hjwylde.quxjc.compiler;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.hjwylde.quxjc.compiler.Qux2ClassTranslater.getMethodDescriptor;
 import static com.hjwylde.quxjc.compiler.Qux2ClassTranslater.getType;
+import static java.util.Arrays.asList;
 import static org.objectweb.asm.Opcodes.AALOAD;
 import static org.objectweb.asm.Opcodes.AASTORE;
 import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
@@ -28,8 +29,6 @@ import org.objectweb.asm.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
-
 import qux.lang.AbstractObj;
 import qux.lang.List;
 import qux.lang.Str;
@@ -49,9 +48,8 @@ public class MainFunctionInjector extends ClassVisitor {
     private static final int FUNCTION_MAIN_FLAGS = ACC_PUBLIC | ACC_STATIC;
     private static final String FUNCTION_MAIN_NAME = "main";
     private static final com.hjwylde.qux.util.Type FUNCTION_MAIN_TYPE =
-            com.hjwylde.qux.util.Type.forFunction(com.hjwylde.qux.util.Type.TYPE_VOID,
-                    Arrays.asList(com.hjwylde.qux.util.Type.forList(
-                            com.hjwylde.qux.util.Type.TYPE_STR)));
+            com.hjwylde.qux.util.Type.forFunction(com.hjwylde.qux.util.Type.TYPE_VOID, asList(
+                    com.hjwylde.qux.util.Type.forList(com.hjwylde.qux.util.Type.TYPE_STR)));
 
     private final String source;
     private String id;
