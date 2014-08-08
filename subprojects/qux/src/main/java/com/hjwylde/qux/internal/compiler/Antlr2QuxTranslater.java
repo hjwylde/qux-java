@@ -5,6 +5,7 @@ import static com.google.common.base.Verify.verify;
 import static com.hjwylde.qux.util.Op.ACC_FINAL;
 import static com.hjwylde.qux.util.Op.ACC_PUBLIC;
 import static com.hjwylde.qux.util.Op.ACC_STATIC;
+import static java.util.Arrays.asList;
 
 import com.hjwylde.common.error.CompilerErrors;
 import com.hjwylde.common.error.MethodNotImplementedError;
@@ -34,7 +35,6 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -48,10 +48,25 @@ import java.util.regex.Pattern;
  */
 public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
 
+    /**
+     * Pattern for generic identifiers.
+     */
     private static final Pattern IDENTIFIER_PATTERN = Pattern.compile("[a-z_][a-zA-Z0-9_]*");
+    /**
+     * Pattern for constant names.
+     */
     private static final Pattern CONSTANT_IDENTIFIER_PATTERN = Pattern.compile("[A-Z_][A-Z0-9_]+");
+    /**
+     * Pattern for generic type names.
+     */
     private static final Pattern GENERIC_IDENTIFIER_PATTERN = Pattern.compile("[A-Z]");
+    /**
+     * Pattern for namespace names.
+     */
     private static final Pattern NAMESPACE_IDENTIFIER_PATTERN = Pattern.compile("[a-z_][a-z0-9_]*");
+    /**
+     * Pattern for type names.
+     */
     private static final Pattern TYPE_IDENTIFIER_PATTERN = Pattern.compile("[A-Z_][a-zA-Z0-9_]+");
 
     /**
@@ -90,7 +105,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
      */
     public Antlr2QuxTranslater(String source, QuxVisitor qv) {
         this.source = checkNotNull(source, "source cannot be null");
-        id = Arrays.asList(new Identifier(Files.getNameWithoutExtension(source)));
+        id = asList(new Identifier(Files.getNameWithoutExtension(source)));
 
         this.qv = checkNotNull(qv, "qv cannot be null");
     }
@@ -154,7 +169,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
             checkIdentifier(parameter);
 
             fv.visitParameter(parameter);
-            namespace.put(parameter, Arrays.asList(parameter));
+            namespace.put(parameter, asList(parameter));
         }
 
         for (StmtNode stmt : visitBlock(ctx.block())) {
@@ -194,14 +209,14 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         Identifier receiver = new Identifier(FunctionNode.RECEIVER_NAME);
 
         fv.visitParameter(receiver);
-        namespace.put(receiver, Arrays.asList(receiver));
+        namespace.put(receiver, asList(receiver));
 
         for (int i = 1; i < ctx.Identifier().size(); i++) {
             Identifier parameter = visitIdentifier(ctx.Identifier(i));
             checkIdentifier(parameter);
 
             fv.visitParameter(parameter);
-            namespace.put(parameter, Arrays.asList(parameter));
+            namespace.put(parameter, asList(parameter));
         }
 
         for (StmtNode stmt : visitBlock(ctx.block())) {
@@ -943,7 +958,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
 
         if (lhs instanceof ExprNode.Variable) {
             ExprNode.Variable var = (ExprNode.Variable) lhs;
-            namespace.put(var.getName(), Arrays.asList(var.getName()));
+            namespace.put(var.getName(), asList(var.getName()));
 
             type = StmtNode.Assign.Type.VARIABLE;
         } else if (lhs instanceof ExprNode.RecordAccess) {
@@ -976,7 +991,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
         ExprNode expr = visitExpr(ctx.expr());
 
         namespace = namespace.push();
-        namespace.put(var, Arrays.asList(var));
+        namespace.put(var, asList(var));
 
         List<StmtNode> body = visitBlock(ctx.block());
 

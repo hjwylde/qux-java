@@ -18,7 +18,8 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 /**
- * TODO: Documentation
+ * A listener that records all reported errors and allows retrieval of them. Upon recording, the
+ * error is translated into a {@link com.hjwylde.common.error.SourceCompilerError}.
  *
  * @author Henry J. Wylde
  */
@@ -28,10 +29,21 @@ public final class SyntaxErrorListener extends BaseErrorListener {
 
     private final List<SourceCompilerError> errors = new ArrayList<>();
 
+    /**
+     * Creates a new {@code SyntaxErrorListener} with the given source file name. The source file
+     * name should include the extension (if applicable).
+     *
+     * @param source the source file name (inclusive of extension).
+     */
     public SyntaxErrorListener(String source) {
         this.source = checkNotNull(source, "source cannot be null");
     }
 
+    /**
+     * Gets the recorded errors.
+     *
+     * @return the recorded errors.
+     */
     public ImmutableList<SourceCompilerError> getSyntaxErrors() {
         return ImmutableList.copyOf(errors);
     }
@@ -42,6 +54,7 @@ public final class SyntaxErrorListener extends BaseErrorListener {
     @Override
     public void syntaxError(Recognizer<?, ?> recognizer, @Nullable Object offendingSymbol, int line,
             int charPositionInLine, String msg, @Nullable RecognitionException e) {
+        // Unsure on when this case occurs
         if (offendingSymbol == null) {
             LoggerUtils.logAssert("offendingSymbol is null", e);
         }

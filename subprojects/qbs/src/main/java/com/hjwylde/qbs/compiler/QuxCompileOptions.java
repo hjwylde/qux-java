@@ -1,5 +1,6 @@
 package com.hjwylde.qbs.compiler;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.hjwylde.common.error.IllegalTimeUnitNameException;
@@ -30,6 +31,8 @@ public class QuxCompileOptions extends CompileOptions {
     private final TimeUnit timeoutUnit;
 
     protected QuxCompileOptions(Builder builder) {
+        checkArgument(builder.timeout >= 0, "timeout cannot be negative");
+
         this.verbose = builder.verbose;
 
         this.charset = checkNotNull(builder.charset, "charset cannot be null");
@@ -57,18 +60,38 @@ public class QuxCompileOptions extends CompileOptions {
         return new Builder(options);
     }
 
+    /**
+     * Gets the character set.
+     *
+     * @return the character set.
+     */
     public final Charset getCharset() {
         return charset;
     }
 
+    /**
+     * Gets the timeout length.
+     *
+     * @return the timeout length.
+     */
     public final Long getTimeout() {
         return timeout;
     }
 
+    /**
+     * Gets the timeout unit.
+     *
+     * @return the timeout unit.
+     */
     public final TimeUnit getTimeoutUnit() {
         return timeoutUnit;
     }
 
+    /**
+     * Gets the verbose option.
+     *
+     * @return the verbose option.
+     */
     public final boolean isVerbose() {
         return verbose;
     }

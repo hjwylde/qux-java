@@ -2,6 +2,8 @@ package com.hjwylde.qbs.builder;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.hjwylde.common.error.MethodNotImplementedError;
+
 import com.google.common.base.Throwables;
 
 import javax.annotation.Nullable;
@@ -162,9 +164,10 @@ public final class BuildResult {
                     return "success";
                 case FAIL:
                     return "fail";
-                default:
-                    // INTERNAL_ERROR
+                case INTERNAL_ERROR:
                     return "internal error";
+                default:
+                    throw new MethodNotImplementedError(this.name());
             }
         }
     }

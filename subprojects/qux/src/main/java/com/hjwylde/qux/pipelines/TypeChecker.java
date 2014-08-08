@@ -13,6 +13,7 @@ import static com.hjwylde.qux.util.Type.forUnion;
 import static com.hjwylde.qux.util.Type.getInnerType;
 import static com.hjwylde.qux.util.Types.isEquivalent;
 import static com.hjwylde.qux.util.Types.isSubtype;
+import static java.util.Arrays.asList;
 
 import com.hjwylde.common.error.CompilerErrors;
 import com.hjwylde.common.error.MethodNotImplementedError;
@@ -39,7 +40,6 @@ import com.google.common.collect.ImmutableMap;
 
 import org.jgrapht.event.VertexTraversalEvent;
 
-import java.util.Arrays;
 import java.util.Map;
 
 /**
@@ -341,7 +341,7 @@ public final class TypeChecker extends Pipeline {
                     checkSubtype(expr.getTarget(), TYPE_ITERABLE);
                     break;
                 case NEG:
-                    checkSubtype(expr.getTarget(), forUnion(Arrays.asList(TYPE_INT, TYPE_RAT)));
+                    checkSubtype(expr.getTarget(), forUnion(asList(TYPE_INT, TYPE_RAT)));
                     break;
                 case NOT:
                     checkSubtype(expr.getTarget(), TYPE_BOOL);
@@ -401,7 +401,7 @@ public final class TypeChecker extends Pipeline {
             switch (stmt.getType()) {
                 case ACCESS:
                     check(stmt.getLhs());
-                    checkSubtype(((ExprNode.Binary) stmt.getLhs()).getLhs(), forUnion(Arrays.asList(
+                    checkSubtype(((ExprNode.Binary) stmt.getLhs()).getLhs(), forUnion(asList(
                             TYPE_STR, TYPE_LIST_ANY)));
                     break;
                 case RECORD_ACCESS:

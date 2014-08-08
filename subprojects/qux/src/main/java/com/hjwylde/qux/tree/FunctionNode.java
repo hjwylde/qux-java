@@ -1,6 +1,7 @@
 package com.hjwylde.qux.tree;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.Arrays.asList;
 
 import com.hjwylde.qux.api.FunctionVisitor;
 import com.hjwylde.qux.api.QuxVisitor;
@@ -11,7 +12,6 @@ import com.hjwylde.qux.util.Type;
 import com.google.common.collect.ImmutableList;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -33,7 +33,7 @@ public final class FunctionNode extends Node implements FunctionVisitor {
     private List<StmtNode> stmts = new ArrayList<>();
 
     public FunctionNode(int flags, Identifier name, Type.Function type, Attribute... attributes) {
-        this(flags, name, type, Arrays.asList(attributes));
+        this(flags, name, type, asList(attributes));
     }
 
     public FunctionNode(int flags, Identifier name, Type.Function type,

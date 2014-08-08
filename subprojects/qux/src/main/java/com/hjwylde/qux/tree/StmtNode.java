@@ -2,6 +2,7 @@ package com.hjwylde.qux.tree;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.Arrays.asList;
 
 import com.hjwylde.common.lang.annotation.Alpha;
 import com.hjwylde.qux.api.StmtVisitor;
@@ -12,7 +13,6 @@ import com.hjwylde.qux.util.Op;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -54,7 +54,7 @@ public abstract class StmtNode extends Node {
         private final ExprNode expr;
 
         public Assign(Type type, ExprNode lhs, ExprNode expr, Attribute... attributes) {
-            this(type, lhs, expr, Arrays.asList(attributes));
+            this(type, lhs, expr, asList(attributes));
         }
 
         public Assign(Type type, ExprNode lhs, ExprNode expr,
@@ -118,7 +118,7 @@ public abstract class StmtNode extends Node {
         private final ExprNode expr;
 
         public Expr(ExprNode expr, Attribute... attributes) {
-            this(expr, Arrays.asList(attributes));
+            this(expr, asList(attributes));
         }
 
         public Expr(ExprNode expr, Collection<? extends Attribute> attributes) {
@@ -153,7 +153,7 @@ public abstract class StmtNode extends Node {
         private final ImmutableList<StmtNode> body;
 
         public For(Identifier var, ExprNode expr, List<StmtNode> body, Attribute... attributes) {
-            this(var, expr, body, Arrays.asList(attributes));
+            this(var, expr, body, asList(attributes));
         }
 
         public For(Identifier var, ExprNode expr, List<StmtNode> body,
@@ -199,7 +199,7 @@ public abstract class StmtNode extends Node {
 
         public If(ExprNode condition, List<StmtNode> trueBlock, List<StmtNode> falseBlock,
                 Attribute... attributes) {
-            this(condition, trueBlock, falseBlock, Arrays.asList(attributes));
+            this(condition, trueBlock, falseBlock, asList(attributes));
         }
 
         public If(ExprNode condition, List<StmtNode> trueBlock, List<StmtNode> falseBlock,
@@ -243,7 +243,7 @@ public abstract class StmtNode extends Node {
         private final ExprNode expr;
 
         public Print(ExprNode expr, Attribute... attributes) {
-            this(expr, Arrays.asList(attributes));
+            this(expr, asList(attributes));
         }
 
         public Print(ExprNode expr, Collection<? extends Attribute> attributes) {
@@ -275,11 +275,11 @@ public abstract class StmtNode extends Node {
         private final Optional<ExprNode> expr;
 
         public Return(Attribute... attributes) {
-            this(null, Arrays.asList(attributes));
+            this(null, asList(attributes));
         }
 
         public Return(@Nullable ExprNode expr, Attribute... attributes) {
-            this(expr, Arrays.asList(attributes));
+            this(expr, asList(attributes));
         }
 
         public Return(Collection<? extends Attribute> attributes) {
@@ -317,7 +317,7 @@ public abstract class StmtNode extends Node {
         private final ImmutableList<StmtNode> body;
 
         public While(ExprNode condition, List<StmtNode> body, Attribute... attributes) {
-            this(condition, body, Arrays.asList(attributes));
+            this(condition, body, asList(attributes));
         }
 
         public While(ExprNode condition, List<StmtNode> body,

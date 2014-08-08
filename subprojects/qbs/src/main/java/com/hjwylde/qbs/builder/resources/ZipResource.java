@@ -2,13 +2,13 @@ package com.hjwylde.qbs.builder.resources;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
@@ -76,7 +76,7 @@ public class ZipResource extends AbstractResourceCollection {
     }
 
     private synchronized void loadResources() {
-        resources = new ArrayList<>();
+        ImmutableList.Builder<Resource> builder = ImmutableList.builder();
 
         Enumeration<? extends ZipEntry> entries = file.entries();
         while (entries.hasMoreElements()) {
@@ -85,20 +85,18 @@ public class ZipResource extends AbstractResourceCollection {
             // TODO: Verify what id returns here, is it just the name or the whole path without the
             // extension
             final String id = Files.getNameWithoutExtension(entry.getName()).replace("/", ".");
-            String extension = Files.getFileExtension(entry.getName());
+            final String extension = Files.getFileExtension(entry.getName());
             if (!ResourceManager.getSupportedExtensions().contains(extension)) {
                 continue;
             }
 
-            resources.add(new LazilyInitialisedResource(id) {
+            builder.add(new LazilyInitialisedResource(id) {
 
                 @Override
                 protected Resource.Single loadDelegate() {
                     try {
-                        Resource.Extension extension = new Resource.Extension(
-                                Files.getFileExtension(entry.getName()));
                         return ResourceManager.getResourceSingle(file.getInputStream(entry),
-                                extension);
+                                new Resource.Extension(extension));
                     } catch (IOException e) {
                         logger.error("i/o exception on loading resource: " + id, e);
                         throw new InternalError(e.getMessage());
@@ -106,5 +104,7 @@ public class ZipResource extends AbstractResourceCollection {
                 }
             });
         }
+
+        resources = builder.build();
     }
 }

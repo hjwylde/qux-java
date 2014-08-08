@@ -3,6 +3,7 @@ package com.hjwylde.qux.util;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.hjwylde.qux.util.Types.isSubtype;
+import static java.util.Arrays.asList;
 
 import com.hjwylde.common.error.MethodNotImplementedError;
 import com.hjwylde.qux.tree.Node;
@@ -13,7 +14,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -79,8 +79,8 @@ public abstract class Type extends Node {
     public static final String STR = "S";
     public static final Type.Str TYPE_STR = new Type.Str();
 
-    public static final Type TYPE_ITERABLE = Type.forUnion(Arrays.asList(TYPE_LIST_ANY,
-            TYPE_SET_ANY, TYPE_STR));
+    public static final Type TYPE_ITERABLE = Type.forUnion(asList(TYPE_LIST_ANY, TYPE_SET_ANY,
+            TYPE_STR));
 
     /**
      * String representation of the {@code void} type.
@@ -528,7 +528,7 @@ public abstract class Type extends Node {
 
         Function(Type returnType, java.util.List<? extends Type> parameterTypes,
                 Attribute... attributes) {
-            this(returnType, parameterTypes, Arrays.asList(attributes));
+            this(returnType, parameterTypes, asList(attributes));
         }
 
         Function(Type returnType, java.util.List<? extends Type> parameterTypes,
@@ -648,7 +648,7 @@ public abstract class Type extends Node {
         private final Type innerType;
 
         private List(Type innerType, Attribute... attributes) {
-            this(innerType, Arrays.asList(attributes));
+            this(innerType, asList(attributes));
         }
 
         private List(Type innerType, Collection<? extends Attribute> attributes) {
@@ -750,7 +750,7 @@ public abstract class Type extends Node {
         private final ImmutableList<Identifier> id;
 
         private Named(java.util.List<Identifier> id, Attribute... attributes) {
-            this(id, Arrays.asList(attributes));
+            this(id, asList(attributes));
         }
 
         private Named(java.util.List<Identifier> id, Collection<? extends Attribute> attributes) {
@@ -936,7 +936,7 @@ public abstract class Type extends Node {
         private final ImmutableMap<Identifier, Type> fields;
 
         Record(Map<Identifier, ? extends Type> fields, Attribute... attributes) {
-            this(fields, Arrays.asList(attributes));
+            this(fields, asList(attributes));
         }
 
         Record(Map<Identifier, ? extends Type> fields, Collection<? extends Attribute> attributes) {
@@ -1018,7 +1018,7 @@ public abstract class Type extends Node {
         private final Type innerType;
 
         private Set(Type innerType, Attribute... attributes) {
-            this(innerType, Arrays.asList(attributes));
+            this(innerType, asList(attributes));
         }
 
         private Set(Type innerType, Collection<? extends Attribute> attributes) {
@@ -1120,7 +1120,7 @@ public abstract class Type extends Node {
         private final ImmutableSet<Type> types;
 
         Union(Collection<? extends Type> types, Attribute... attributes) {
-            this(types, Arrays.asList(attributes));
+            this(types, asList(attributes));
         }
 
         Union(Collection<? extends Type> types, Collection<? extends Attribute> attributes) {

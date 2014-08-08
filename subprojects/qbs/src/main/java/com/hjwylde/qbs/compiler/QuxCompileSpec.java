@@ -1,6 +1,7 @@
 package com.hjwylde.qbs.compiler;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static java.util.Arrays.asList;
 
 import com.hjwylde.qbs.util.QuxProperties;
 
@@ -9,7 +10,6 @@ import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -67,7 +67,7 @@ public class QuxCompileSpec extends AbstractCompileSpec {
      * @param classpath the paths to append.
      */
     public final void classpath(Path... classpath) {
-        classpath(Arrays.asList(classpath));
+        classpath(asList(classpath));
     }
 
     /**

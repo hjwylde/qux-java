@@ -2,6 +2,7 @@ package com.hjwylde.qux.tree;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.Arrays.asList;
 
 import com.hjwylde.qux.api.ExprVisitor;
 import com.hjwylde.qux.util.Attribute;
@@ -14,7 +15,6 @@ import com.google.common.collect.ImmutableMap;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 
@@ -54,7 +54,7 @@ public abstract class ExprNode extends Node {
         private final ExprNode lhs, rhs;
 
         public Binary(Op.Binary op, ExprNode lhs, ExprNode rhs, Attribute... attributes) {
-            this(op, lhs, rhs, Arrays.asList(attributes));
+            this(op, lhs, rhs, asList(attributes));
         }
 
         public Binary(Op.Binary op, ExprNode lhs, ExprNode rhs,
@@ -100,7 +100,7 @@ public abstract class ExprNode extends Node {
         private final Identifier name;
 
         public Constant(Meta owner, Identifier name, Attribute... attributes) {
-            this(owner, name, Arrays.asList(attributes));
+            this(owner, name, asList(attributes));
         }
 
         public Constant(Meta owner, Identifier name, Collection<? extends Attribute> attributes) {
@@ -144,7 +144,7 @@ public abstract class ExprNode extends Node {
 
         public Function(Meta owner, Identifier name, java.util.List<ExprNode> arguments,
                 boolean isMethodCall, Attribute... attributes) {
-            this(owner, name, arguments, isMethodCall, Arrays.asList(attributes));
+            this(owner, name, arguments, isMethodCall, asList(attributes));
         }
 
         public Function(Meta owner, Identifier name, java.util.List<ExprNode> arguments,
@@ -194,7 +194,7 @@ public abstract class ExprNode extends Node {
         private final ImmutableList<ExprNode> values;
 
         public List(java.util.List<ExprNode> values, Attribute... attributes) {
-            this(values, Arrays.asList(attributes));
+            this(values, asList(attributes));
         }
 
         public List(java.util.List<ExprNode> values, Collection<? extends Attribute> attributes) {
@@ -227,7 +227,7 @@ public abstract class ExprNode extends Node {
         private final ImmutableList<Identifier> id;
 
         public Meta(java.util.List<Identifier> id, Attribute... attributes) {
-            this(id, Arrays.asList(attributes));
+            this(id, asList(attributes));
         }
 
         public Meta(java.util.List<Identifier> id, Collection<? extends Attribute> attributes) {
@@ -262,7 +262,7 @@ public abstract class ExprNode extends Node {
         private final ImmutableMap<Identifier, ExprNode> fields;
 
         public Record(Map<Identifier, ExprNode> fields, Attribute... attributes) {
-            this(fields, Arrays.asList(attributes));
+            this(fields, asList(attributes));
         }
 
         public Record(Map<Identifier, ExprNode> fields,
@@ -299,7 +299,7 @@ public abstract class ExprNode extends Node {
         private final Identifier field;
 
         public RecordAccess(ExprNode target, Identifier field, Attribute... attributes) {
-            this(target, field, Arrays.asList(attributes));
+            this(target, field, asList(attributes));
         }
 
         public RecordAccess(ExprNode target, Identifier field,
@@ -338,7 +338,7 @@ public abstract class ExprNode extends Node {
         private final ImmutableList<ExprNode> values;
 
         public Set(java.util.List<ExprNode> values, Attribute... attributes) {
-            this(values, Arrays.asList(attributes));
+            this(values, asList(attributes));
         }
 
         public Set(java.util.List<ExprNode> values, Collection<? extends Attribute> attributes) {
@@ -374,7 +374,7 @@ public abstract class ExprNode extends Node {
 
         public Slice(ExprNode target, @Nullable ExprNode from, @Nullable ExprNode to,
                 Attribute... attributes) {
-            this(target, from, to, Arrays.asList(attributes));
+            this(target, from, to, asList(attributes));
         }
 
         public Slice(ExprNode target, @Nullable ExprNode from, @Nullable ExprNode to,
@@ -418,7 +418,7 @@ public abstract class ExprNode extends Node {
         private final ExprNode target;
 
         public Unary(Op.Unary op, ExprNode target, Attribute... attributes) {
-            this(op, target, Arrays.asList(attributes));
+            this(op, target, asList(attributes));
         }
 
         public Unary(Op.Unary op, ExprNode target, Collection<? extends Attribute> attributes) {
@@ -457,7 +457,7 @@ public abstract class ExprNode extends Node {
         private final Object value;
 
         public Value(Type type, Object value, Attribute... attributes) {
-            this(type, value, Arrays.asList(attributes));
+            this(type, value, asList(attributes));
         }
 
         public Value(Type type, Object value, Collection<? extends Attribute> attributes) {
@@ -517,7 +517,7 @@ public abstract class ExprNode extends Node {
         private final Identifier name;
 
         public Variable(Identifier name, Attribute... attributes) {
-            this(name, Arrays.asList(attributes));
+            this(name, asList(attributes));
         }
 
         public Variable(Identifier name, Collection<? extends Attribute> attributes) {

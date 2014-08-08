@@ -1,10 +1,11 @@
 package com.hjwylde.qux.builder;
 
+import static java.util.Arrays.asList;
+
 import com.hjwylde.qux.api.FunctionAdapter;
 import com.hjwylde.qux.tree.StmtNode;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -136,6 +137,6 @@ final class ControlFlowGraphGenerator extends FunctionAdapter {
 
     private void setPreviousStmts(StmtNode... stmts) {
         previousStmts.clear();
-        previousStmts.addAll(Arrays.asList(stmts));
+        previousStmts.addAll(asList(stmts));
     }
 }

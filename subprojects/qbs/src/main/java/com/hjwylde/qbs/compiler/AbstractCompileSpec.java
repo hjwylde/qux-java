@@ -1,12 +1,12 @@
 package com.hjwylde.qbs.compiler;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.Arrays.asList;
 
 import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -97,6 +97,6 @@ public abstract class AbstractCompileSpec implements CompileSpec {
      */
     @Override
     public final void source(Path... source) {
-        source(Arrays.asList(source));
+        source(asList(source));
     }
 }

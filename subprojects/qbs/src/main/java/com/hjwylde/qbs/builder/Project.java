@@ -9,8 +9,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
- * A project is a static configuration to be used to assist in compilation. It has a root directory,
- * a binary output directory, and a classpath.
+ * A project is a static configuration to be used to assist in compilation. It has a root directory
+ * and a binary output directory.
  *
  * @author Henry J. Wylde
  */

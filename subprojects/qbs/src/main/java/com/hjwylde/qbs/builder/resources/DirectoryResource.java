@@ -1,5 +1,6 @@
 package com.hjwylde.qbs.builder.resources;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 
 import org.slf4j.Logger;
@@ -10,7 +11,6 @@ import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -90,7 +90,7 @@ public class DirectoryResource extends AbstractResourceCollection {
     }
 
     private synchronized void loadResources() {
-        resources = new ArrayList<>();
+        final ImmutableList.Builder<Resource> builder = ImmutableList.builder();
 
         SimpleFileVisitor<Path> visitor = new SimpleFileVisitor<Path>() {
 
@@ -105,7 +105,7 @@ public class DirectoryResource extends AbstractResourceCollection {
 
                 if (ResourceManager.getSupportedExtensions().contains(new Resource.Extension(
                         extension))) {
-                    resources.add(new LazilyInitialisedResource(id) {
+                    builder.add(new LazilyInitialisedResource(id) {
 
                         @Override
                         protected Resource.Single loadDelegate() {
@@ -130,5 +130,7 @@ public class DirectoryResource extends AbstractResourceCollection {
         } catch (IOException e) {
             logger.warn("i/o exception when trying to read resource directory: " + root, e);
         }
+
+        resources = builder.build();
     }
 }

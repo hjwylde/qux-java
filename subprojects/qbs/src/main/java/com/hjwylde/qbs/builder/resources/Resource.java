@@ -37,7 +37,8 @@ public interface Resource {
     Optional<Resource.Single> getById(String id);
 
     /**
-     * TODO: Documentation.
+     * A resource collection contains multiple resources. It is a resource itself (composite design
+     * pattern) and may be iterated over in order to find a desired resource.
      *
      * @author Henry J. Wylde
      */
@@ -87,6 +88,11 @@ public interface Resource {
 
         Optional<String> getFunctionType(String name);
 
+        /**
+         * Gets the identifier of this resource.
+         *
+         * @return the identifier.
+         */
         String getId();
 
         Optional<String> getTypeType(String name);

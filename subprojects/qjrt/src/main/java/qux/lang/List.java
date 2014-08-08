@@ -4,11 +4,13 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkElementIndex;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkPositionIndex;
+import static java.util.Arrays.asList;
+import static java.util.Arrays.copyOf;
+import static java.util.Arrays.copyOfRange;
 import static qux.lang.Bool.FALSE;
 import static qux.lang.Bool.TRUE;
 
 import java.math.BigInteger;
-import java.util.Arrays;
 
 import qux.lang.op.Assign;
 import qux.lang.op.Len;
@@ -44,7 +46,7 @@ public final class List extends AbstractObj implements Assign, Iterable, Len, Sl
     }
 
     private List(AbstractObj[] data) {
-        checkArgument(!Arrays.asList(data).contains(null), "data cannot contain null");
+        checkArgument(!asList(data).contains(null), "data cannot contain null");
 
         this.data = data.clone();
         count = data.length;
@@ -349,7 +351,7 @@ public final class List extends AbstractObj implements Assign, Iterable, Len, Sl
         checkArgument(from <= to, "from must be less than or equal to to (from=%s, to=%s)", from,
                 to);
 
-        return valueOf(Arrays.copyOfRange(data, from, to));
+        return valueOf(copyOfRange(data, from, to));
     }
 
     List sublist(BigInteger from, BigInteger to) {
@@ -385,7 +387,7 @@ public final class List extends AbstractObj implements Assign, Iterable, Len, Sl
         checkArgument(capacity >= 0, "capacity must be non-negative");
 
         while (count + capacity > data.length) {
-            data = Arrays.copyOf(data, data.length * 2);
+            data = copyOf(data, data.length * 2);
         }
     }
 }
