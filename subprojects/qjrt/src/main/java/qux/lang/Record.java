@@ -12,7 +12,7 @@ import java.util.TreeMap;
 
 /**
  * TODO: Documentation
- * <p/>
+ * <p>
  * TODO: Implement reference counting
  *
  * @author Henry J. Wylde
@@ -20,7 +20,7 @@ import java.util.TreeMap;
  */
 public final class Record extends AbstractObj {
 
-    private Map<String, AbstractObj> fields;
+    private final Map<String, AbstractObj> fields;
 
     private Record(Record record) {
         fields = new TreeMap<>();

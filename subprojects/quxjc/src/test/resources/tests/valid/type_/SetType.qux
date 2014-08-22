@@ -3,7 +3,7 @@ package valid.type_
 type Foo is {int}
 type Bar is {any}
 
-{any} f(Foo a, Bar b):
+Bar f(Foo a, Bar b):
     return a + b
 
 void main([str] args):

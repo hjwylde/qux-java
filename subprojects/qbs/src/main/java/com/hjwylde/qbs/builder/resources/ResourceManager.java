@@ -6,8 +6,6 @@ import static com.google.common.collect.Sets.filter;
 
 import com.hjwylde.common.error.BuildError;
 
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.reflect.ClassPath;
 
@@ -16,16 +14,13 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-
-import javax.annotation.Nullable;
 
 /**
  * A management class for resources. This class handles the registration of resource readers to
@@ -39,13 +34,10 @@ public final class ResourceManager {
 
     private static final Logger logger = LoggerFactory.getLogger(ResourceManager.class);
 
-    private static final String PROP_PREFIX = "qux-resources/";
+    private static final String PROP_PREFIX = "META-INF/services/qux-resources/";
 
-    private static final String PROP_EXTENSION_CLASS = "extension-class";
     private static final String PROP_READER_CLASS = "reader-class";
-
-    private static final String EXTENSION_FIELD_NAME = "EXTENSION";
-    private static final String READER_METHOD_NAME = "getInstance";
+    private static final String PROP_RESOURCE_EXTENSION = "resource-extension";
 
     /**
      * A mapping of extensions to registered readers.
@@ -62,26 +54,22 @@ public final class ResourceManager {
                 String name = entry.getKey();
                 Properties properties = entry.getValue();
 
-                // Grab the class names
-                String extensionClass = properties.getProperty(PROP_EXTENSION_CLASS);
+                // Grab the class and extension name
                 String readerClass = properties.getProperty(PROP_READER_CLASS);
+                String resourceExtension = properties.getProperty(PROP_RESOURCE_EXTENSION);
 
                 // Check that they are not empty
-                checkNotNull(extensionClass, "%s: property '%s' cannot be empty", name,
-                        PROP_EXTENSION_CLASS);
                 checkNotNull(readerClass, "%s: property '%s' cannot be empty", name,
                         PROP_READER_CLASS);
-
-                // Grab the appropriate field and method from the classes
-                Field extensionField = Class.forName(extensionClass).getField(EXTENSION_FIELD_NAME);
-                Method readerMethod = Class.forName(readerClass).getMethod(READER_METHOD_NAME);
+                checkNotNull(resourceExtension, "%s: property '%s' cannot be empty", name,
+                        PROP_RESOURCE_EXTENSION);
 
                 // Get the extension and reader
-                Resource.Extension extension = (Resource.Extension) extensionField.get(null);
-                Resource.Reader<?> reader = (Resource.Reader<?>) readerMethod.invoke(null);
+                Resource.Reader<?> reader = (Resource.Reader<?>) Class.forName(readerClass)
+                        .getConstructor().newInstance();
 
                 // Register the extension with the reader
-                register(extension, reader);
+                register(new Resource.Extension(resourceExtension), reader);
             }
         } catch (Exception e) {
             throw new BuildError(e);
@@ -161,7 +149,7 @@ public final class ResourceManager {
         String name = path.getFileName().toString();
 
         try {
-            Resource.Extension extension = null;
+            Resource.Extension extension;
 
             if (Files.isDirectory(path) || !name.contains(".")) {
                 extension = DirectoryResource.EXTENSION;
@@ -173,7 +161,7 @@ public final class ResourceManager {
             return Optional.of(getReader(extension).read(path));
         } catch (IOException e) {
             logger.warn("i/o exception when attempting to load resource: " + path, e);
-            return Optional.absent();
+            return Optional.empty();
         }
     }
 
@@ -190,7 +178,7 @@ public final class ResourceManager {
             return Optional.of(getReader(extension).read(in));
         } catch (IOException e) {
             logger.warn("i/o exception when attempting to load resource", e);
-            return Optional.absent();
+            return Optional.empty();
         }
     }
 
@@ -205,7 +193,7 @@ public final class ResourceManager {
         Optional<Resource> opt = loadResource(path);
 
         if (!opt.isPresent() || !(opt.get() instanceof Resource.Single)) {
-            return Optional.absent();
+            return Optional.empty();
         }
 
         return Optional.of((Resource.Single) opt.get());
@@ -224,7 +212,7 @@ public final class ResourceManager {
         Optional<Resource> opt = loadResource(in, extension);
 
         if (!opt.isPresent() || !(opt.get() instanceof Resource.Single)) {
-            return Optional.absent();
+            return Optional.empty();
         }
 
         return Optional.of((Resource.Single) opt.get());
@@ -263,12 +251,7 @@ public final class ResourceManager {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         Set<ClassPath.ResourceInfo> resources = ClassPath.from(classLoader).getResources();
 
-        resources = filter(resources, new Predicate<ClassPath.ResourceInfo>() {
-            @Override
-            public boolean apply(@Nullable ClassPath.ResourceInfo input) {
-                return input.getResourceName().startsWith(PROP_PREFIX);
-            }
-        });
+        resources = filter(resources, input -> input.getResourceName().startsWith(PROP_PREFIX));
 
         ImmutableMap.Builder<String, Properties> builder = ImmutableMap.builder();
         for (ClassPath.ResourceInfo resource : resources) {

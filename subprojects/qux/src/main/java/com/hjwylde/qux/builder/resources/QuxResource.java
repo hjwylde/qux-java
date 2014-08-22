@@ -10,7 +10,8 @@ import com.hjwylde.qux.tree.QuxNode;
 import com.hjwylde.qux.tree.TypeNode;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
+
+import java.util.Optional;
 
 /**
  * TODO: Documentation.
@@ -39,7 +40,7 @@ public final class QuxResource extends AbstractResource {
             }
         }
 
-        return Optional.absent();
+        return Optional.empty();
     }
 
     /**
@@ -53,7 +54,7 @@ public final class QuxResource extends AbstractResource {
             }
         }
 
-        return Optional.absent();
+        return Optional.empty();
     }
 
     /**
@@ -79,6 +80,6 @@ public final class QuxResource extends AbstractResource {
             }
         }
 
-        return Optional.absent();
+        return Optional.empty();
     }
 }

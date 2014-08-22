@@ -2,10 +2,10 @@ package com.hjwylde.qux.util;
 
 import com.hjwylde.qux.tree.Node;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 import java.util.Collection;
+import java.util.Optional;
 
 /**
  * Utility class for methods pertaining to an {@link com.hjwylde.qux.util.Attribute} and a {@link
@@ -51,7 +51,7 @@ public final class Attributes {
             }
         }
 
-        return Optional.absent();
+        return Optional.empty();
     }
 
     /**

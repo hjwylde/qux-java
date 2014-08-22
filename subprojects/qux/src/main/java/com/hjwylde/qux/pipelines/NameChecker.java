@@ -10,14 +10,13 @@ import com.hjwylde.qux.util.Attribute;
 import com.hjwylde.qux.util.Attributes;
 import com.hjwylde.qux.util.Identifier;
 
-import com.google.common.base.Optional;
-
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 /**
  * TODO: Documentation.
- * <p/>
+ * <p>
  * Responsible for checking the following: <ul> <li>No duplicate constants declared</li> <li>No
  * recursive constants declared</li><li>No duplicate functions declared</li> <li>No clashing
  * function parameters</li><li>No duplicate types declared</li><li>No recursive types

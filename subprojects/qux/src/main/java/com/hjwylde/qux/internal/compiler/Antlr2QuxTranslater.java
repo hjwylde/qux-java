@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * TODO: Documentation
@@ -88,7 +89,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
      * A namespace for propagating import information throughout the code. The name space contains
      * imported {@code meta}s, {@code constant}s, {@code type}s and {@code function}s. The latter 3
      * are identified by their name with a '$' prefix.
-     * <p/>
+     * <p>
      * The namespace will also contain any local variables when parsing functions and the like, this
      * is to ensure name propagation does not occur to the local variables.
      */
@@ -115,12 +116,7 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
      */
     @Override
     public List<StmtNode> visitBlock(@NotNull QuxParser.BlockContext ctx) {
-        List<StmtNode> stmts = new ArrayList<>();
-        for (QuxParser.StmtContext sctx : ctx.stmt()) {
-            stmts.add(visitStmt(sctx));
-        }
-
-        return stmts;
+        return ctx.stmt().stream().map(this::visitStmt).collect(Collectors.toList());
     }
 
     /**
@@ -903,7 +899,6 @@ public final class Antlr2QuxTranslater extends QuxBaseVisitor<Object> {
     @Override
     public StmtNode.Assign visitStmtAssign(@NotNull QuxParser.StmtAssignContext ctx) {
         // Create a series of nested accesses
-        // TODO: Go through from here and add in all the "checkIdentifier"s etc where needed
         ExprNode lhs = new ExprNode.Variable(visitIdentifier(ctx.Identifier()),
                 generateAttributeSource(ctx.Identifier()));
         checkIdentifier(((ExprNode.Variable) lhs).getName());

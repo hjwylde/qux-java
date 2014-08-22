@@ -184,10 +184,7 @@ public class QuxProject extends Project {
          * @return this builder for chaining.
          */
         public final Builder classpath(Collection<Path> classpath) {
-            for (Path path : classpath) {
-                classpath.add(path);
-            }
-
+            classpath.forEach(this.classpath::add);
             return this;
         }
 

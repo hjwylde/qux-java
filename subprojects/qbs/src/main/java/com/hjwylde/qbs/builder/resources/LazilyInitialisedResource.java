@@ -2,7 +2,7 @@ package com.hjwylde.qbs.builder.resources;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 /**
  * A lazily initialised resource will attempt to provide as many default method implementations as

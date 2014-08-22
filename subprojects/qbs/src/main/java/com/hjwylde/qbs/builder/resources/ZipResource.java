@@ -24,8 +24,6 @@ import javax.annotation.Nullable;
  */
 public class ZipResource extends AbstractResourceCollection {
 
-    public static final Resource.Extension EXTENSION = new Resource.Extension("zip");
-
     private static final Logger logger = LoggerFactory.getLogger(ZipResource.class);
 
     private final ZipFile file;
@@ -86,7 +84,8 @@ public class ZipResource extends AbstractResourceCollection {
             // extension
             final String id = Files.getNameWithoutExtension(entry.getName()).replace("/", ".");
             final String extension = Files.getFileExtension(entry.getName());
-            if (!ResourceManager.getSupportedExtensions().contains(extension)) {
+            if (!ResourceManager.getSupportedExtensions().contains(new Resource.Extension(
+                    extension))) {
                 continue;
             }
 

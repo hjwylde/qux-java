@@ -45,7 +45,6 @@ import com.hjwylde.qux.util.Identifier;
 import com.hjwylde.qux.util.Type;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import org.jgrapht.event.VertexTraversalEvent;
@@ -56,6 +55,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -66,8 +66,6 @@ import java.util.Set;
  */
 public final class TypePropagator extends Pipeline {
 
-    private QuxNode node;
-
     public TypePropagator(QuxContext context) {
         super(context);
     }
@@ -77,19 +75,11 @@ public final class TypePropagator extends Pipeline {
      */
     @Override
     public QuxNode apply(QuxNode node) {
-        this.node = node;
+        node.getConstants().forEach(this::apply);
 
-        for (ConstantNode constant : node.getConstants()) {
-            apply(constant);
-        }
+        node.getFunctions().forEach(this::apply);
 
-        for (FunctionNode function : node.getFunctions()) {
-            apply(function);
-        }
-
-        for (TypeNode type : node.getTypes()) {
-            apply(type);
-        }
+        node.getTypes().forEach(this::apply);
 
         return node;
     }
@@ -286,7 +276,7 @@ public final class TypePropagator extends Pipeline {
     }
 
     private boolean propagate(ExprNode expr) {
-        return propagate(expr, new Environment<Identifier, Type>());
+        return propagate(expr, new Environment<>());
     }
 
     private boolean propagate(ExprNode expr, Environment<Identifier, Type> env) {
@@ -432,9 +422,7 @@ public final class TypePropagator extends Pipeline {
         public void visitExprFunction(ExprNode.Function expr) {
             visitExpr(expr.getOwner());
 
-            for (ExprNode argument : expr.getArguments()) {
-                visitExpr(argument);
-            }
+            expr.getArguments().forEach(this::visitExpr);
 
             setType(expr, getFunctionType(expr).getReturnType());
         }

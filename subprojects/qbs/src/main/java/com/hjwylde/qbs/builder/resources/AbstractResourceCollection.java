@@ -1,7 +1,8 @@
 package com.hjwylde.qbs.builder.resources;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.Iterables;
+
+import java.util.Optional;
 
 /**
  * Represents a collection of resources. A collection of resources can be iterated over in order to
@@ -44,14 +45,14 @@ public abstract class AbstractResourceCollection implements Resource.Collection 
      * {@inheritDoc}
      */
     @Override
-    public Optional<Resource.Single> getById(String id) {
+    public Optional<Single> getById(String id) {
         for (Resource resource : this) {
             if (resource.containsId(id)) {
                 return resource.getById(id);
             }
         }
 
-        return Optional.absent();
+        return Optional.empty();
     }
 
     /**
