@@ -5,6 +5,10 @@ import static qux.lang.Bool.FALSE;
 import static qux.lang.Bool.TRUE;
 import static qux.lang.Meta.META_RAT;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
@@ -15,16 +19,13 @@ import java.math.BigInteger;
  */
 public final class Rat extends AbstractObj {
 
-    // TODO: Add this back in once tuples are implemented
-    /*private static final LoadingCache<Tuple, Rat> cache =
-            CacheBuilder.<Tuple, Rat>newBuilder().weakKeys().build(
-                    new CacheLoader<Tuple, Rat>() {
+    private static final LoadingCache<Tuple, Rat> cache =
+            CacheBuilder.<Tuple, Rat>newBuilder().weakKeys().build(new CacheLoader<Tuple, Rat>() {
                         @Override
                         public Rat load(Tuple key) throws Exception {
-                            return new Rat(key);
+                            return new Rat((Int) key.get(0), (Int) key.get(1));
                         }
-                    }
-            );*/
+                    });
 
     private final Int num;
     private final Int den;
@@ -158,7 +159,7 @@ public final class Rat extends AbstractObj {
     }
 
     public static Rat valueOf(Int num, Int den) {
-        return new Rat(num, den);
+        return cache.getUnchecked(Tuple.valueOf(num, den));
     }
 
     public static Rat valueOf(BigInteger num, BigInteger den) {

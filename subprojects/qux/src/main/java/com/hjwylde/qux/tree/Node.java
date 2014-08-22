@@ -18,7 +18,7 @@ import java.util.List;
  */
 public abstract class Node {
 
-    private List<Attribute> attributes = new ArrayList<>();
+    private final List<Attribute> attributes = new ArrayList<>();
 
     public Node(Attribute... attributes) {
         this(asList(attributes));

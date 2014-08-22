@@ -83,8 +83,7 @@ public final class Qux2ClassBuilder implements Builder {
         // Build all the files concurrently
         int threads = Runtime.getRuntime().availableProcessors() * 2;
         ExecutorService executor = Executors.newFixedThreadPool(threads);
-        CompletionService<BuildResult> completion = new ExecutorCompletionService<BuildResult>(
-                executor);
+        CompletionService<BuildResult> completion = new ExecutorCompletionService<>(executor);
 
         logger.info("compiling {} source file(s) concurrently with {} worker(s)", source.size(),
                 threads);
@@ -122,7 +121,7 @@ public final class Qux2ClassBuilder implements Builder {
 
         // Wait for each job to finish and gather up the results
         for (Map.Entry<Path, Future<BuildResult>> job : jobs.entrySet()) {
-            BuildResult result = null;
+            BuildResult result;
             try {
                 if (getTimeout() > 0) {
                     result = job.getValue().get(getTimeout(), getTimeoutUnit());

@@ -56,7 +56,6 @@ import com.hjwylde.qux.util.Identifier;
 import com.hjwylde.qux.util.Op;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 import org.objectweb.asm.ClassVisitor;
@@ -72,6 +71,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import qux.lang.AbstractObj;
 import qux.lang.Bool;
@@ -83,11 +83,6 @@ import qux.lang.Rat;
 import qux.lang.Record;
 import qux.lang.Set;
 import qux.lang.Str;
-import qux.lang.op.Assign;
-import qux.lang.op.Eq;
-import qux.lang.op.Len;
-import qux.lang.op.Neq;
-import qux.lang.op.Slice;
 import qux.util.Iterable;
 import qux.util.Iterator;
 
@@ -341,7 +336,7 @@ public final class Qux2ClassTranslater extends QuxAdapter {
 
         /**
          * Stores a list of variable names, each at their associated jvm local indices.
-         * <p/>
+         * <p>
          * TODO: Change this so that the number of local variables are minimized, i.e. can be used
          * more than once like for loop vars
          */
@@ -350,7 +345,7 @@ public final class Qux2ClassTranslater extends QuxAdapter {
         private int line = Integer.MIN_VALUE;
 
         public Expr2ClassTranslater(MethodVisitor mv) {
-            this(mv, new ArrayList<Identifier>());
+            this(mv, new ArrayList<>());
         }
 
         public Expr2ClassTranslater(MethodVisitor mv, java.util.List<Identifier> locals) {
@@ -395,8 +390,8 @@ public final class Qux2ClassTranslater extends QuxAdapter {
                             getMethodDescriptor(lhsClass, "_div_", rhsClass), false);
                     break;
                 case EQ:
-                    mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Eq.class), "_eq_",
-                            getMethodDescriptor(Eq.class, "_eq_", AbstractObj.class), true);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(lhsClass), "_eq_",
+                            getMethodDescriptor(lhsClass, "_eq_", AbstractObj.class), false);
                     break;
                 case EXP:
                     mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(Int.class), "_exp_",
@@ -444,8 +439,8 @@ public final class Qux2ClassTranslater extends QuxAdapter {
                             getMethodDescriptor(lhsClass, "_mul_", rhsClass), false);
                     break;
                 case NEQ:
-                    mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Neq.class), "_neq_",
-                            getMethodDescriptor(Neq.class, "_neq_", AbstractObj.class), true);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(lhsClass), "_neq_",
+                            getMethodDescriptor(lhsClass, "_neq_", AbstractObj.class), false);
                     break;
                 case OR:
                     mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(lhsClass), "_or_",
@@ -542,8 +537,6 @@ public final class Qux2ClassTranslater extends QuxAdapter {
          */
         @Override
         public void visitExprRecord(ExprNode.Record expr) {
-            Map<Identifier, ExprNode> fields = expr.getFields();
-
             mv.visitTypeInsn(NEW, Type.getInternalName(HashMap.class));
             mv.visitInsn(DUP);
             mv.visitMethodInsn(INVOKESPECIAL, Type.getInternalName(HashMap.class), "<init>",
@@ -613,8 +606,10 @@ public final class Qux2ClassTranslater extends QuxAdapter {
                 visitExpr(new ExprNode.Unary(Op.Unary.LEN, expr.getTarget()));
             }
 
-            mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Slice.class), "_slice_",
-                    getMethodDescriptor(Slice.class, "_slice_", Int.class, Int.class), true);
+            Class<?> clazz = Qux2ClassTranslater.getClass(expr.getTarget());
+
+            mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(clazz), "_slice_",
+                    getMethodDescriptor(clazz, "_slice_", Int.class, Int.class), false);
             visitCheckcast(expr);
         }
 
@@ -691,8 +686,8 @@ public final class Qux2ClassTranslater extends QuxAdapter {
                     }
                     break;
                 case LEN:
-                    mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Len.class), "_len_",
-                            getMethodDescriptor(Len.class, "_len_"), true);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(clazz), "_len_",
+                            getMethodDescriptor(clazz, "_len_"), false);
                     break;
                 case NEG:
                     mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(clazz), "_neg_",
@@ -895,18 +890,13 @@ public final class Qux2ClassTranslater extends QuxAdapter {
         private Expr2ClassTranslater et;
 
         /**
-         * Stores a map of parameter names to jvm types.
-         */
-        private Map<Identifier, String> parameters = new HashMap<>();
-
-        /**
          * Unique number for generating variable names.
          */
         private int gen;
 
         /**
          * Stores a list of variable names, each at their associated jvm local indices.
-         * <p/>
+         * <p>
          * TODO: Change this so that the number of local variables are minimized, i.e. can be used
          * more than once like for loop vars
          */
@@ -971,7 +961,6 @@ public final class Qux2ClassTranslater extends QuxAdapter {
 
             Type type = getType(this.type.getParameterTypes().get(locals.size()));
 
-            parameters.put(var, type.getDescriptor());
             locals.add(var);
         }
 
@@ -990,9 +979,11 @@ public final class Qux2ClassTranslater extends QuxAdapter {
                     visitExpr(access.getRhs());
                     visitExpr(stmt.getExpr());
 
-                    mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(Assign.class),
-                            "_assign_", getMethodDescriptor(Assign.class, "_assign_", Int.class,
-                                    AbstractObj.class), true);
+                    Class<?> clazz = Qux2ClassTranslater.getClass(access.getLhs());
+
+                    mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(clazz), "_assign_",
+                            getMethodDescriptor(clazz, "_assign_", Int.class, AbstractObj.class),
+                            false);
                     break;
                 case RECORD_ACCESS:
                     ExprNode.RecordAccess recordAccess = (ExprNode.RecordAccess) stmt.getLhs();

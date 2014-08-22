@@ -9,7 +9,6 @@ import com.hjwylde.qux.util.Attribute;
 import com.hjwylde.qux.util.Identifier;
 import com.hjwylde.qux.util.Op;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -17,6 +16,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 
@@ -382,8 +382,8 @@ public abstract class ExprNode extends Node {
             super(attributes);
 
             this.target = checkNotNull(target, "target cannot be null");
-            this.from = Optional.fromNullable(from);
-            this.to = Optional.fromNullable(to);
+            this.from = Optional.ofNullable(from);
+            this.to = Optional.ofNullable(to);
         }
 
         /**
@@ -503,7 +503,7 @@ public abstract class ExprNode extends Node {
          * @author Henry J. Wylde
          */
         public static enum Type {
-            BOOL, INT, NULL, OBJ, RAT, STR;
+            BOOL, INT, NULL, OBJ, RAT, STR
         }
     }
 

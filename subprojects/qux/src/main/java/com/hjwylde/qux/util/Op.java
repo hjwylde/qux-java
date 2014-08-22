@@ -27,7 +27,7 @@ public interface Op {
      */
     public static enum Binary implements Op {
         EQ, NEQ, LT, LTE, GT, GTE, AND, OR, XOR, IFF, IMP, IN, ACC, RNG, EXP, ADD, SUB, MUL, DIV,
-        IDIV, REM;
+        IDIV, REM
     }
 
     /**
@@ -36,6 +36,6 @@ public interface Op {
      * @author Henry J. Wylde
      */
     public static enum Unary implements Op {
-        DEC, INC, LEN, NEG, NOT;
+        DEC, INC, LEN, NEG, NOT
     }
 }

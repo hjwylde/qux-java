@@ -13,22 +13,6 @@ import java.nio.file.Path;
  */
 public final class LocalDirectoryResourceReader implements Resource.Reader<DirectoryResource> {
 
-    private static final LocalDirectoryResourceReader INSTANCE = new LocalDirectoryResourceReader();
-
-    /**
-     * This class is a singleton.
-     */
-    private LocalDirectoryResourceReader() {}
-
-    /**
-     * Gets the singleton instance of a local directory resource reader.
-     *
-     * @return the instance.
-     */
-    public static LocalDirectoryResourceReader getInstance() {
-        return INSTANCE;
-    }
-
     /**
      * {@inheritDoc}
      */

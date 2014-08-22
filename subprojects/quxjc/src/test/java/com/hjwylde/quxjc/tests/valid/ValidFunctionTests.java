@@ -1,4 +1,4 @@
-package com.hjwylde.qux.tests.valid;
+package com.hjwylde.quxjc.tests.valid;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 

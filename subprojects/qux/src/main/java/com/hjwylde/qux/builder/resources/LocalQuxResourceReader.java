@@ -1,9 +1,9 @@
 package com.hjwylde.qux.builder.resources;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
 
 import com.hjwylde.qbs.builder.resources.Resource;
+import com.hjwylde.qbs.compiler.QuxCompileOptions;
 import com.hjwylde.qux.api.QuxReader;
 import com.hjwylde.qux.tree.QuxNode;
 
@@ -21,6 +21,14 @@ import java.nio.file.Path;
 public final class LocalQuxResourceReader implements Resource.Reader<QuxResource> {
 
     private final Charset charset;
+
+    public LocalQuxResourceReader() {
+        this(QuxCompileOptions.DEFAULT_OPTIONS.getCharset());
+    }
+
+    public LocalQuxResourceReader(String charset) {
+        this(Charset.forName(charset));
+    }
 
     public LocalQuxResourceReader(Charset charset) {
         this.charset = checkNotNull(charset, "charset cannot be null");

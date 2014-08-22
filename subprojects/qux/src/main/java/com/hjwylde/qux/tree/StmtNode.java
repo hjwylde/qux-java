@@ -10,11 +10,11 @@ import com.hjwylde.qux.util.Attribute;
 import com.hjwylde.qux.util.Identifier;
 import com.hjwylde.qux.util.Op;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 
@@ -103,7 +103,7 @@ public abstract class StmtNode extends Node {
          * @since 0.2.4
          */
         public static enum Type {
-            ACCESS, RECORD_ACCESS, VARIABLE;
+            ACCESS, RECORD_ACCESS, VARIABLE
         }
     }
 
@@ -289,7 +289,7 @@ public abstract class StmtNode extends Node {
         public Return(@Nullable ExprNode expr, Collection<? extends Attribute> attributes) {
             super(attributes);
 
-            this.expr = Optional.fromNullable(expr);
+            this.expr = Optional.ofNullable(expr);
         }
 
         /**

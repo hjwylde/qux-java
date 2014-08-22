@@ -28,9 +28,9 @@ public final class FunctionNode extends Node implements FunctionVisitor {
     private final Identifier name;
     private final Type.Function type;
 
-    private List<Identifier> parameters = new ArrayList<>();
+    private final List<Identifier> parameters = new ArrayList<>();
 
-    private List<StmtNode> stmts = new ArrayList<>();
+    private final List<StmtNode> stmts = new ArrayList<>();
 
     public FunctionNode(int flags, Identifier name, Type.Function type, Attribute... attributes) {
         this(flags, name, type, asList(attributes));
@@ -54,15 +54,11 @@ public final class FunctionNode extends Node implements FunctionVisitor {
     }
 
     public void accept(FunctionVisitor fv) {
-        for (Identifier parameter : parameters) {
-            fv.visitParameter(parameter);
-        }
+        parameters.forEach(fv::visitParameter);
 
         fv.visitCode();
 
-        for (StmtNode stmt : stmts) {
-            stmt.accept(fv);
-        }
+        stmts.forEach(stmt -> stmt.accept(fv));
     }
 
     public int getFlags() {

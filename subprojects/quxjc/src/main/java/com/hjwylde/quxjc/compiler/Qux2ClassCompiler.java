@@ -11,7 +11,6 @@ import com.hjwylde.qbs.compiler.QuxCompileSpec;
 import com.hjwylde.qux.pipelines.Pipeline;
 import com.hjwylde.quxjc.builder.Qux2ClassBuilder;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 import org.apache.log4j.Level;
@@ -23,6 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * TODO: Documentation.

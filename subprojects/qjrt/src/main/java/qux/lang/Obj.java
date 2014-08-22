@@ -13,7 +13,7 @@ import static qux.lang.Meta.META_OBJ;
  */
 public final class Obj extends AbstractObj {
 
-    private String id;
+    private final String id;
 
     /**
      * Creates a new {@code Obj} with the given id.

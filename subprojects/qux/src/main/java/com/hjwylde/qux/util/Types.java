@@ -141,7 +141,6 @@ public final class Types {
                 return TYPE_ANY;
             }
 
-            INNER:
             for (int i = 0; i < types.size(); i++) {
                 // Ignore subtypes
                 if (isSubtype(inner, types.get(i))) {
@@ -152,7 +151,6 @@ public final class Types {
 
                     // Continue on the inner, as it may supertype more than one inner type
                     // If it does, then duplicates will be removed when we create a set of the types
-                    continue INNER;
                 }
             }
 

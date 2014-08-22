@@ -15,7 +15,7 @@ import java.util.Set;
  * A basic implementation of a {@link com.hjwylde.qbs.compiler.CompileSpec}. Provides default
  * implementation of the methods and some fields to hold the properties. Note that this
  * implementation will automatically normalise any paths passed as arguments to methods.
- * <p/>
+ * <p>
  * The default contains the default compile options, no source files and sets the output directory
  * to be the current working directory ({@code Paths.get(".")}).
  *
@@ -87,9 +87,7 @@ public abstract class AbstractCompileSpec implements CompileSpec {
      */
     @Override
     public final void source(Collection<Path> source) {
-        for (Path path : source) {
-            this.source.add(path.toAbsolutePath().normalize());
-        }
+        source.forEach(path -> this.source.add(path.toAbsolutePath().normalize()));
     }
 
     /**

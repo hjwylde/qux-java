@@ -35,12 +35,12 @@ import com.hjwylde.qux.util.Attributes;
 import com.hjwylde.qux.util.Identifier;
 import com.hjwylde.qux.util.Type;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import org.jgrapht.event.VertexTraversalEvent;
 
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * TODO: Documentation
@@ -58,13 +58,9 @@ public final class TypeChecker extends Pipeline {
      */
     @Override
     public QuxNode apply(QuxNode node) {
-        for (ConstantNode constant : node.getConstants()) {
-            apply(constant);
-        }
+        node.getConstants().forEach(com.hjwylde.qux.pipelines.TypeChecker::apply);
 
-        for (FunctionNode function : node.getFunctions()) {
-            apply(function);
-        }
+        node.getFunctions().forEach(com.hjwylde.qux.pipelines.TypeChecker::apply);
 
         return node;
     }
@@ -251,9 +247,7 @@ public final class TypeChecker extends Pipeline {
             visitExpr(expr.getOwner());
 
             // TODO: Type check the arguments
-            for (ExprNode argument : expr.getArguments()) {
-                visitExpr(argument);
-            }
+            expr.getArguments().forEach(this::visitExpr);
         }
 
         /**
@@ -261,9 +255,7 @@ public final class TypeChecker extends Pipeline {
          */
         @Override
         public void visitExprList(ExprNode.List expr) {
-            for (ExprNode value : expr.getValues()) {
-                visitExpr(value);
-            }
+            expr.getValues().forEach(this::visitExpr);
         }
 
         /**
@@ -301,9 +293,7 @@ public final class TypeChecker extends Pipeline {
          */
         @Override
         public void visitExprSet(ExprNode.Set expr) {
-            for (ExprNode value : expr.getValues()) {
-                visitExpr(value);
-            }
+            expr.getValues().forEach(this::visitExpr);
         }
 
         /**

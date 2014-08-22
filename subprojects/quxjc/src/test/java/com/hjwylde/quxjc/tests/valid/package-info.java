@@ -1,3 +1,3 @@
-@ParametersAreNonnullByDefault package com.hjwylde.qux.tests.valid;
+@ParametersAreNonnullByDefault package com.hjwylde.quxjc.tests.valid;
 
 import javax.annotation.ParametersAreNonnullByDefault;

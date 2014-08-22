@@ -1,6 +1,6 @@
 package com.hjwylde.qbs.builder.resources;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 
@@ -36,8 +36,8 @@ public abstract class AbstractResource implements Resource.Single {
      * {@inheritDoc}
      */
     @Override
-    public Optional<Resource.Single> getById(String id) {
-        return Optional.<Resource.Single>fromNullable(containsId(id) ? this : null);
+    public Optional<Single> getById(String id) {
+        return Optional.ofNullable(containsId(id) ? this : null);
     }
 
     /**

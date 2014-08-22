@@ -12,8 +12,6 @@ import static qux.lang.Bool.TRUE;
 
 import java.math.BigInteger;
 
-import qux.lang.op.Len;
-import qux.lang.op.Slice;
 import qux.util.Iterable;
 import qux.util.Iterator;
 
@@ -23,7 +21,7 @@ import qux.util.Iterator;
  * @author Henry J. Wylde
  * @since 0.1.3
  */
-public final class Set extends AbstractObj implements Iterable, Len, Slice {
+public final class Set extends AbstractObj implements Iterable {
 
     private AbstractObj[] data;
     private int count;
@@ -207,18 +205,10 @@ public final class Set extends AbstractObj implements Iterable, Len, Slice {
         };
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Int _len_() {
         return Int.valueOf(count);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Set _slice_(Int from, Int to) {
         return subset(from, to);
     }

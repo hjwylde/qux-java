@@ -328,7 +328,8 @@ public final class CompilerErrors {
      * @return the created {@link com.hjwylde.common.error.CompilerError}.
      */
     public static CompilerError invalidIdentifier(String id, String regex) {
-        String message = String.format("invalid identifier, received '%s' but expected '%s'", id);
+        String message = String.format("invalid identifier, received '%s' but expected '%s'", id,
+                regex);
 
         return new CompilerError(message);
     }

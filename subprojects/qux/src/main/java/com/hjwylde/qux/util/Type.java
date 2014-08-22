@@ -126,11 +126,8 @@ public abstract class Type extends Node {
         if (this == obj) {
             return true;
         }
-        if (obj == null || getClass() != obj.getClass()) {
-            return false;
-        }
 
-        return true;
+        return obj != null && getClass() == obj.getClass();
     }
 
     public static Type.Any forAny(Collection<? extends Attribute> attributes) {

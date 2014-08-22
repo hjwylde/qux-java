@@ -3,13 +3,14 @@ package com.hjwylde.qux.builder;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.base.Optional;
-
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+
+import javax.annotation.Nullable;
 
 /**
  * TODO: Documentation
@@ -23,10 +24,10 @@ public final class Environment<K, V> implements Iterable<Map.Entry<K, V>> {
     private final Map<K, V> mapping;
 
     public Environment() {
-        this(null, new HashMap<K, V>());
+        this(null, new HashMap<>());
     }
 
-    private Environment(Environment<K, V> previous, Map<K, V> mapping) {
+    private Environment(@Nullable Environment<K, V> previous, Map<K, V> mapping) {
         this.previous = previous;
 
         this.mapping = checkNotNull(mapping, "mapping cannot be null");
@@ -37,7 +38,7 @@ public final class Environment<K, V> implements Iterable<Map.Entry<K, V>> {
     }
 
     private Environment(Environment<K, V> previous) {
-        this(previous, new HashMap<K, V>());
+        this(previous, new HashMap<>());
     }
 
     /**
@@ -78,9 +79,12 @@ public final class Environment<K, V> implements Iterable<Map.Entry<K, V>> {
     public Optional<V> get(K key) {
         checkNotNull(key, "key cannot be null");
 
-        Optional<V> value = Optional.fromNullable(mapping.get(key));
+        Optional<V> value = Optional.ofNullable(mapping.get(key));
+        if (value.isPresent()) {
+            return value;
+        }
 
-        return previous != null ? value.or(previous.get(key)) : value;
+        return Optional.ofNullable(previous).flatMap((prev) -> prev.get(key));
     }
 
     /**
@@ -116,7 +120,7 @@ public final class Environment<K, V> implements Iterable<Map.Entry<K, V>> {
     }
 
     public Environment<K, V> push() {
-        return new Environment<K, V>(this);
+        return new Environment<>(this);
     }
 
     public void put(K key, V value) {
@@ -146,7 +150,7 @@ public final class Environment<K, V> implements Iterable<Map.Entry<K, V>> {
         if (recurse && previous != null) {
             return previous.remove(key, recurse);
         } else {
-            return Optional.absent();
+            return Optional.empty();
         }
     }
 
