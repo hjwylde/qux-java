@@ -2,9 +2,9 @@
 " Language:         Qux
 " Maintainer:       Henry J. Wylde
 " URL:              https://github.com/hjwylde/qux/
-" Latest Revision:  2014-07-22
+" Latest Revision:  2014-08-27
 " Filenames:        *.qux
-" Version:          0.2.5
+" Version:          0.2.0
 
 if exists("b:current_syntax")
     finish

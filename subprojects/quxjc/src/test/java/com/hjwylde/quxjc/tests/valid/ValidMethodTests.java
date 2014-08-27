@@ -21,7 +21,7 @@ import java.util.List;
  * Valid method tests.
  *
  * @author Henry J. Wylde
- * @since TODO: SINCE
+ * @since 0.2.6
  */
 @RunWith(Parameterized.class)
 public final class ValidMethodTests extends Harness {
