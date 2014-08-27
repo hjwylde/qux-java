@@ -91,7 +91,7 @@ public abstract class ExprNode extends Node {
      * TODO: Documentation
      *
      * @author Henry J. Wylde
-     * @since TODO: SINCE
+     * @since 0.2.6
      */
     public static final class Constant extends ExprNode {
 
