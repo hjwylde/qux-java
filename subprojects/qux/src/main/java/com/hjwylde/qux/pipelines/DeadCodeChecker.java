@@ -94,9 +94,7 @@ public final class DeadCodeChecker extends Pipeline {
          */
         @Override
         public void vertexTraversed(VertexTraversalEvent<StmtNode> e) {
-            if (e.getVertex() == function.getStmts().get(0)) {
-                started = true;
-            }
+            started |= e.getVertex() == function.getStmts().get(0);
 
             checkReachable(e.getVertex());
         }
@@ -107,15 +105,11 @@ public final class DeadCodeChecker extends Pipeline {
             }
 
             Optional<Attribute.Source> opt = Attributes.getAttribute(stmt, Attribute.Source.class);
+            Attribute.Source source = opt.orElseThrow(() -> CompilerErrors.unreachableStatement(
+                    stmt.toString()));
 
-            if (opt.isPresent()) {
-                Attribute.Source source = opt.get();
-
-                throw CompilerErrors.unreachableStatement(stmt.toString(), source.getSource(),
-                        source.getLine(), source.getCol(), source.getLength());
-            } else {
-                throw CompilerErrors.unreachableStatement(stmt.toString());
-            }
+            throw CompilerErrors.unreachableStatement(stmt.toString(), source.getSource(),
+                    source.getLine(), source.getCol(), source.getLength());
         }
     }
 }

@@ -68,6 +68,14 @@ public final class Bool extends AbstractObj {
         return this == obj ? TRUE : FALSE;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Int _hash_() {
+        return value ? Int.ONE : Int.M_ONE;
+    }
+
     public Bool _iff_(Bool t) {
         return (this == t) ? TRUE : FALSE;
     }

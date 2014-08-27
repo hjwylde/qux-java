@@ -2,10 +2,8 @@ package com.hjwylde.qux.pipelines;
 
 import com.hjwylde.common.error.CompilerErrors;
 import com.hjwylde.qbs.builder.QuxContext;
-import com.hjwylde.qux.tree.ConstantNode;
 import com.hjwylde.qux.tree.FunctionNode;
 import com.hjwylde.qux.tree.QuxNode;
-import com.hjwylde.qux.tree.TypeNode;
 import com.hjwylde.qux.util.Attribute;
 import com.hjwylde.qux.util.Attributes;
 import com.hjwylde.qux.util.Identifier;
@@ -38,25 +36,19 @@ public final class NameChecker extends Pipeline {
     public QuxNode apply(QuxNode node) {
         Set<Identifier> constants = new HashSet<>();
         // TODO: Check for recursive constants
-        for (ConstantNode constant : node.getConstants()) {
-            checkConstant(constant.getName(), constants);
-        }
+        node.getConstants().forEach(c -> checkConstant(c.getName(), constants));
 
         Set<Identifier> functions = new HashSet<>();
         for (FunctionNode function : node.getFunctions()) {
             checkFunction(function.getName(), functions);
 
             Set<Identifier> parameters = new HashSet<>();
-            for (Identifier parameter : function.getParameters()) {
-                checkFunctionParameter(parameter, parameters, function);
-            }
+            function.getParameters().forEach(p -> checkFunctionParameter(p, parameters, function));
         }
 
         Set<Identifier> types = new HashSet<>();
         // TODO: Check for recursive types
-        for (TypeNode type : node.getTypes()) {
-            checkType(type.getName(), types);
-        }
+        node.getTypes().forEach(t -> checkType(t.getName(), types));
 
         return node;
     }
@@ -68,15 +60,11 @@ public final class NameChecker extends Pipeline {
         }
 
         Optional<Attribute.Source> opt = Attributes.getAttribute(constant, Attribute.Source.class);
+        Attribute.Source source = opt.orElseThrow(() -> CompilerErrors.duplicateConstant(
+                constant.getId()));
 
-        if (opt.isPresent()) {
-            Attribute.Source source = opt.get();
-
-            throw CompilerErrors.duplicateConstant(constant.getId(), source.getSource(),
-                    source.getLine(), source.getCol(), source.getLength());
-        } else {
-            throw CompilerErrors.duplicateConstant(constant.getId());
-        }
+        throw CompilerErrors.duplicateConstant(constant.getId(), source.getSource(),
+                source.getLine(), source.getCol(), source.getLength());
     }
 
     private void checkFunction(Identifier function, Set<Identifier> functions) {
@@ -86,15 +74,11 @@ public final class NameChecker extends Pipeline {
         }
 
         Optional<Attribute.Source> opt = Attributes.getAttribute(function, Attribute.Source.class);
+        Attribute.Source source = opt.orElseThrow(() -> CompilerErrors.duplicateFunction(
+                function.getId()));
 
-        if (opt.isPresent()) {
-            Attribute.Source source = opt.get();
-
-            throw CompilerErrors.duplicateFunction(function.getId(), source.getSource(),
-                    source.getLine(), source.getCol(), source.getLength());
-        } else {
-            throw CompilerErrors.duplicateFunction(function.getId());
-        }
+        throw CompilerErrors.duplicateFunction(function.getId(), source.getSource(),
+                source.getLine(), source.getCol(), source.getLength());
     }
 
     private void checkFunctionParameter(Identifier parameter, Set<Identifier> parameters,
@@ -105,15 +89,11 @@ public final class NameChecker extends Pipeline {
         }
 
         Optional<Attribute.Source> opt = Attributes.getAttribute(function, Attribute.Source.class);
+        Attribute.Source source = opt.orElseThrow(() -> CompilerErrors.duplicateFunctionParameter(
+                parameter.getId()));
 
-        if (opt.isPresent()) {
-            Attribute.Source source = opt.get();
-
-            throw CompilerErrors.duplicateFunctionParameter(parameter.getId(), source.getSource(),
-                    source.getLine(), source.getCol(), source.getLength());
-        } else {
-            throw CompilerErrors.duplicateFunctionParameter(parameter.getId());
-        }
+        throw CompilerErrors.duplicateFunctionParameter(parameter.getId(), source.getSource(),
+                source.getLine(), source.getCol(), source.getLength());
     }
 
     private void checkType(Identifier type, Set<Identifier> types) {
@@ -123,14 +103,9 @@ public final class NameChecker extends Pipeline {
         }
 
         Optional<Attribute.Source> opt = Attributes.getAttribute(type, Attribute.Source.class);
+        Attribute.Source source = opt.orElseThrow(() -> CompilerErrors.duplicateType(type.getId()));
 
-        if (opt.isPresent()) {
-            Attribute.Source source = opt.get();
-
-            throw CompilerErrors.duplicateType(type.getId(), source.getSource(), source.getLine(),
-                    source.getCol(), source.getLength());
-        } else {
-            throw CompilerErrors.duplicateType(type.getId());
-        }
+        throw CompilerErrors.duplicateType(type.getId(), source.getSource(), source.getLine(),
+                source.getCol(), source.getLength());
     }
 }

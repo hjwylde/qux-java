@@ -55,6 +55,14 @@ public final class Null extends AbstractObj {
      * {@inheritDoc}
      */
     @Override
+    public Int _hash_() {
+        return Int.M_ONE;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public Meta meta() {
         return META_NULL;
     }

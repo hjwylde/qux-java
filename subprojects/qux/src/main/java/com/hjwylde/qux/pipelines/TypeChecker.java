@@ -1,6 +1,7 @@
 package com.hjwylde.qux.pipelines;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static com.hjwylde.qux.util.Type.TYPE_ANY;
 import static com.hjwylde.qux.util.Type.TYPE_BOOL;
 import static com.hjwylde.qux.util.Type.TYPE_INT;
@@ -60,9 +61,9 @@ public final class TypeChecker extends Pipeline {
      */
     @Override
     public QuxNode apply(QuxNode node) {
-        node.getConstants().forEach(com.hjwylde.qux.pipelines.TypeChecker::apply);
+        node.getConstants().forEach(TypeChecker::apply);
 
-        node.getFunctions().forEach(com.hjwylde.qux.pipelines.TypeChecker::apply);
+        node.getFunctions().forEach(TypeChecker::apply);
 
         return node;
     }
@@ -77,15 +78,11 @@ public final class TypeChecker extends Pipeline {
         Type record = forRecord(ImmutableMap.of(new Identifier(""), TYPE_ANY));
 
         Optional<Attribute.Source> opt = Attributes.getAttribute(expr, Attribute.Source.class);
+        Attribute.Source source = opt.orElseThrow(() -> CompilerErrors.invalidType(type.toString(),
+                record.toString()));
 
-        if (opt.isPresent()) {
-            Attribute.Source source = opt.get();
-
-            throw CompilerErrors.invalidType(type.toString(), record.toString(), source.getSource(),
-                    source.getLine(), source.getCol(), source.getLength());
-        } else {
-            throw CompilerErrors.invalidType(type.toString(), record.toString());
-        }
+        throw CompilerErrors.invalidType(type.toString(), record.toString(), source.getSource(),
+                source.getLine(), source.getCol(), source.getLength());
     }
 
     static void checkSubtype(ExprNode expr, Type rhs) {
@@ -96,15 +93,11 @@ public final class TypeChecker extends Pipeline {
         }
 
         Optional<Attribute.Source> opt = Attributes.getAttribute(expr, Attribute.Source.class);
+        Attribute.Source source = opt.orElseThrow(() -> CompilerErrors.invalidType(type.toString(),
+                rhs.toString()));
 
-        if (opt.isPresent()) {
-            Attribute.Source source = opt.get();
-
-            throw CompilerErrors.invalidType(type.toString(), rhs.toString(), source.getSource(),
-                    source.getLine(), source.getCol(), source.getLength());
-        } else {
-            throw CompilerErrors.invalidType(type.toString(), rhs.toString());
-        }
+        throw CompilerErrors.invalidType(type.toString(), rhs.toString(), source.getSource(),
+                source.getLine(), source.getCol(), source.getLength());
     }
 
     private static void apply(ConstantNode constant) {
@@ -141,15 +134,11 @@ public final class TypeChecker extends Pipeline {
         }
 
         Optional<Attribute.Source> opt = Attributes.getAttribute(expr, Attribute.Source.class);
+        Attribute.Source source = opt.orElseThrow(() -> CompilerErrors.invalidType(type.toString(),
+                expected.toString()));
 
-        if (opt.isPresent()) {
-            Attribute.Source source = opt.get();
-
-            throw CompilerErrors.invalidType(type.toString(), expected.toString(),
-                    source.getSource(), source.getLine(), source.getCol(), source.getLength());
-        } else {
-            throw CompilerErrors.invalidType(type.toString(), expected.toString());
-        }
+        throw CompilerErrors.invalidType(type.toString(), expected.toString(), source.getSource(),
+                source.getLine(), source.getCol(), source.getLength());
     }
 
     private static Type getType(Node node) {
@@ -269,8 +258,17 @@ public final class TypeChecker extends Pipeline {
         public void visitExprFunction(ExprNode.Function expr) {
             visitExpr(expr.getOwner());
 
-            // TODO: Type check the arguments
-            expr.getArguments().forEach(this::visitExpr);
+            Type.Function type = Attributes.getAttributeUnchecked(expr, Attribute.Function.class)
+                    .getType();
+
+            checkState(type.getParameterTypes().size() == expr.getArguments().size());
+
+            for (int i = 0; i < type.getParameterTypes().size(); i++) {
+                ExprNode argument = expr.getArguments().get(i);
+
+                visitExpr(argument);
+                checkSubtype(argument, type.getParameterTypes().get(i));
+            }
         }
 
         /**

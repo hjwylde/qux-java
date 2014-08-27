@@ -39,9 +39,7 @@ public abstract class AbstractObj {
         return _comp_(obj)._gte_(Int.ZERO);
     }
 
-    public Int _hash_() {
-        return Int.valueOf(hashCode());
-    }
+    public abstract Int _hash_();
 
     public Bool _lt_(AbstractObj obj) {
         return _comp_(obj)._lt_(Int.ZERO);
