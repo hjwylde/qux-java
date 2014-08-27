@@ -10,3 +10,6 @@ void main([str] args):
     print i
     print i-- + 1
 
+    print 1--
+    print 2--
+

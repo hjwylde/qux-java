@@ -14,13 +14,21 @@ import static com.hjwylde.qux.util.Type.TYPE_OBJ;
 import static com.hjwylde.qux.util.Type.TYPE_RAT;
 import static com.hjwylde.qux.util.Type.TYPE_SET_ANY;
 import static com.hjwylde.qux.util.Type.TYPE_STR;
+import static com.hjwylde.qux.util.Type.forDescriptor;
+import static com.hjwylde.qux.util.Type.forFunction;
+import static com.hjwylde.qux.util.Type.forList;
+import static com.hjwylde.qux.util.Type.forRecord;
+import static com.hjwylde.qux.util.Type.forSet;
+import static com.hjwylde.qux.util.Type.forUnion;
 import static com.hjwylde.qux.util.Type.getFieldType;
+import static com.hjwylde.qux.util.Type.getFields;
 import static com.hjwylde.qux.util.Type.getInnerType;
 import static com.hjwylde.qux.util.Types.isSubtype;
 import static java.util.Arrays.asList;
 
 import com.hjwylde.common.error.CompilerErrors;
 import com.hjwylde.common.error.MethodNotImplementedError;
+import com.hjwylde.common.lang.Pair;
 import com.hjwylde.qbs.builder.QuxContext;
 import com.hjwylde.qbs.builder.resources.Resource;
 import com.hjwylde.qux.api.ConstantAdapter;
@@ -119,7 +127,7 @@ public final class TypePropagator extends Pipeline {
 
         Optional<String> type = resource.getConstantType(constant.getName().getId());
         if (type.isPresent()) {
-            return propagate(Type.forDescriptor(type.get()));
+            return propagate(forDescriptor(type.get()));
         }
 
         Optional<Attribute.Source> opt = Attributes.getAttribute(constant, Attribute.Source.class);
@@ -143,7 +151,7 @@ public final class TypePropagator extends Pipeline {
 
         Optional<String> type = resource.getFunctionType(function.getName().getId());
         if (type.isPresent()) {
-            return (Type.Function) propagate(Type.forDescriptor(type.get()));
+            return (Type.Function) propagate(forDescriptor(type.get()));
         }
 
         Optional<Attribute.Source> opt = Attributes.getAttribute(function, Attribute.Source.class);
@@ -207,7 +215,7 @@ public final class TypePropagator extends Pipeline {
 
         Optional<String> desc = resource.getTypeType(name.getId());
         if (desc.isPresent()) {
-            return propagate(Type.forDescriptor(desc.get()));
+            return propagate(forDescriptor(desc.get()));
         }
 
         Optional<Attribute.Source> opt = Attributes.getAttribute(type, Attribute.Source.class);
@@ -238,8 +246,8 @@ public final class TypePropagator extends Pipeline {
                 if (!next.contains(key)) {
                     merged.remove(key);
                 } else {
-                    merged.put(key, Type.forUnion(asList(merged.getUnchecked(key),
-                            next.getUnchecked(key))));
+                    merged.put(key, forUnion(asList(merged.getUnchecked(key), next.getUnchecked(
+                            key))));
                 }
             }
         }
@@ -256,18 +264,18 @@ public final class TypePropagator extends Pipeline {
 
             Type returnType = propagate(((Type.Function) type).getReturnType());
 
-            return Type.forFunction(returnType, parameters, type.getAttributes());
+            return forFunction(returnType, parameters, type.getAttributes());
         } else if (type instanceof Type.List) {
-            return Type.forList(propagate(((Type.List) type).getInnerType()), type.getAttributes());
+            return forList(propagate(((Type.List) type).getInnerType()), type.getAttributes());
         } else if (type instanceof Type.Set) {
-            return Type.forSet(propagate(((Type.Set) type).getInnerType()), type.getAttributes());
+            return forSet(propagate(((Type.Set) type).getInnerType()), type.getAttributes());
         } else if (type instanceof Type.Union) {
             List<Type> types = new ArrayList<>();
             for (Type bound : ((Type.Union) type).getTypes()) {
                 types.add(propagate(bound));
             }
 
-            return Type.forUnion(types, type.getAttributes());
+            return forUnion(types, type.getAttributes());
         } else if (type instanceof Type.Named) {
             return propagate(getTypeType((Type.Named) type));
         }
@@ -298,7 +306,7 @@ public final class TypePropagator extends Pipeline {
         Attribute.Type attribute = opt.get();
 
         // Combine the two types and create a normalised union of them
-        Type ntype = Type.forUnion(asList(type, attribute.getType()));
+        Type ntype = forUnion(asList(type, attribute.getType()));
         attribute.setType(ntype);
 
         // Return true if the type was updated
@@ -370,7 +378,7 @@ public final class TypePropagator extends Pipeline {
                     setType(expr, TYPE_INT);
                     break;
                 case RNG:
-                    setType(expr, Type.forList(TYPE_INT));
+                    setType(expr, forList(TYPE_INT));
                     break;
                 case ACC:
                     checkSubtype(expr.getLhs(), TYPE_ITERABLE);
@@ -442,7 +450,7 @@ public final class TypePropagator extends Pipeline {
             if (types.isEmpty()) {
                 setType(expr, TYPE_LIST_ANY);
             } else {
-                setType(expr, Type.forList(Type.forUnion(types)));
+                setType(expr, forList(forUnion(types)));
             }
         }
 
@@ -466,7 +474,7 @@ public final class TypePropagator extends Pipeline {
                 fields.put(field.getKey(), getType(field.getValue()));
             }
 
-            setType(expr, Type.forRecord(fields));
+            setType(expr, forRecord(fields));
         }
 
         /**
@@ -475,7 +483,7 @@ public final class TypePropagator extends Pipeline {
         @Override
         public void visitExprRecordAccess(ExprNode.RecordAccess expr) {
             visitExpr(expr.getTarget());
-            checkSubtype(expr.getTarget(), Type.forRecord(ImmutableMap.<Identifier, Type>of(
+            checkSubtype(expr.getTarget(), forRecord(ImmutableMap.<Identifier, Type>of(
                     expr.getField(), TYPE_ANY)));
 
             setType(expr, getFieldType(getType(expr.getTarget()), expr.getField()));
@@ -496,7 +504,7 @@ public final class TypePropagator extends Pipeline {
             if (types.isEmpty()) {
                 setType(expr, TYPE_SET_ANY);
             } else {
-                setType(expr, Type.forSet(Type.forUnion(types)));
+                setType(expr, forSet(forUnion(types)));
             }
         }
 
@@ -660,26 +668,20 @@ public final class TypePropagator extends Pipeline {
 
                     // After the access assignment, the type of the variable needs to be updated
 
-                    ExprNode lhs = ((ExprNode.Binary) stmt.getLhs()).getLhs();
-                    Type type = getType(lhs);
+                    Pair<Identifier, Type> pair = updateInnerType(stmt.getLhs(), getType(
+                            stmt.getExpr()));
 
-                    if (isSubtype(type, TYPE_STR)) {
-                        // Don't need to do anything, a string assignment results in the same type
-                    } else if (isSubtype(getType(stmt.getExpr()), getInnerType(type))) {
-                        // TODO: Temporary solution to allow for some access assignments
-                    } else {
-                        //                        throw new MethodNotImplementedError(type.toString());
-                    }
+                    env.put(pair.getFirst(), pair.getSecond());
 
                     break;
                 case RECORD_ACCESS:
-                    propagate(stmt.getLhs());
+                    propagate(((ExprNode.RecordAccess) stmt.getLhs()).getTarget());
 
-                    // After the record access assignment, the type of the variable needs to be
-                    // updated
+                    // After the access assignment, the type of the variable needs to be updated
 
-                    // lhs = ((ExprNode.RecordAccess) stmt.getLhs()).getTarget();
-                    // type = getType(lhs);
+                    pair = updateInnerType(stmt.getLhs(), getType(stmt.getExpr()));
+
+                    env.put(pair.getFirst(), pair.getSecond());
 
                     break;
                 case VARIABLE:
@@ -790,6 +792,38 @@ public final class TypePropagator extends Pipeline {
             boolean modified = TypePropagator.this.propagate(expr, env);
 
             setFinished(isFinished() && !modified);
+        }
+
+        private Pair<Identifier, Type> updateInnerType(ExprNode expr, Type type) {
+            if (expr instanceof ExprNode.Variable) {
+                return new Pair<>(((ExprNode.Variable) expr).getName(), type);
+            } else if (expr instanceof ExprNode.RecordAccess) {
+                return updateInnerType((ExprNode.RecordAccess) expr, type);
+            } else if (expr instanceof ExprNode.Binary) {
+                return updateInnerType((ExprNode.Binary) expr, type);
+            }
+
+            throw new MethodNotImplementedError();
+        }
+
+        private Pair<Identifier, Type> updateInnerType(ExprNode.Binary access, Type type) {
+            Type list = getType(access.getLhs());
+
+            if (isSubtype(list, TYPE_STR)) {
+                return updateInnerType(access.getLhs(), list);
+            }
+
+            return updateInnerType(access.getLhs(), forList(forUnion(asList(type, getInnerType(
+                    list)))));
+        }
+
+        private Pair<Identifier, Type> updateInnerType(ExprNode.RecordAccess access, Type type) {
+            Type record = getType(access.getTarget());
+
+            Map<Identifier, Type> fields = new HashMap<>(getFields(record));
+            fields.put(access.getField(), type);
+
+            return updateInnerType(access.getTarget(), forRecord(fields, record.getAttributes()));
         }
     }
 

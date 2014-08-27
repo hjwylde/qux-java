@@ -24,3 +24,9 @@ void main([str] args):
     xs.x.y.a = null
     print xs
 
+    ys = {x: 5, y: 6}
+    ys.x++
+    print ys
+    ys.x = 'foo'
+    print ys
+

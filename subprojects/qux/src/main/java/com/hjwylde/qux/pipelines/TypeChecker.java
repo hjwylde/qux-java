@@ -9,9 +9,11 @@ import static com.hjwylde.qux.util.Type.TYPE_LIST_ANY;
 import static com.hjwylde.qux.util.Type.TYPE_META;
 import static com.hjwylde.qux.util.Type.TYPE_RAT;
 import static com.hjwylde.qux.util.Type.TYPE_STR;
+import static com.hjwylde.qux.util.Type.forRecord;
 import static com.hjwylde.qux.util.Type.forUnion;
 import static com.hjwylde.qux.util.Type.getInnerType;
 import static com.hjwylde.qux.util.Types.isEquivalent;
+import static com.hjwylde.qux.util.Types.isRecord;
 import static com.hjwylde.qux.util.Types.isSubtype;
 import static java.util.Arrays.asList;
 
@@ -63,6 +65,27 @@ public final class TypeChecker extends Pipeline {
         node.getFunctions().forEach(com.hjwylde.qux.pipelines.TypeChecker::apply);
 
         return node;
+    }
+
+    static void checkRecord(ExprNode expr) {
+        Type type = getType(expr);
+
+        if (isRecord(type)) {
+            return;
+        }
+
+        Type record = forRecord(ImmutableMap.of(new Identifier(""), TYPE_ANY));
+
+        Optional<Attribute.Source> opt = Attributes.getAttribute(expr, Attribute.Source.class);
+
+        if (opt.isPresent()) {
+            Attribute.Source source = opt.get();
+
+            throw CompilerErrors.invalidType(type.toString(), record.toString(), source.getSource(),
+                    source.getLine(), source.getCol(), source.getLength());
+        } else {
+            throw CompilerErrors.invalidType(type.toString(), record.toString());
+        }
     }
 
     static void checkSubtype(ExprNode expr, Type rhs) {
@@ -283,8 +306,7 @@ public final class TypeChecker extends Pipeline {
         public void visitExprRecordAccess(ExprNode.RecordAccess expr) {
             visitExpr(expr.getTarget());
 
-            Type expected = Type.forRecord(ImmutableMap.<Identifier, Type>of(expr.getField(),
-                    TYPE_ANY));
+            Type expected = forRecord(ImmutableMap.<Identifier, Type>of(expr.getField(), TYPE_ANY));
             checkSubtype(expr.getTarget(), expected);
         }
 
@@ -395,7 +417,10 @@ public final class TypeChecker extends Pipeline {
                             TYPE_STR, TYPE_LIST_ANY)));
                     break;
                 case RECORD_ACCESS:
-                    check(stmt.getLhs());
+                    ExprNode.RecordAccess access = (ExprNode.RecordAccess) stmt.getLhs();
+
+                    check(access.getTarget());
+                    checkRecord(access.getTarget());
                     break;
                 case VARIABLE:
                     break;

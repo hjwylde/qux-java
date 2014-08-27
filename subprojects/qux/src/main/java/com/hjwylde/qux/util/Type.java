@@ -16,6 +16,7 @@ import com.google.common.collect.ImmutableSet;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import javax.annotation.Nullable;
@@ -281,6 +282,30 @@ public abstract class Type extends Node {
         }
 
         throw new MethodNotImplementedError(type.getClass().toString());
+    }
+
+    public static Map<Identifier, Type> getFields(Type type) {
+        Map<Identifier, Type> fields = new HashMap<>();
+
+        if (type instanceof Type.Union) {
+            Iterator<Type> it = ((Union) type).getTypes().iterator();
+
+            fields.putAll(getFields(it.next()));
+
+            while (it.hasNext()) {
+                Map<Identifier, Type> next = getFields(it.next());
+
+                fields.keySet().removeIf(field -> !next.containsKey(field));
+
+                fields.replaceAll((field, old) -> forUnion(asList(old, next.get(field))));
+            }
+        } else if (type instanceof Type.Record) {
+            fields.putAll(((Record) type).getFields());
+        } else {
+            throw new MethodNotImplementedError(type.getClass().toString());
+        }
+
+        return ImmutableMap.copyOf(fields);
     }
 
     public static Type getInnerType(Type type) {
