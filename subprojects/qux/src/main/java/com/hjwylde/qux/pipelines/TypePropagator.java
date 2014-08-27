@@ -2,6 +2,7 @@ package com.hjwylde.qux.pipelines;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.hjwylde.qux.pipelines.TypeChecker.checkSubtype;
 import static com.hjwylde.qux.util.Type.TYPE_ANY;
 import static com.hjwylde.qux.util.Type.TYPE_BOOL;
 import static com.hjwylde.qux.util.Type.TYPE_INT;
@@ -13,12 +14,21 @@ import static com.hjwylde.qux.util.Type.TYPE_OBJ;
 import static com.hjwylde.qux.util.Type.TYPE_RAT;
 import static com.hjwylde.qux.util.Type.TYPE_SET_ANY;
 import static com.hjwylde.qux.util.Type.TYPE_STR;
+import static com.hjwylde.qux.util.Type.forDescriptor;
+import static com.hjwylde.qux.util.Type.forFunction;
+import static com.hjwylde.qux.util.Type.forList;
+import static com.hjwylde.qux.util.Type.forRecord;
+import static com.hjwylde.qux.util.Type.forSet;
+import static com.hjwylde.qux.util.Type.forUnion;
 import static com.hjwylde.qux.util.Type.getFieldType;
+import static com.hjwylde.qux.util.Type.getFields;
 import static com.hjwylde.qux.util.Type.getInnerType;
 import static com.hjwylde.qux.util.Types.isSubtype;
+import static java.util.Arrays.asList;
 
 import com.hjwylde.common.error.CompilerErrors;
 import com.hjwylde.common.error.MethodNotImplementedError;
+import com.hjwylde.common.lang.Pair;
 import com.hjwylde.qbs.builder.QuxContext;
 import com.hjwylde.qbs.builder.resources.Resource;
 import com.hjwylde.qux.api.ConstantAdapter;
@@ -43,18 +53,17 @@ import com.hjwylde.qux.util.Identifier;
 import com.hjwylde.qux.util.Type;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import org.jgrapht.event.VertexTraversalEvent;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -65,8 +74,6 @@ import java.util.Set;
  */
 public final class TypePropagator extends Pipeline {
 
-    private QuxNode node;
-
     public TypePropagator(QuxContext context) {
         super(context);
     }
@@ -76,19 +83,11 @@ public final class TypePropagator extends Pipeline {
      */
     @Override
     public QuxNode apply(QuxNode node) {
-        this.node = node;
+        node.getConstants().forEach(this::apply);
 
-        for (ConstantNode constant : node.getConstants()) {
-            apply(constant);
-        }
+        node.getFunctions().forEach(this::apply);
 
-        for (FunctionNode function : node.getFunctions()) {
-            apply(function);
-        }
-
-        for (TypeNode type : node.getTypes()) {
-            apply(type);
-        }
+        node.getTypes().forEach(this::apply);
 
         return node;
     }
@@ -121,15 +120,17 @@ public final class TypePropagator extends Pipeline {
         }
     }
 
-    private Type getConstantType(List<Identifier> owner, ExprNode.Variable constant, Node node) {
-        Resource.Single resource = getResource(owner, node);
+    private Type getConstantType(ExprNode.Constant constant) {
+        List<Identifier> owner = constant.getOwner().getId();
+
+        Resource.Single resource = getResource(owner, constant.getOwner());
 
         Optional<String> type = resource.getConstantType(constant.getName().getId());
         if (type.isPresent()) {
-            return propagate(Type.forDescriptor(type.get()));
+            return propagate(forDescriptor(type.get()));
         }
 
-        Optional<Attribute.Source> opt = Attributes.getAttribute(node, Attribute.Source.class);
+        Optional<Attribute.Source> opt = Attributes.getAttribute(constant, Attribute.Source.class);
 
         if (opt.isPresent()) {
             Attribute.Source source = opt.get();
@@ -143,16 +144,17 @@ public final class TypePropagator extends Pipeline {
         }
     }
 
-    private Type.Function getFunctionType(List<Identifier> owner, ExprNode.Function function,
-            Node node) {
-        Resource.Single resource = getResource(owner, node);
+    private Type.Function getFunctionType(ExprNode.Function function) {
+        List<Identifier> owner = function.getOwner().getId();
+
+        Resource.Single resource = getResource(owner, function.getOwner());
 
         Optional<String> type = resource.getFunctionType(function.getName().getId());
         if (type.isPresent()) {
-            return (Type.Function) propagate(Type.forDescriptor(type.get()));
+            return (Type.Function) propagate(forDescriptor(type.get()));
         }
 
-        Optional<Attribute.Source> opt = Attributes.getAttribute(node, Attribute.Source.class);
+        Optional<Attribute.Source> opt = Attributes.getAttribute(function, Attribute.Source.class);
 
         if (opt.isPresent()) {
             Attribute.Source source = opt.get();
@@ -213,10 +215,19 @@ public final class TypePropagator extends Pipeline {
 
         Optional<String> desc = resource.getTypeType(name.getId());
         if (desc.isPresent()) {
-            return propagate(Type.forDescriptor(desc.get()));
+            return propagate(forDescriptor(desc.get()));
         }
 
-        throw CompilerErrors.noTypeFound(Joiner.on('.').join(owner), name.getId());
+        Optional<Attribute.Source> opt = Attributes.getAttribute(type, Attribute.Source.class);
+
+        if (opt.isPresent()) {
+            Attribute.Source source = opt.get();
+
+            throw CompilerErrors.noTypeFound(Joiner.on('.').join(owner), name.getId(),
+                    source.getSource(), source.getLine(), source.getCol(), source.getLength());
+        } else {
+            throw CompilerErrors.noTypeFound(Joiner.on('.').join(owner), name.getId());
+        }
     }
 
     private static Environment<Identifier, Type> mergeEnvironments(
@@ -235,8 +246,8 @@ public final class TypePropagator extends Pipeline {
                 if (!next.contains(key)) {
                     merged.remove(key);
                 } else {
-                    merged.put(key, Type.forUnion(Arrays.asList(merged.getUnchecked(key),
-                            next.getUnchecked(key))));
+                    merged.put(key, forUnion(asList(merged.getUnchecked(key), next.getUnchecked(
+                            key))));
                 }
             }
         }
@@ -253,18 +264,18 @@ public final class TypePropagator extends Pipeline {
 
             Type returnType = propagate(((Type.Function) type).getReturnType());
 
-            return Type.forFunction(returnType, parameters, type.getAttributes());
+            return forFunction(returnType, parameters, type.getAttributes());
         } else if (type instanceof Type.List) {
-            return Type.forList(propagate(((Type.List) type).getInnerType()), type.getAttributes());
+            return forList(propagate(((Type.List) type).getInnerType()), type.getAttributes());
         } else if (type instanceof Type.Set) {
-            return Type.forSet(propagate(((Type.Set) type).getInnerType()), type.getAttributes());
+            return forSet(propagate(((Type.Set) type).getInnerType()), type.getAttributes());
         } else if (type instanceof Type.Union) {
             List<Type> types = new ArrayList<>();
             for (Type bound : ((Type.Union) type).getTypes()) {
                 types.add(propagate(bound));
             }
 
-            return Type.forUnion(types, type.getAttributes());
+            return forUnion(types, type.getAttributes());
         } else if (type instanceof Type.Named) {
             return propagate(getTypeType((Type.Named) type));
         }
@@ -273,7 +284,7 @@ public final class TypePropagator extends Pipeline {
     }
 
     private boolean propagate(ExprNode expr) {
-        return propagate(expr, new Environment<Identifier, Type>());
+        return propagate(expr, new Environment<>());
     }
 
     private boolean propagate(ExprNode expr, Environment<Identifier, Type> env) {
@@ -295,7 +306,7 @@ public final class TypePropagator extends Pipeline {
         Attribute.Type attribute = opt.get();
 
         // Combine the two types and create a normalised union of them
-        Type ntype = Type.forUnion(Arrays.asList(type, attribute.getType()));
+        Type ntype = forUnion(asList(type, attribute.getType()));
         attribute.setType(ntype);
 
         // Return true if the type was updated
@@ -367,14 +378,12 @@ public final class TypePropagator extends Pipeline {
                     setType(expr, TYPE_INT);
                     break;
                 case RNG:
-                    setType(expr, Type.forList(TYPE_INT));
+                    setType(expr, forList(TYPE_INT));
                     break;
                 case ACC:
-                    // Sanity check, if it fails then we don't care - the type checker should pick
-                    // it up
-                    if (isSubtype(getType(expr.getLhs()), TYPE_ITERABLE)) {
-                        setType(expr, getInnerType(getType(expr.getLhs())));
-                    }
+                    checkSubtype(expr.getLhs(), TYPE_ITERABLE);
+
+                    setType(expr, getInnerType(getType(expr.getLhs())));
                     break;
                 case AND:
                 case OR:
@@ -409,51 +418,9 @@ public final class TypePropagator extends Pipeline {
          */
         @Override
         public void visitExprConstant(ExprNode.Constant expr) {
-            switch (expr.getType()) {
-                case BOOL:
-                    setType(expr, TYPE_BOOL);
-                    break;
-                case INT:
-                    setType(expr, TYPE_INT);
-                    break;
-                case NULL:
-                    setType(expr, TYPE_NULL);
-                    break;
-                case OBJ:
-                    setType(expr, TYPE_OBJ);
-                    break;
-                case RAT:
-                    setType(expr, TYPE_RAT);
-                    break;
-                case STR:
-                    setType(expr, TYPE_STR);
-                    break;
-                default:
-                    throw new MethodNotImplementedError(expr.getType().toString());
-            }
-        }
+            visitExpr(expr.getOwner());
 
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void visitExprExternal(ExprNode.External expr) {
-            visitExpr(expr.getMeta());
-
-            switch (expr.getType()) {
-                case CONSTANT:
-                    visitExprVariable(expr.getMeta().getId(), (ExprNode.Variable) expr.getExpr(),
-                            expr);
-                    break;
-                case FUNCTION:
-                    visitExprFunction(expr.getMeta().getId(), (ExprNode.Function) expr.getExpr(),
-                            expr);
-                    break;
-                default:
-                    throw new MethodNotImplementedError(expr.getType().toString());
-            }
-
-            setType(expr, getType(expr.getExpr()));
+            setType(expr, getConstantType(expr));
         }
 
         /**
@@ -461,15 +428,11 @@ public final class TypePropagator extends Pipeline {
          */
         @Override
         public void visitExprFunction(ExprNode.Function expr) {
-            visitExprFunction(node.getId(), expr, expr);
-        }
+            visitExpr(expr.getOwner());
 
-        public void visitExprFunction(List<Identifier> owner, ExprNode.Function expr, Node node) {
-            for (ExprNode argument : expr.getArguments()) {
-                visitExpr(argument);
-            }
+            expr.getArguments().forEach(this::visitExpr);
 
-            setType(expr, getFunctionType(owner, expr, node).getReturnType());
+            setType(expr, getFunctionType(expr).getReturnType());
         }
 
         /**
@@ -487,7 +450,7 @@ public final class TypePropagator extends Pipeline {
             if (types.isEmpty()) {
                 setType(expr, TYPE_LIST_ANY);
             } else {
-                setType(expr, Type.forList(Type.forUnion(types)));
+                setType(expr, forList(forUnion(types)));
             }
         }
 
@@ -511,7 +474,7 @@ public final class TypePropagator extends Pipeline {
                 fields.put(field.getKey(), getType(field.getValue()));
             }
 
-            setType(expr, Type.forRecord(fields));
+            setType(expr, forRecord(fields));
         }
 
         /**
@@ -520,12 +483,10 @@ public final class TypePropagator extends Pipeline {
         @Override
         public void visitExprRecordAccess(ExprNode.RecordAccess expr) {
             visitExpr(expr.getTarget());
+            checkSubtype(expr.getTarget(), forRecord(ImmutableMap.<Identifier, Type>of(
+                    expr.getField(), TYPE_ANY)));
 
-            // Sanity check, if it fails then we don't care - the type checker should pick it up
-            if (isSubtype(getType(expr.getTarget()), Type.forRecord(
-                    ImmutableMap.<Identifier, Type>of(expr.getField(), TYPE_ANY)))) {
-                setType(expr, getFieldType(getType(expr.getTarget()), expr.getField()));
-            }
+            setType(expr, getFieldType(getType(expr.getTarget()), expr.getField()));
         }
 
         /**
@@ -543,7 +504,7 @@ public final class TypePropagator extends Pipeline {
             if (types.isEmpty()) {
                 setType(expr, TYPE_SET_ANY);
             } else {
-                setType(expr, Type.forSet(Type.forUnion(types)));
+                setType(expr, forSet(forUnion(types)));
             }
         }
 
@@ -591,8 +552,33 @@ public final class TypePropagator extends Pipeline {
             }
         }
 
-        public void visitExprVariable(List<Identifier> owner, ExprNode.Variable expr, Node node) {
-            setType(expr, getConstantType(owner, expr, node));
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void visitExprValue(ExprNode.Value expr) {
+            switch (expr.getType()) {
+                case BOOL:
+                    setType(expr, TYPE_BOOL);
+                    break;
+                case INT:
+                    setType(expr, TYPE_INT);
+                    break;
+                case NULL:
+                    setType(expr, TYPE_NULL);
+                    break;
+                case OBJ:
+                    setType(expr, TYPE_OBJ);
+                    break;
+                case RAT:
+                    setType(expr, TYPE_RAT);
+                    break;
+                case STR:
+                    setType(expr, TYPE_STR);
+                    break;
+                default:
+                    throw new MethodNotImplementedError(expr.getType().toString());
+            }
         }
 
         /**
@@ -600,7 +586,24 @@ public final class TypePropagator extends Pipeline {
          */
         @Override
         public void visitExprVariable(ExprNode.Variable expr) {
-            setType(expr, propagate(env.getUnchecked(expr.getName())));
+            setType(expr, propagate(getVariableType(expr)));
+        }
+
+        private Type getVariableType(ExprNode.Variable var) {
+            if (env.contains(var.getName())) {
+                return env.getUnchecked(var.getName());
+            }
+
+            Optional<Attribute.Source> opt = Attributes.getAttribute(var, Attribute.Source.class);
+
+            if (opt.isPresent()) {
+                Attribute.Source source = opt.get();
+
+                throw CompilerErrors.unassignedVariableAccess(var.getName().getId(),
+                        source.getSource(), source.getLine(), source.getCol(), source.getLength());
+            } else {
+                throw CompilerErrors.unassignedVariableAccess(var.getName().getId());
+            }
         }
 
         private void setType(Node node, Type type) {
@@ -662,6 +665,24 @@ public final class TypePropagator extends Pipeline {
             switch (stmt.getType()) {
                 case ACCESS:
                     propagate(stmt.getLhs());
+
+                    // After the access assignment, the type of the variable needs to be updated
+
+                    Pair<Identifier, Type> pair = updateInnerType(stmt.getLhs(), getType(
+                            stmt.getExpr()));
+
+                    env.put(pair.getFirst(), pair.getSecond());
+
+                    break;
+                case RECORD_ACCESS:
+                    propagate(((ExprNode.RecordAccess) stmt.getLhs()).getTarget());
+
+                    // After the access assignment, the type of the variable needs to be updated
+
+                    pair = updateInnerType(stmt.getLhs(), getType(stmt.getExpr()));
+
+                    env.put(pair.getFirst(), pair.getSecond());
+
                     break;
                 case VARIABLE:
                     env.put(((ExprNode.Variable) stmt.getLhs()).getName(), getType(stmt.getExpr()));
@@ -685,11 +706,9 @@ public final class TypePropagator extends Pipeline {
         @Override
         public void visitStmtFor(StmtNode.For stmt) {
             propagate(stmt.getExpr());
+            checkSubtype(stmt.getExpr(), TYPE_ITERABLE);
 
-            // Sanity check, if it fails then we don't care - the type checker should pick it up
-            if (isSubtype(getType(stmt.getExpr()), TYPE_ITERABLE)) {
-                env.put(stmt.getVar(), getInnerType(getType(stmt.getExpr())));
-            }
+            env.put(stmt.getVar(), getInnerType(getType(stmt.getExpr())));
         }
 
         /**
@@ -773,6 +792,38 @@ public final class TypePropagator extends Pipeline {
             boolean modified = TypePropagator.this.propagate(expr, env);
 
             setFinished(isFinished() && !modified);
+        }
+
+        private Pair<Identifier, Type> updateInnerType(ExprNode expr, Type type) {
+            if (expr instanceof ExprNode.Variable) {
+                return new Pair<>(((ExprNode.Variable) expr).getName(), type);
+            } else if (expr instanceof ExprNode.RecordAccess) {
+                return updateInnerType((ExprNode.RecordAccess) expr, type);
+            } else if (expr instanceof ExprNode.Binary) {
+                return updateInnerType((ExprNode.Binary) expr, type);
+            }
+
+            throw new MethodNotImplementedError();
+        }
+
+        private Pair<Identifier, Type> updateInnerType(ExprNode.Binary access, Type type) {
+            Type list = getType(access.getLhs());
+
+            if (isSubtype(list, TYPE_STR)) {
+                return updateInnerType(access.getLhs(), list);
+            }
+
+            return updateInnerType(access.getLhs(), forList(forUnion(asList(type, getInnerType(
+                    list)))));
+        }
+
+        private Pair<Identifier, Type> updateInnerType(ExprNode.RecordAccess access, Type type) {
+            Type record = getType(access.getTarget());
+
+            Map<Identifier, Type> fields = new HashMap<>(getFields(record));
+            fields.put(access.getField(), type);
+
+            return updateInnerType(access.getTarget(), forRecord(fields, record.getAttributes()));
         }
     }
 

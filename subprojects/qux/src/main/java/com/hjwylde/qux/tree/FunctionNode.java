@@ -1,6 +1,7 @@
 package com.hjwylde.qux.tree;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.Arrays.asList;
 
 import com.hjwylde.qux.api.FunctionVisitor;
 import com.hjwylde.qux.api.QuxVisitor;
@@ -11,7 +12,6 @@ import com.hjwylde.qux.util.Type;
 import com.google.common.collect.ImmutableList;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -22,16 +22,18 @@ import java.util.List;
  */
 public final class FunctionNode extends Node implements FunctionVisitor {
 
+    public static final String RECEIVER_NAME = "this";
+
     private final int flags;
     private final Identifier name;
     private final Type.Function type;
 
-    private List<Identifier> parameters = new ArrayList<>();
+    private final List<Identifier> parameters = new ArrayList<>();
 
-    private List<StmtNode> stmts = new ArrayList<>();
+    private final List<StmtNode> stmts = new ArrayList<>();
 
     public FunctionNode(int flags, Identifier name, Type.Function type, Attribute... attributes) {
-        this(flags, name, type, Arrays.asList(attributes));
+        this(flags, name, type, asList(attributes));
     }
 
     public FunctionNode(int flags, Identifier name, Type.Function type,
@@ -52,15 +54,11 @@ public final class FunctionNode extends Node implements FunctionVisitor {
     }
 
     public void accept(FunctionVisitor fv) {
-        for (Identifier parameter : parameters) {
-            fv.visitParameter(parameter);
-        }
+        parameters.forEach(fv::visitParameter);
 
         fv.visitCode();
 
-        for (StmtNode stmt : stmts) {
-            stmt.accept(fv);
-        }
+        stmts.forEach(stmt -> stmt.accept(fv));
     }
 
     public int getFlags() {
@@ -81,6 +79,10 @@ public final class FunctionNode extends Node implements FunctionVisitor {
 
     public Type.Function getType() {
         return type;
+    }
+
+    public boolean isMethod() {
+        return !parameters.isEmpty() && parameters.get(0).getId().equals(RECEIVER_NAME);
     }
 
     /**

@@ -27,7 +27,9 @@ tokens { INDENT, DEDENT }
 
             pending.offer(next);
             if (next.getType() == QuxParser.NEWLINE) {
-                next = super.nextToken();
+                do {
+                    next = super.nextToken();
+                } while (next.getType() == QuxParser.NEWLINE);
             } else {
                 continue;
             }
@@ -83,7 +85,7 @@ tokens { INDENT, DEDENT }
 
 }
 
-// Grammar section
+// Parser section
 
 start : NEWLINE? file EOF
       ;
@@ -100,13 +102,14 @@ pkg : 'package' Identifier ('.' Identifier)* NEWLINE
 
 // Import statement
 
-imp : 'import' Identifier ('.' Identifier)+ ('$' Identifier)? NEWLINE
+imp : 'import' Identifier ('.' Identifier)+ ('$' (Identifier | Identifier | Identifier))? NEWLINE
     ;
 
 // Declarations
 
 decl : declConstant
      | declFunction
+     | declMethod
      | declType
      ;
 
@@ -116,13 +119,15 @@ declConstant : type Identifier 'is' expr NEWLINE
 declFunction : typeReturn Identifier '(' (type Identifier (',' type Identifier)*)? ')' block
              ;
 
+declMethod : typeReturn type '::' Identifier '(' (type Identifier (',' type Identifier)*)? ')' block
+           ;
+
 declType : 'type' Identifier 'is' type NEWLINE
          ;
 
 // Statements
 
-stmt : stmtAccessAssign
-     | stmtAssign
+stmt : stmtAssign
      | stmtExpr
      | stmtFor
      | stmtIf
@@ -131,16 +136,10 @@ stmt : stmtAccessAssign
      | stmtWhile
      ;
 
-stmtAccessAssign : Identifier ('[' expr ']')+ AOP expr NEWLINE
-                 ;
-
-stmtAssign : Identifier (AOP | AOP_ADD | AOP_SUB | AOP_MUL | AOP_DIV | AOP_REM) expr NEWLINE
+stmtAssign : Identifier exprAccess_1* (AOP | AOP_EXP | AOP_ADD | AOP_SUB | AOP_MUL | AOP_DIV | AOP_IDIV | AOP_REM) expr NEWLINE
            ;
 
-stmtExpr : exprDecrement NEWLINE
-         | exprExternalFunction NEWLINE
-         | exprFunction NEWLINE
-         | exprIncrement NEWLINE
+stmtExpr : expr NEWLINE
          ;
 
 stmtFor : 'for' Identifier BOP_IN expr block
@@ -200,10 +199,17 @@ exprBinary_9 : exprBinary_10 (BOP_EXP exprBinary_10)*
 exprBinary_10 : exprUnary (BOP_RNG exprUnary)?
              ;
 
-exprUnary : UOP_NEG? exprAccess
-          | UOP_NOT? exprAccess
-          | UOP_LEN exprAccess UOP_LEN
+exprUnary : exprMethod UOP_DEC?
+          | exprMethod UOP_INC?
+          | UOP_NEG? exprMethod
+          | UOP_NOT? exprMethod
+          | UOP_LEN exprMethod UOP_LEN
           ;
+
+exprMethod : exprAccess '::' exprMeta? Identifier '(' ')'
+           | exprAccess '::' exprMeta? Identifier '(' expr (',' expr)* ')'
+           | exprAccess
+           ;
 
 exprAccess : exprTerm exprAccess_1*
            ;
@@ -236,11 +242,7 @@ exprAccess_1_6 : '.' Identifier
 
 exprTerm : exprBrace
          | exprBracket
-         | exprDecrement
-         | exprExternalConstant
-         | exprExternalFunction
          | exprFunction
-         | exprIncrement
          | exprParen
          | exprVariable
          | value
@@ -253,29 +255,17 @@ exprBrace : '{' (expr (',' expr)*)? '}'
 exprBracket : '[' (expr (',' expr)*)? ']'
             ;
 
-exprDecrement : Identifier UOP_DEC
-              ;
-
-exprFunction : Identifier '(' ')'
-             | Identifier '(' expr (',' expr)* ')'
+exprFunction : exprMeta? Identifier '(' ')'
+             | exprMeta? Identifier '(' expr (',' expr)* ')'
              ;
-
-exprIncrement : Identifier UOP_INC
-              ;
 
 exprParen : '(' expr ')'
           ;
 
-exprVariable : Identifier
+exprVariable : exprMeta? Identifier
              ;
 
-exprExternalConstant : exprMeta '$' exprVariable
-                     ;
-
-exprExternalFunction : exprMeta '$' exprFunction
-                     ;
-
-exprMeta : Identifier ('.' Identifier)+
+exprMeta : Identifier ('.' Identifier)+ '$'
          ;
 
 // Values
@@ -319,7 +309,7 @@ typeRecord : '{' type Identifier (',' type Identifier)* '}'
 typeSet : '{' type '}'
          ;
 
-typeNamed : (exprMeta '$')? Identifier
+typeNamed : exprMeta? Identifier
           ;
 
 typeReturn : type
@@ -343,9 +333,9 @@ EscapeSequence : '\\' [fnrt'\\]
                ;
 
 ValueInt : '-'? Numeral
-         | BinNumeral
-         | OctNumeral
-         | HexNumeral
+         | '-'? BinNumeral
+         | '-'? OctNumeral
+         | '-'? HexNumeral
          ;
 
 ValueRat : '-'? Numeral '.' Numeral Exponent ?
@@ -417,6 +407,7 @@ RBRACKET    : ']' ;
 DOT         : '.' ;
 COMMA       : ',' ;
 SEMI_COLON  : ';' ;
+COLON_COLON : '::' ;
 COLON       : ':' ;
 DOLLAR      : '$' ;
 
@@ -461,10 +452,12 @@ UOP_INC: '++' ;
 // Assignment operators
 
 AOP : '=' ;
+AOP_EXP : '**=' ;
 AOP_ADD : '+=' ;
 AOP_SUB : '-=' ;
 AOP_MUL : '*=' ;
 AOP_DIV : '/=' ;
+AOP_IDIV : '//=' ;
 AOP_REM : '%=' ;
 
 // Identifier
@@ -473,11 +466,11 @@ Identifier : [a-zA-Z_][a-zA-Z0-9_]* ;
 
 // Miscellaneous
 
-COMMENT_LINE : '#' ~[\r\n]*? -> skip ;
+COMMENT_LINE : ' '* '#' ~[\r\n]* -> skip ;
 
-COMMENT_DOC : '/**' .*? '*/' -> skip ;
+COMMENT_DOC : ' '* '/**' .*? '*/' -> skip ;
 
-COMMENT_BLOCK : '/*' .*? '*/' -> skip ;
+COMMENT_BLOCK : ' '* '/*' .*? '*/' -> skip ;
 
 NEWLINE : (' '* '\r'? '\n')+ ;
 

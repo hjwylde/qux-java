@@ -14,22 +14,6 @@ import java.util.zip.ZipFile;
  */
 public final class LocalZipResourceReader implements Resource.Reader<ZipResource> {
 
-    private static final LocalZipResourceReader INSTANCE = new LocalZipResourceReader();
-
-    /**
-     * This class is a singleton.
-     */
-    private LocalZipResourceReader() {}
-
-    /**
-     * Gets the singleton instance of a local zip resource reader.
-     *
-     * @return the instance.
-     */
-    public static LocalZipResourceReader getInstance() {
-        return INSTANCE;
-    }
-
     /**
      * {@inheritDoc}
      */

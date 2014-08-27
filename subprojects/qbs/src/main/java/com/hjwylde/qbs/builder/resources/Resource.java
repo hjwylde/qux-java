@@ -1,18 +1,17 @@
 package com.hjwylde.qbs.builder.resources;
 
-import com.google.common.base.Optional;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.Locale;
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 
 /**
  * A resource is used in relation to the context in the compilation process. It reflects different
  * resources that may be referenced in compilation.
- * <p/>
+ * <p>
  * All identifiers are assumed to be fully qualified and in '.' delimited fashion.
  *
  * @author Henry J. Wylde
@@ -34,10 +33,11 @@ public interface Resource {
      * @param id the identifier.
      * @return the resource or nothing.
      */
-    Optional<Resource.Single> getById(String id);
+    Optional<Single> getById(String id);
 
     /**
-     * TODO: Documentation.
+     * A resource collection contains multiple resources. It is a resource itself (composite design
+     * pattern) and may be iterated over in order to find a desired resource.
      *
      * @author Henry J. Wylde
      */
@@ -87,6 +87,11 @@ public interface Resource {
 
         Optional<String> getFunctionType(String name);
 
+        /**
+         * Gets the identifier of this resource.
+         *
+         * @return the identifier.
+         */
         String getId();
 
         Optional<String> getTypeType(String name);

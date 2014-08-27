@@ -1,13 +1,13 @@
 package com.hjwylde.qux.tree;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.Arrays.asList;
 
 import com.hjwylde.qux.util.Attribute;
 
 import com.google.common.collect.ImmutableList;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -18,10 +18,10 @@ import java.util.List;
  */
 public abstract class Node {
 
-    private List<Attribute> attributes = new ArrayList<>();
+    private final List<Attribute> attributes = new ArrayList<>();
 
     public Node(Attribute... attributes) {
-        this(Arrays.asList(attributes));
+        this(asList(attributes));
     }
 
     public Node(Collection<? extends Attribute> attributes) {
@@ -29,7 +29,7 @@ public abstract class Node {
     }
 
     public void addAttributes(Attribute... attributes) {
-        addAttributes(Arrays.asList(attributes));
+        addAttributes(asList(attributes));
     }
 
     public void addAttributes(Collection<? extends Attribute> attributes) {

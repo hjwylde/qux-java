@@ -1,0 +1,24 @@
+package valid.method
+
+type Scanner is {str input, int index}
+
+str Scanner::next():
+    return this.input[this.index++]
+
+str Scanner::peek():
+    return this.input[this.index]
+
+void Scanner::reset():
+    this.index = 0
+
+void main([str] args):
+    scanner = {input: 'foo bar baz', index: 0}
+    print scanner
+    print scanner::next()
+    print scanner::peek()
+    print scanner
+    scanner::next()
+    print scanner
+    scanner::reset()
+    print scanner::next()
+

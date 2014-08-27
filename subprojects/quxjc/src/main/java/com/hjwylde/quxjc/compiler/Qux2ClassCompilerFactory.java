@@ -8,7 +8,7 @@ import com.hjwylde.qbs.compiler.QuxCompileSpec;
 /**
  * A default compiler factory for creating a {@link com.hjwylde.qbs.compiler.Compiler} that takes a
  * {@link com.hjwylde.qbs.compiler.QuxCompileSpec}.
- * <p/>
+ * <p>
  * This factory simply returns a new {@link com.hjwylde.quxjc.compiler.Qux2ClassCompiler}.
  *
  * @author Henry J. Wylde
@@ -21,7 +21,7 @@ public final class Qux2ClassCompilerFactory<T extends QuxCompileSpec, E extends 
      */
     @Override
     public Compiler<T> buildCompiler(E options) {
-        return new Qux2ClassCompiler<T>();
+        return new Qux2ClassCompiler<>();
     }
 }
 

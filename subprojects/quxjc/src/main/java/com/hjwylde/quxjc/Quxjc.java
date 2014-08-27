@@ -131,7 +131,7 @@ public final class Quxjc {
         QuxCompileSpec spec = new QuxCompileSpec();
 
         spec.setOutdir(Paths.get(properties.getOutdir()));
-        spec.setClasspath(new ArrayList<Path>());
+        spec.setClasspath(new ArrayList<>());
         for (String path : properties.getClasspath().split(File.pathSeparator)) {
             spec.classpath(Paths.get(path));
         }
@@ -306,7 +306,7 @@ public final class Quxjc {
      * com.hjwylde.qbs.compiler.Compiler} for a {@link com.hjwylde.qbs.compiler.QuxCompileSpec}
      * using the factory. It will then attempt to execute the compiler using the {@link
      * com.hjwylde.qbs.compiler.QuxCompileSpec} provided to this object.
-     * <p/>
+     * <p>
      * See {@link com.hjwylde.common.util.ExitCode} for return value details.
      *
      * @return the result of running this Qux compilation unit, {@code 0} indicates success.

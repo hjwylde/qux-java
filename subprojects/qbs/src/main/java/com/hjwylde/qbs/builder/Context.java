@@ -5,12 +5,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.hjwylde.qbs.builder.resources.Resource;
 import com.hjwylde.qbs.builder.resources.ResourceSet;
 
-import com.google.common.base.Optional;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -26,7 +25,7 @@ public class Context {
 
     private final Project project;
 
-    private final Set<Resource> resources = Collections.synchronizedSet(new HashSet<Resource>());
+    private final Set<Resource> resources = Collections.synchronizedSet(new HashSet<>());
 
     /**
      * Creates a new <code>Context</code> for the given project.
@@ -95,7 +94,7 @@ public class Context {
             }
         }
 
-        return Optional.absent();
+        return Optional.empty();
     }
 
     /**

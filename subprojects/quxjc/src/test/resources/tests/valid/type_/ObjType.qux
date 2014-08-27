@@ -1,9 +1,8 @@
 package valid.type_
 
-type A is obj
-type B is any
+type Foo is any
 
-any f(B a):
+any f(Foo a):
     if a == null:
         return obj
 

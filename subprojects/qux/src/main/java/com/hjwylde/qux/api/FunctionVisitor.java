@@ -1,7 +1,6 @@
 package com.hjwylde.qux.api;
 
 import com.hjwylde.qux.util.Identifier;
-import com.hjwylde.qux.util.Type;
 
 /**
  * TODO: Documentation.

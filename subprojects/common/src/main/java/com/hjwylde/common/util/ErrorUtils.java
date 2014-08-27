@@ -6,6 +6,7 @@ import com.hjwylde.common.error.CompilerError;
 import com.hjwylde.common.error.CompilerErrorList;
 import com.hjwylde.common.error.SourceCompilerError;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 
 import org.slf4j.Logger;
@@ -182,16 +183,16 @@ public final class ErrorUtils {
 
         int end = Math.min(e.getCol() + Math.max(1, e.getLength()), line.length());
 
-        // TODO: Change it from logging a warning to outputting the first line nad a "+ n more line(s)"
-        if (e.getCol() + e.getLength() > line.length() + 1) {
-            logger.warn("erroneous token spans more than one line @{}:{}-{}", e.getLine(),
-                    e.getCol(), e.getCol() + e.getLength());
-
-            return toString(e);
-        }
-
         // A space padded string of '^' characters to point out where in the line the error occurred
         String helper = Strings.repeat(" ", e.getCol()) + Strings.repeat("^", end - e.getCol());
+
+        if (e.getCol() + e.getLength() > line.length() + 1) {
+            String token = Joiner.on("\n").join(source.subList(e.getLine() - 1, source.size()));
+            token = token.substring(e.getCol(), e.getCol() + e.getLength());
+            int lines = token.replaceAll("[^\n]", "").length();
+
+            return toString(e) + "\n" + line + "\n" + helper + "\n" + "... " + lines + " more";
+        }
 
         return toString(e) + "\n" + line + "\n" + helper + "\n";
     }

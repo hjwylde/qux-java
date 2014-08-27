@@ -5,11 +5,17 @@ import static com.hjwylde.qux.util.Type.TYPE_ANY;
 import static com.hjwylde.qux.util.Type.TYPE_BOOL;
 import static com.hjwylde.qux.util.Type.TYPE_INT;
 import static com.hjwylde.qux.util.Type.TYPE_ITERABLE;
+import static com.hjwylde.qux.util.Type.TYPE_LIST_ANY;
 import static com.hjwylde.qux.util.Type.TYPE_META;
 import static com.hjwylde.qux.util.Type.TYPE_RAT;
+import static com.hjwylde.qux.util.Type.TYPE_STR;
+import static com.hjwylde.qux.util.Type.forRecord;
+import static com.hjwylde.qux.util.Type.forUnion;
 import static com.hjwylde.qux.util.Type.getInnerType;
 import static com.hjwylde.qux.util.Types.isEquivalent;
+import static com.hjwylde.qux.util.Types.isRecord;
 import static com.hjwylde.qux.util.Types.isSubtype;
+import static java.util.Arrays.asList;
 
 import com.hjwylde.common.error.CompilerErrors;
 import com.hjwylde.common.error.MethodNotImplementedError;
@@ -31,13 +37,12 @@ import com.hjwylde.qux.util.Attributes;
 import com.hjwylde.qux.util.Identifier;
 import com.hjwylde.qux.util.Type;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import org.jgrapht.event.VertexTraversalEvent;
 
-import java.util.Arrays;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * TODO: Documentation
@@ -55,15 +60,51 @@ public final class TypeChecker extends Pipeline {
      */
     @Override
     public QuxNode apply(QuxNode node) {
-        for (ConstantNode constant : node.getConstants()) {
-            apply(constant);
-        }
+        node.getConstants().forEach(com.hjwylde.qux.pipelines.TypeChecker::apply);
 
-        for (FunctionNode function : node.getFunctions()) {
-            apply(function);
-        }
+        node.getFunctions().forEach(com.hjwylde.qux.pipelines.TypeChecker::apply);
 
         return node;
+    }
+
+    static void checkRecord(ExprNode expr) {
+        Type type = getType(expr);
+
+        if (isRecord(type)) {
+            return;
+        }
+
+        Type record = forRecord(ImmutableMap.of(new Identifier(""), TYPE_ANY));
+
+        Optional<Attribute.Source> opt = Attributes.getAttribute(expr, Attribute.Source.class);
+
+        if (opt.isPresent()) {
+            Attribute.Source source = opt.get();
+
+            throw CompilerErrors.invalidType(type.toString(), record.toString(), source.getSource(),
+                    source.getLine(), source.getCol(), source.getLength());
+        } else {
+            throw CompilerErrors.invalidType(type.toString(), record.toString());
+        }
+    }
+
+    static void checkSubtype(ExprNode expr, Type rhs) {
+        Type type = getType(expr);
+
+        if (isSubtype(type, rhs)) {
+            return;
+        }
+
+        Optional<Attribute.Source> opt = Attributes.getAttribute(expr, Attribute.Source.class);
+
+        if (opt.isPresent()) {
+            Attribute.Source source = opt.get();
+
+            throw CompilerErrors.invalidType(type.toString(), rhs.toString(), source.getSource(),
+                    source.getLine(), source.getCol(), source.getLength());
+        } else {
+            throw CompilerErrors.invalidType(type.toString(), rhs.toString());
+        }
     }
 
     private static void apply(ConstantNode constant) {
@@ -108,25 +149,6 @@ public final class TypeChecker extends Pipeline {
                     source.getSource(), source.getLine(), source.getCol(), source.getLength());
         } else {
             throw CompilerErrors.invalidType(type.toString(), expected.toString());
-        }
-    }
-
-    private static void checkSubtype(ExprNode expr, Type rhs) {
-        Type type = getType(expr);
-
-        if (isSubtype(type, rhs)) {
-            return;
-        }
-
-        Optional<Attribute.Source> opt = Attributes.getAttribute(expr, Attribute.Source.class);
-
-        if (opt.isPresent()) {
-            Attribute.Source source = opt.get();
-
-            throw CompilerErrors.invalidType(type.toString(), rhs.toString(), source.getSource(),
-                    source.getLine(), source.getCol(), source.getLength());
-        } else {
-            throw CompilerErrors.invalidType(type.toString(), rhs.toString());
         }
     }
 
@@ -236,15 +258,8 @@ public final class TypeChecker extends Pipeline {
          * {@inheritDoc}
          */
         @Override
-        public void visitExprConstant(ExprNode.Constant expr) {}
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void visitExprExternal(ExprNode.External expr) {
-            visitExpr(expr.getMeta());
-            visitExpr(expr.getExpr());
+        public void visitExprConstant(ExprNode.Constant expr) {
+            visitExpr(expr.getOwner());
         }
 
         /**
@@ -252,10 +267,10 @@ public final class TypeChecker extends Pipeline {
          */
         @Override
         public void visitExprFunction(ExprNode.Function expr) {
+            visitExpr(expr.getOwner());
+
             // TODO: Type check the arguments
-            for (ExprNode argument : expr.getArguments()) {
-                visitExpr(argument);
-            }
+            expr.getArguments().forEach(this::visitExpr);
         }
 
         /**
@@ -263,9 +278,7 @@ public final class TypeChecker extends Pipeline {
          */
         @Override
         public void visitExprList(ExprNode.List expr) {
-            for (ExprNode value : expr.getValues()) {
-                visitExpr(value);
-            }
+            expr.getValues().forEach(this::visitExpr);
         }
 
         /**
@@ -293,8 +306,7 @@ public final class TypeChecker extends Pipeline {
         public void visitExprRecordAccess(ExprNode.RecordAccess expr) {
             visitExpr(expr.getTarget());
 
-            Type expected = Type.forRecord(ImmutableMap.<Identifier, Type>of(expr.getField(),
-                    TYPE_ANY));
+            Type expected = forRecord(ImmutableMap.<Identifier, Type>of(expr.getField(), TYPE_ANY));
             checkSubtype(expr.getTarget(), expected);
         }
 
@@ -303,9 +315,7 @@ public final class TypeChecker extends Pipeline {
          */
         @Override
         public void visitExprSet(ExprNode.Set expr) {
-            for (ExprNode value : expr.getValues()) {
-                visitExpr(value);
-            }
+            expr.getValues().forEach(this::visitExpr);
         }
 
         /**
@@ -343,8 +353,7 @@ public final class TypeChecker extends Pipeline {
                     checkSubtype(expr.getTarget(), TYPE_ITERABLE);
                     break;
                 case NEG:
-                    checkSubtype(expr.getTarget(), Type.forUnion(Arrays.asList(TYPE_INT,
-                            TYPE_RAT)));
+                    checkSubtype(expr.getTarget(), forUnion(asList(TYPE_INT, TYPE_RAT)));
                     break;
                 case NOT:
                     checkSubtype(expr.getTarget(), TYPE_BOOL);
@@ -353,6 +362,12 @@ public final class TypeChecker extends Pipeline {
                     throw new MethodNotImplementedError(expr.getOp().toString());
             }
         }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void visitExprValue(ExprNode.Value expr) {}
 
         /**
          * {@inheritDoc}
@@ -398,6 +413,14 @@ public final class TypeChecker extends Pipeline {
             switch (stmt.getType()) {
                 case ACCESS:
                     check(stmt.getLhs());
+                    checkSubtype(((ExprNode.Binary) stmt.getLhs()).getLhs(), forUnion(asList(
+                            TYPE_STR, TYPE_LIST_ANY)));
+                    break;
+                case RECORD_ACCESS:
+                    ExprNode.RecordAccess access = (ExprNode.RecordAccess) stmt.getLhs();
+
+                    check(access.getTarget());
+                    checkRecord(access.getTarget());
                     break;
                 case VARIABLE:
                     break;

@@ -12,16 +12,12 @@ import com.google.common.base.Strings;
 
 import java.math.BigInteger;
 
-import qux.lang.op.Assign;
-import qux.lang.op.Len;
-import qux.lang.op.Slice;
-
 /**
  * TODO: Documentation
  *
  * @author Henry J. Wylde
  */
-public final class Str extends AbstractObj implements Assign, Len, Slice {
+public final class Str extends AbstractObj {
 
     private String value;
 
@@ -42,10 +38,6 @@ public final class Str extends AbstractObj implements Assign, Len, Slice {
         return valueOf(value.concat(str.value));
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public void _assign_(Int index, AbstractObj value) {
         set(index, value);
     }
@@ -106,10 +98,6 @@ public final class Str extends AbstractObj implements Assign, Len, Slice {
         return Int.valueOf(value.hashCode());
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Int _len_() {
         return Int.valueOf(value.length());
     }
@@ -135,10 +123,6 @@ public final class Str extends AbstractObj implements Assign, Len, Slice {
         return ret;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Str _slice_(Int from, Int to) {
         return substring(from, to);
     }

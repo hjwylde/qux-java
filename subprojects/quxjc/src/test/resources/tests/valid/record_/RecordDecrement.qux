@@ -1,11 +1,21 @@
 package valid.record_
 
+{int x, int y} f({int x, int y} r):
+    r.x--
+
+    return r
+
 void main([str] args):
-    xs = {x: 0, y: 1}
+    xs = {x: 0, y: 1, z: {x: 2}}
     print xs.x
     print xs.y
+    print xs.z
     xs.x--
     xs.y--
+    xs.z.x--
     print xs.x--
-    print xs.y
     print xs.x
+    print xs.y
+    print xs.z
+    print f(xs)
+    print xs

@@ -37,6 +37,7 @@ public final class Constants {
     public static final int QUX_0_2_3 = 0 << 16 | 2 << 8 | 3;
     public static final int QUX_0_2_4 = 0 << 16 | 2 << 8 | 4;
     public static final int QUX_0_2_5 = 0 << 16 | 2 << 8 | 5;
+    public static final int QUX_0_2_6 = 0 << 16 | 2 << 8 | 6;
 
     private static final Logger logger = LoggerFactory.getLogger(Constants.class);
 

@@ -11,8 +11,8 @@ import com.hjwylde.qbs.builder.QuxContext;
 import com.hjwylde.qbs.builder.resources.Resource;
 import com.hjwylde.qbs.builder.resources.ResourceManager;
 import com.hjwylde.qux.api.QuxReader;
-import com.hjwylde.qux.builder.LocalQuxResourceReader;
-import com.hjwylde.qux.builder.QuxResource;
+import com.hjwylde.qux.builder.resources.LocalQuxResourceReader;
+import com.hjwylde.qux.builder.resources.QuxResource;
 import com.hjwylde.qux.pipelines.Pipeline;
 import com.hjwylde.qux.tree.QuxNode;
 
@@ -81,10 +81,9 @@ public final class Qux2ClassBuilder implements Builder {
         Stopwatch stopwatch = Stopwatch.createStarted();
 
         // Build all the files concurrently
-        int threads = Runtime.getRuntime().availableProcessors() * 4;
+        int threads = Runtime.getRuntime().availableProcessors();
         ExecutorService executor = Executors.newFixedThreadPool(threads);
-        CompletionService<BuildResult> completion = new ExecutorCompletionService<BuildResult>(
-                executor);
+        CompletionService<BuildResult> completion = new ExecutorCompletionService<>(executor);
 
         logger.info("compiling {} source file(s) concurrently with {} worker(s)", source.size(),
                 threads);
@@ -122,7 +121,7 @@ public final class Qux2ClassBuilder implements Builder {
 
         // Wait for each job to finish and gather up the results
         for (Map.Entry<Path, Future<BuildResult>> job : jobs.entrySet()) {
-            BuildResult result = null;
+            BuildResult result;
             try {
                 if (getTimeout() > 0) {
                     result = job.getValue().get(getTimeout(), getTimeoutUnit());

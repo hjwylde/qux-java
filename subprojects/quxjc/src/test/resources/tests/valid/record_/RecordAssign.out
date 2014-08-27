@@ -3,3 +3,9 @@ foo
 3
 5
 {x: 5, y: bar}
+{x: 5, y: null}
+{x: 15, y: null}
+{x: 15, y: null}
+{x: {y: {a: null, z: null}}, y: null}
+{x: 5, y: 6}
+{x: foo, y: 6}

@@ -1,27 +1,27 @@
 package valid.const
 
-obj A is obj
-obj B is obj
+obj FOO is obj
+obj BAR is obj
 
 obj f(obj a):
-    if a == A:
-        return B
+    if a == FOO:
+        return BAR
 
-    return A
+    return FOO
 
-obj g(obj A):
-    return A
+obj g(obj a):
+    return a
 
 void main([str] args):
-    print A
-    print B
-    print A == A
-    print B == B
-    print A == B
-    print B == obj
-    print f(B)
-    print f(B) == B
-    print f(obj) == B
-    print f(B) == A
-    print g(B) == A
+    print FOO
+    print BAR
+    print FOO == FOO
+    print BAR == BAR
+    print FOO == BAR
+    print BAR == obj
+    print f(BAR)
+    print f(BAR) == BAR
+    print f(obj) == BAR
+    print f(BAR) == FOO
+    print g(BAR) == FOO
 

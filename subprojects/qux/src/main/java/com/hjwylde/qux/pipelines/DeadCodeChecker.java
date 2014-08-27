@@ -11,10 +11,10 @@ import com.hjwylde.qux.tree.StmtNode;
 import com.hjwylde.qux.util.Attribute;
 import com.hjwylde.qux.util.Attributes;
 
-import com.google.common.base.Optional;
-
 import org.jgrapht.event.ConnectedComponentTraversalEvent;
 import org.jgrapht.event.VertexTraversalEvent;
+
+import java.util.Optional;
 
 /**
  * TODO: Documentation.
@@ -33,9 +33,7 @@ public final class DeadCodeChecker extends Pipeline {
      */
     @Override
     public QuxNode apply(QuxNode node) {
-        for (FunctionNode function : node.getFunctions()) {
-            apply(function);
-        }
+        node.getFunctions().forEach(this::apply);
 
         return node;
     }

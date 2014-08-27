@@ -13,4 +13,20 @@ void main([str] args):
     print xs.x
     xs.y = 'bar'
     print xs
+    xs.y = null
+    print xs
+    xs.x *= 3
+    print xs
+    xs.x += 0
+    print xs
+    xs.x = {y: {z: null}}
+    print xs
+    xs.x.y.a = null
+    print xs
+
+    ys = {x: 5, y: 6}
+    ys.x++
+    print ys
+    ys.x = 'foo'
+    print ys
 

@@ -1,0 +1,14 @@
+package valid.method
+
+int int::fibonacci():
+    if (this <= 1):
+        return this
+
+    return (this - 2)::fibonacci() + (this - 1)::fibonacci()
+
+void main([str] args):
+    print 0::fibonacci()
+    print 1::fibonacci()
+    print 5::fibonacci()
+    print 10::fibonacci()
+

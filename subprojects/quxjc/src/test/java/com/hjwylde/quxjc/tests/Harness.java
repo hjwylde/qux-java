@@ -47,7 +47,7 @@ public abstract class Harness {
     private final Path root;
 
     @Rule
-    public Timeout timeout = new Timeout(4000);
+    public Timeout timeout = new Timeout(60000);
 
     static {
         // Grab all of the library files in our libraries directory

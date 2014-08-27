@@ -2,20 +2,19 @@ package com.hjwylde.qux.tree;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.Arrays.asList;
 
-import com.hjwylde.common.error.MethodNotImplementedError;
 import com.hjwylde.common.lang.annotation.Alpha;
 import com.hjwylde.qux.api.StmtVisitor;
 import com.hjwylde.qux.util.Attribute;
 import com.hjwylde.qux.util.Identifier;
 import com.hjwylde.qux.util.Op;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 
@@ -55,7 +54,7 @@ public abstract class StmtNode extends Node {
         private final ExprNode expr;
 
         public Assign(Type type, ExprNode lhs, ExprNode expr, Attribute... attributes) {
-            this(type, lhs, expr, Arrays.asList(attributes));
+            this(type, lhs, expr, asList(attributes));
         }
 
         public Assign(Type type, ExprNode lhs, ExprNode expr,
@@ -63,11 +62,13 @@ public abstract class StmtNode extends Node {
             super(attributes);
 
             checkArgument(type != Type.ACCESS || lhs instanceof ExprNode.Binary,
-                    "lhs must be of class Binary for access assignment");
+                    "lhs must be of class ExprNode.Binary for access assignment");
             checkArgument(type != Type.ACCESS || ((ExprNode.Binary) lhs).getOp() == Op.Binary.ACC,
-                    "lhs must be of class Binary with ACC operator for access assignment");
+                    "lhs must be of class ExprNode.Binary with ACC operator for access assignment");
+            checkArgument(type != Type.RECORD_ACCESS || lhs instanceof ExprNode.RecordAccess,
+                    "lhs must be of class ExprNode.Binary for access assignment");
             checkArgument(type != Type.VARIABLE || lhs instanceof ExprNode.Variable,
-                    "lhs must be of class Variable for variable assignment");
+                    "lhs must be of class ExprNode.Variable for variable assignment");
 
             this.type = checkNotNull(type, "type cannot be null");
 
@@ -102,7 +103,7 @@ public abstract class StmtNode extends Node {
          * @since 0.2.4
          */
         public static enum Type {
-            ACCESS, VARIABLE;
+            ACCESS, RECORD_ACCESS, VARIABLE
         }
     }
 
@@ -114,37 +115,16 @@ public abstract class StmtNode extends Node {
      */
     public static final class Expr extends StmtNode {
 
-        private final StmtNode.Expr.Type type;
         private final ExprNode expr;
 
-        public Expr(StmtNode.Expr.Type type, ExprNode expr, Attribute... attributes) {
-            this(type, expr, Arrays.asList(attributes));
+        public Expr(ExprNode expr, Attribute... attributes) {
+            this(expr, asList(attributes));
         }
 
-        public Expr(StmtNode.Expr.Type type, ExprNode expr,
-                Collection<? extends Attribute> attributes) {
+        public Expr(ExprNode expr, Collection<? extends Attribute> attributes) {
             super(attributes);
 
-            this.type = checkNotNull(type, "type cannot be null");
             this.expr = checkNotNull(expr, "expr cannot be null");
-
-            switch (type) {
-                case DECREMENT:
-                    checkArgument(expr instanceof ExprNode.Unary);
-                    checkArgument(((ExprNode.Unary) expr).getOp() == Op.Unary.DEC);
-                    break;
-                case FUNCTION:
-                    checkArgument(expr instanceof ExprNode.External);
-                    checkArgument(((ExprNode.External) expr).getType()
-                            == ExprNode.External.Type.FUNCTION);
-                    break;
-                case INCREMENT:
-                    checkArgument(expr instanceof ExprNode.Unary);
-                    checkArgument(((ExprNode.Unary) expr).getOp() == Op.Unary.INC);
-                    break;
-                default:
-                    throw new MethodNotImplementedError(type.toString());
-            }
         }
 
         /**
@@ -157,20 +137,6 @@ public abstract class StmtNode extends Node {
 
         public ExprNode getExpr() {
             return expr;
-        }
-
-        public Type getType() {
-            return type;
-        }
-
-        /**
-         * TODO: Documentation
-         *
-         * @author Henry J. Wylde
-         * @since 0.1.3
-         */
-        public static enum Type {
-            DECREMENT, FUNCTION, INCREMENT;
         }
     }
 
@@ -187,7 +153,7 @@ public abstract class StmtNode extends Node {
         private final ImmutableList<StmtNode> body;
 
         public For(Identifier var, ExprNode expr, List<StmtNode> body, Attribute... attributes) {
-            this(var, expr, body, Arrays.asList(attributes));
+            this(var, expr, body, asList(attributes));
         }
 
         public For(Identifier var, ExprNode expr, List<StmtNode> body,
@@ -233,7 +199,7 @@ public abstract class StmtNode extends Node {
 
         public If(ExprNode condition, List<StmtNode> trueBlock, List<StmtNode> falseBlock,
                 Attribute... attributes) {
-            this(condition, trueBlock, falseBlock, Arrays.asList(attributes));
+            this(condition, trueBlock, falseBlock, asList(attributes));
         }
 
         public If(ExprNode condition, List<StmtNode> trueBlock, List<StmtNode> falseBlock,
@@ -277,7 +243,7 @@ public abstract class StmtNode extends Node {
         private final ExprNode expr;
 
         public Print(ExprNode expr, Attribute... attributes) {
-            this(expr, Arrays.asList(attributes));
+            this(expr, asList(attributes));
         }
 
         public Print(ExprNode expr, Collection<? extends Attribute> attributes) {
@@ -309,11 +275,11 @@ public abstract class StmtNode extends Node {
         private final Optional<ExprNode> expr;
 
         public Return(Attribute... attributes) {
-            this(null, Arrays.asList(attributes));
+            this(null, asList(attributes));
         }
 
         public Return(@Nullable ExprNode expr, Attribute... attributes) {
-            this(expr, Arrays.asList(attributes));
+            this(expr, asList(attributes));
         }
 
         public Return(Collection<? extends Attribute> attributes) {
@@ -323,7 +289,7 @@ public abstract class StmtNode extends Node {
         public Return(@Nullable ExprNode expr, Collection<? extends Attribute> attributes) {
             super(attributes);
 
-            this.expr = Optional.fromNullable(expr);
+            this.expr = Optional.ofNullable(expr);
         }
 
         /**
@@ -351,7 +317,7 @@ public abstract class StmtNode extends Node {
         private final ImmutableList<StmtNode> body;
 
         public While(ExprNode condition, List<StmtNode> body, Attribute... attributes) {
-            this(condition, body, Arrays.asList(attributes));
+            this(condition, body, asList(attributes));
         }
 
         public While(ExprNode condition, List<StmtNode> body,

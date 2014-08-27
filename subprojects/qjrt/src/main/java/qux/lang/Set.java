@@ -4,14 +4,14 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkElementIndex;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkPositionIndex;
+import static java.util.Arrays.asList;
+import static java.util.Arrays.copyOf;
+import static java.util.Arrays.copyOfRange;
 import static qux.lang.Bool.FALSE;
 import static qux.lang.Bool.TRUE;
 
 import java.math.BigInteger;
-import java.util.Arrays;
 
-import qux.lang.op.Len;
-import qux.lang.op.Slice;
 import qux.util.Iterable;
 import qux.util.Iterator;
 
@@ -21,7 +21,7 @@ import qux.util.Iterator;
  * @author Henry J. Wylde
  * @since 0.1.3
  */
-public final class Set extends AbstractObj implements Iterable, Len, Slice {
+public final class Set extends AbstractObj implements Iterable {
 
     private AbstractObj[] data;
     private int count;
@@ -46,7 +46,7 @@ public final class Set extends AbstractObj implements Iterable, Len, Slice {
     private Set(AbstractObj[] data) {
         this();
 
-        checkArgument(!Arrays.asList(data).contains(null), "data cannot contain null");
+        checkArgument(!asList(data).contains(null), "data cannot contain null");
 
         for (AbstractObj datum : data) {
             add(datum);
@@ -205,18 +205,10 @@ public final class Set extends AbstractObj implements Iterable, Len, Slice {
         };
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Int _len_() {
         return Int.valueOf(count);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Set _slice_(Int from, Int to) {
         return subset(from, to);
     }
@@ -327,7 +319,7 @@ public final class Set extends AbstractObj implements Iterable, Len, Slice {
         checkArgument(from <= to, "from must be less than or equal to to (from=%s, to=%s)", from,
                 to);
 
-        return valueOf(Arrays.copyOfRange(data, from, to));
+        return valueOf(copyOfRange(data, from, to));
     }
 
     Set subset(BigInteger from, BigInteger to) {
@@ -362,7 +354,7 @@ public final class Set extends AbstractObj implements Iterable, Len, Slice {
         checkArgument(capacity >= 0, "capacity must be non-negative");
 
         while (count + capacity > data.length) {
-            data = Arrays.copyOf(data, data.length * 2);
+            data = copyOf(data, data.length * 2);
         }
     }
 

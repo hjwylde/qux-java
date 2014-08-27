@@ -1,10 +1,10 @@
 package valid.type_
 
-type A is int
-type B is [int]
-type C is A
+type Foo is int
+type Bar is [int]
+type Baz is Foo
 
-int f(C a, B b):
+int f(Baz a, Bar b):
     return b[a]
 
 void main([str] args):

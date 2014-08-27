@@ -14,8 +14,6 @@ public interface ExprVisitor {
 
     void visitExprConstant(ExprNode.Constant expr);
 
-    void visitExprExternal(ExprNode.External expr);
-
     void visitExprFunction(ExprNode.Function expr);
 
     void visitExprList(ExprNode.List expr);
@@ -31,6 +29,8 @@ public interface ExprVisitor {
     void visitExprSlice(ExprNode.Slice expr);
 
     void visitExprUnary(ExprNode.Unary expr);
+
+    void visitExprValue(ExprNode.Value expr);
 
     void visitExprVariable(ExprNode.Variable expr);
 }

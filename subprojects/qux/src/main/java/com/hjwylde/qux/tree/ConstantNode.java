@@ -2,6 +2,7 @@ package com.hjwylde.qux.tree;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static java.util.Arrays.asList;
 
 import com.hjwylde.qux.api.ConstantVisitor;
 import com.hjwylde.qux.api.QuxVisitor;
@@ -9,7 +10,6 @@ import com.hjwylde.qux.util.Attribute;
 import com.hjwylde.qux.util.Identifier;
 import com.hjwylde.qux.util.Type;
 
-import java.util.Arrays;
 import java.util.Collection;
 
 /**
@@ -27,7 +27,7 @@ public final class ConstantNode extends Node implements ConstantVisitor {
     private ExprNode expr;
 
     public ConstantNode(int flags, Identifier name, Type type, Attribute... attributes) {
-        this(flags, name, type, Arrays.asList(attributes));
+        this(flags, name, type, asList(attributes));
     }
 
     public ConstantNode(int flags, Identifier name, Type type,

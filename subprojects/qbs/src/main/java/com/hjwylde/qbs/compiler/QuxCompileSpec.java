@@ -1,6 +1,7 @@
 package com.hjwylde.qbs.compiler;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static java.util.Arrays.asList;
 
 import com.hjwylde.qbs.util.QuxProperties;
 
@@ -9,7 +10,6 @@ import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -18,7 +18,7 @@ import java.util.Set;
  * Compile specification for a Qux unit. This specification adds in the ability to set the {@link
  * com.hjwylde.qbs.compiler.QuxCompileOptions} and the classpath. The classpath is a set of paths
  * that are used to load resources from for use during compilation.
- * <p/>
+ * <p>
  * The default contains the default Qux compile options and an empty classpath.
  *
  * @author Henry J. Wylde
@@ -56,9 +56,8 @@ public class QuxCompileSpec extends AbstractCompileSpec {
      * @param classpath the paths to append.
      */
     public final void classpath(Collection<Path> classpath) {
-        for (Path path : classpath) {
-            this.classpath.add(path.toAbsolutePath().normalize());
-        }
+        classpath.stream().map(path -> path.toAbsolutePath().normalize()).forEach(
+                this.classpath::add);
     }
 
     /**
@@ -67,7 +66,7 @@ public class QuxCompileSpec extends AbstractCompileSpec {
      * @param classpath the paths to append.
      */
     public final void classpath(Path... classpath) {
-        classpath(Arrays.asList(classpath));
+        classpath(asList(classpath));
     }
 
     /**
