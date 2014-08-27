@@ -46,7 +46,7 @@ public class Pair<F, S> {
 
         Pair<?, ?> pair = (Pair<?, ?>) obj;
 
-        return Objects.equals(first, pair.first) && Objects.equals(second, pair.second);
+        return first.equals(pair.first) && second.equals(pair.second);
     }
 
     /**

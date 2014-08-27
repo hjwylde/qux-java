@@ -481,9 +481,6 @@ public final class Qux2ClassTranslater extends QuxAdapter {
          */
         @Override
         public void visitExprFunction(ExprNode.Function expr) {
-            Type returnType = getType(expr);
-            java.util.List<Type> argumentTypes = new ArrayList<>();
-
             for (int i = 0; i < expr.getArguments().size(); i++) {
                 visitExpr(expr.getArguments().get(i));
 
@@ -497,11 +494,10 @@ public final class Qux2ClassTranslater extends QuxAdapter {
                             getMethodDescriptor(Qux2ClassTranslater.getClass(argumentType),
                                     "_dup_"), false);
                 }
-
-                argumentTypes.add(argumentType);
             }
 
-            Type type = Type.getMethodType(returnType, argumentTypes.toArray(new Type[0]));
+            Type type = getType(Attributes.getAttributeUnchecked(expr, Attribute.Function.class)
+                    .getType());
 
             mv.visitMethodInsn(INVOKESTATIC, Joiner.on('/').join(expr.getOwner().getId()),
                     expr.getName().getId(), type.getDescriptor(), false);
@@ -650,8 +646,8 @@ public final class Qux2ClassTranslater extends QuxAdapter {
                         visitExpr(access.getRhs());
                         mv.visitInsn(SWAP);
 
-                        mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(List.class), "_assign_",
-                                getMethodDescriptor(List.class, "_assign_", Int.class,
+                        mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(List.class),
+                                "_assign_", getMethodDescriptor(List.class, "_assign_", Int.class,
                                         AbstractObj.class), false);
                     } else if (expr.getTarget() instanceof ExprNode.RecordAccess) {
                         ExprNode.RecordAccess access = (ExprNode.RecordAccess) expr.getTarget();
@@ -696,8 +692,8 @@ public final class Qux2ClassTranslater extends QuxAdapter {
                         visitExpr(access.getRhs());
                         mv.visitInsn(SWAP);
 
-                        mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(List.class), "_assign_",
-                                getMethodDescriptor(List.class, "_assign_", Int.class,
+                        mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(List.class),
+                                "_assign_", getMethodDescriptor(List.class, "_assign_", Int.class,
                                         AbstractObj.class), false);
                     } else if (expr.getTarget() instanceof ExprNode.RecordAccess) {
                         ExprNode.RecordAccess access = (ExprNode.RecordAccess) expr.getTarget();

@@ -131,17 +131,11 @@ public final class TypePropagator extends Pipeline {
         }
 
         Optional<Attribute.Source> opt = Attributes.getAttribute(constant, Attribute.Source.class);
+        Attribute.Source source = opt.orElseThrow(() -> CompilerErrors.noConstantFound(Joiner.on(
+                '.').join(owner), constant.getName().getId()));
 
-        if (opt.isPresent()) {
-            Attribute.Source source = opt.get();
-
-            throw CompilerErrors.noConstantFound(Joiner.on('.').join(owner),
-                    constant.getName().getId(), source.getSource(), source.getLine(),
-                    source.getCol(), source.getLength());
-        } else {
-            throw CompilerErrors.noConstantFound(Joiner.on('.').join(owner),
-                    constant.getName().getId());
-        }
+        throw CompilerErrors.noConstantFound(Joiner.on('.').join(owner), constant.getName().getId(),
+                source.getSource(), source.getLine(), source.getCol(), source.getLength());
     }
 
     private Type.Function getFunctionType(ExprNode.Function function) {
@@ -155,17 +149,11 @@ public final class TypePropagator extends Pipeline {
         }
 
         Optional<Attribute.Source> opt = Attributes.getAttribute(function, Attribute.Source.class);
+        Attribute.Source source = opt.orElseThrow(() -> CompilerErrors.noFunctionFound(Joiner.on(
+                '.').join(owner), function.getName().getId()));
 
-        if (opt.isPresent()) {
-            Attribute.Source source = opt.get();
-
-            throw CompilerErrors.noFunctionFound(Joiner.on('.').join(owner),
-                    function.getName().getId(), source.getSource(), source.getLine(),
-                    source.getCol(), source.getLength());
-        } else {
-            throw CompilerErrors.noFunctionFound(Joiner.on('.').join(owner),
-                    function.getName().getId());
-        }
+        throw CompilerErrors.noFunctionFound(Joiner.on('.').join(owner), function.getName().getId(),
+                source.getSource(), source.getLine(), source.getCol(), source.getLength());
     }
 
     private Resource.Single getResource(List<Identifier> id) {
@@ -177,12 +165,7 @@ public final class TypePropagator extends Pipeline {
     }
 
     private Resource.Single getResource(String id) {
-        Optional<Resource.Single> resource = context.getResourceById(id);
-        if (resource.isPresent()) {
-            return resource.get();
-        }
-
-        throw CompilerErrors.noResourceFound(id);
+        return context.getResourceById(id).orElseThrow(() -> CompilerErrors.noResourceFound(id));
     }
 
     private Resource.Single getResource(String id, Node node) {
@@ -192,15 +175,10 @@ public final class TypePropagator extends Pipeline {
         }
 
         Optional<Attribute.Source> opt = Attributes.getAttribute(node, Attribute.Source.class);
+        Attribute.Source source = opt.orElseThrow(() -> CompilerErrors.noResourceFound(id));
 
-        if (opt.isPresent()) {
-            Attribute.Source source = opt.get();
-
-            throw CompilerErrors.noResourceFound(id, source.getSource(), source.getLine(),
-                    source.getCol(), source.getLength());
-        } else {
-            throw CompilerErrors.noResourceFound(id);
-        }
+        throw CompilerErrors.noResourceFound(id, source.getSource(), source.getLine(),
+                source.getCol(), source.getLength());
     }
 
     private static Type getType(Node node) {
@@ -219,15 +197,11 @@ public final class TypePropagator extends Pipeline {
         }
 
         Optional<Attribute.Source> opt = Attributes.getAttribute(type, Attribute.Source.class);
+        Attribute.Source source = opt.orElseThrow(() -> CompilerErrors.noTypeFound(Joiner.on('.')
+                .join(owner), name.getId()));
 
-        if (opt.isPresent()) {
-            Attribute.Source source = opt.get();
-
-            throw CompilerErrors.noTypeFound(Joiner.on('.').join(owner), name.getId(),
-                    source.getSource(), source.getLine(), source.getCol(), source.getLength());
-        } else {
-            throw CompilerErrors.noTypeFound(Joiner.on('.').join(owner), name.getId());
-        }
+        throw CompilerErrors.noTypeFound(Joiner.on('.').join(owner), name.getId(),
+                source.getSource(), source.getLine(), source.getCol(), source.getLength());
     }
 
     private static Environment<Identifier, Type> mergeEnvironments(
@@ -432,7 +406,11 @@ public final class TypePropagator extends Pipeline {
 
             expr.getArguments().forEach(this::visitExpr);
 
-            setType(expr, getFunctionType(expr).getReturnType());
+            // Add the function type
+            Type.Function type = getFunctionType(expr);
+            expr.addAttributes(new Attribute.Function(type));
+
+            setType(expr, type.getReturnType());
         }
 
         /**

@@ -24,7 +24,7 @@ public interface Attribute {
         private final com.hjwylde.qux.builder.ControlFlowGraph cfg;
 
         public ControlFlowGraph(com.hjwylde.qux.builder.ControlFlowGraph cfg) {
-            this.cfg = checkNotNull(cfg);
+            this.cfg = checkNotNull(cfg, "cfg cannot be null");
         }
 
         /**
@@ -34,6 +34,29 @@ public interface Attribute {
          */
         public com.hjwylde.qux.builder.ControlFlowGraph getControlFlowGraph() {
             return cfg;
+        }
+    }
+
+    /**
+     * A function attribute. This attribute is attached to a {@link com.hjwylde.qux.tree.ExprNode
+     * .Function} and holds a reference to the resolved function type. The resolved function type
+     * takes into account subtyping relations and gets the most appropriate function call for the
+     * types of the expressions. Function resolution is done within the {@link
+     * com.hjwylde.qux.pipelines.TypePropagator}.
+     *
+     * @author Henry J. Wylde
+     * @since TODO: SINCE
+     */
+    public static final class Function implements Attribute {
+
+        private final com.hjwylde.qux.util.Type.Function type;
+
+        public Function(com.hjwylde.qux.util.Type.Function type) {
+            this.type = checkNotNull(type, "type cannot be null");
+        }
+
+        public com.hjwylde.qux.util.Type.Function getType() {
+            return type;
         }
     }
 

@@ -116,6 +116,14 @@ public class Meta extends AbstractObj {
         return this == obj ? TRUE : FALSE;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public qux.lang.Int _hash_() {
+        return _desc_()._hash_();
+    }
+
     public static Meta forList(Meta innerType) {
         return listMetas.getUnchecked(normalise(innerType));
     }
