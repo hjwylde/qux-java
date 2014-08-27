@@ -209,7 +209,7 @@ public class QuxProperties extends AbstractProperties {
         properties.put(PROP_CLASSPATH, "");
         properties.put(PROP_CHARSET, StandardCharsets.UTF_8.name());
         properties.put(PROP_OUTDIR, ".");
-        properties.put(PROP_TIMEOUT, "10");
+        properties.put(PROP_TIMEOUT, "20");
         properties.put(PROP_TIMEOUT_UNIT, "seconds");
         properties.put(PROP_VERBOSE, "false");
 

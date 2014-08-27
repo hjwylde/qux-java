@@ -57,6 +57,16 @@ public final class Types {
         return lhs.equals(checkNotNull(rhs, "rhs cannot be null"));
     }
 
+    public static boolean isRecord(Type type) {
+        type = normalise(type);
+
+        if (type instanceof Type.Union) {
+            return isRecord((Type.Union) type);
+        }
+
+        return type instanceof Type.Record;
+    }
+
     public static boolean isSubtype(Type lhs, Type rhs) {
         lhs = normalise(lhs);
         rhs = normalise(rhs);
@@ -97,18 +107,6 @@ public final class Types {
 
         // Rest of the types only subtype themselves
         return lhs.equals(rhs);
-    }
-
-    public static Type.Function normalise(Type.Function type) {
-        List<Type> parameterTypes = new ArrayList<>();
-
-        for (Type parameterType : type.getParameterTypes()) {
-            parameterTypes.add(normalise(parameterType));
-        }
-
-        // Create a new function using the constructor to avoid an infinite recursive call to normalise
-        return new Type.Function(normalise(type.getReturnType()), parameterTypes,
-                type.getAttributes());
     }
 
     public static Type normalise(Type type) {
@@ -168,6 +166,18 @@ public final class Types {
 
         // Create a new union using the constructor to avoid an infinite recursive call to normalise
         return new Type.Union(union, type.getAttributes());
+    }
+
+    public static Type.Function normalise(Type.Function type) {
+        List<Type> parameterTypes = new ArrayList<>();
+
+        for (Type parameterType : type.getParameterTypes()) {
+            parameterTypes.add(normalise(parameterType));
+        }
+
+        // Create a new function using the constructor to avoid an infinite recursive call to normalise
+        return new Type.Function(normalise(type.getReturnType()), parameterTypes,
+                type.getAttributes());
     }
 
     /**
@@ -231,13 +241,9 @@ public final class Types {
         return new Type.Union(union, type.getAttributes());
     }
 
-    private static boolean isSubtype(Type.Record lhs, Type.Record rhs) {
-        if (!lhs.getFields().keySet().containsAll(rhs.getFields().keySet())) {
-            return false;
-        }
-
-        for (Identifier key : rhs.getFields().keySet()) {
-            if (!isSubtype(lhs.getFields().get(key), rhs.getFields().get(key))) {
+    private static boolean isRecord(Type.Union union) {
+        for (Type type : union.getTypes()) {
+            if (!isRecord(type)) {
                 return false;
             }
         }
@@ -256,6 +262,20 @@ public final class Types {
 
         for (int i = 0; i < lhs.getParameterTypes().size(); i++) {
             if (!isSubtype(lhs.getParameterTypes().get(i), rhs.getParameterTypes().get(i))) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static boolean isSubtype(Type.Record lhs, Type.Record rhs) {
+        if (!lhs.getFields().keySet().containsAll(rhs.getFields().keySet())) {
+            return false;
+        }
+
+        for (Identifier key : rhs.getFields().keySet()) {
+            if (!isSubtype(lhs.getFields().get(key), rhs.getFields().get(key))) {
                 return false;
             }
         }

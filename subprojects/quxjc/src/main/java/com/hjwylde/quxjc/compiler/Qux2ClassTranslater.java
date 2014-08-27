@@ -618,6 +618,7 @@ public final class Qux2ClassTranslater extends QuxAdapter {
          */
         @Override
         public void visitExprUnary(ExprNode.Unary expr) {
+            // TODO: We're visiting this expression multiple times throughout this method and it could cause issues if there are side effects inside of it
             visitExpr(expr.getTarget());
 
             Class<?> clazz = Qux2ClassTranslater.getClass(expr.getTarget());
@@ -636,6 +637,22 @@ public final class Qux2ClassTranslater extends QuxAdapter {
                                 getMethodDescriptor(Int.class, "_sub_", Int.class), false);
 
                         mv.visitVarInsn(ASTORE, index);
+                    } else if (expr.getTarget() instanceof ExprNode.Binary) {
+                        ExprNode.Binary access = (ExprNode.Binary) expr.getTarget();
+
+                        mv.visitInsn(DUP);
+                        visitExpr(new ExprNode.Value(ExprNode.Value.Type.INT, BigInteger.ONE));
+                        mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(Int.class), "_add_",
+                                getMethodDescriptor(Int.class, "_sub_", Int.class), false);
+
+                        visitExpr(access.getLhs());
+                        mv.visitInsn(SWAP);
+                        visitExpr(access.getRhs());
+                        mv.visitInsn(SWAP);
+
+                        mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(List.class), "_assign_",
+                                getMethodDescriptor(List.class, "_assign_", Int.class,
+                                        AbstractObj.class), false);
                     } else if (expr.getTarget() instanceof ExprNode.RecordAccess) {
                         ExprNode.RecordAccess access = (ExprNode.RecordAccess) expr.getTarget();
 
@@ -655,8 +672,7 @@ public final class Qux2ClassTranslater extends QuxAdapter {
                     }
                     break;
                 case INC:
-                    // An increment can be on a variable or record field, all others we should just
-                    // compute the value
+                    // An increment can be on a variable, list access or a record field, all others we should just compute the value
                     if (expr.getTarget() instanceof ExprNode.Variable) {
                         int index = locals.indexOf(
                                 ((ExprNode.Variable) expr.getTarget()).getName());
@@ -667,6 +683,22 @@ public final class Qux2ClassTranslater extends QuxAdapter {
                                 getMethodDescriptor(Int.class, "_add_", Int.class), false);
 
                         mv.visitVarInsn(ASTORE, index);
+                    } else if (expr.getTarget() instanceof ExprNode.Binary) {
+                        ExprNode.Binary access = (ExprNode.Binary) expr.getTarget();
+
+                        mv.visitInsn(DUP);
+                        visitExpr(new ExprNode.Value(ExprNode.Value.Type.INT, BigInteger.ONE));
+                        mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(Int.class), "_add_",
+                                getMethodDescriptor(Int.class, "_add_", Int.class), false);
+
+                        visitExpr(access.getLhs());
+                        mv.visitInsn(SWAP);
+                        visitExpr(access.getRhs());
+                        mv.visitInsn(SWAP);
+
+                        mv.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(List.class), "_assign_",
+                                getMethodDescriptor(List.class, "_assign_", Int.class,
+                                        AbstractObj.class), false);
                     } else if (expr.getTarget() instanceof ExprNode.RecordAccess) {
                         ExprNode.RecordAccess access = (ExprNode.RecordAccess) expr.getTarget();
 
