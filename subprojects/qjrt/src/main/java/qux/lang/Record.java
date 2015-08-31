@@ -2,8 +2,6 @@ package qux.lang;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static qux.lang.Bool.FALSE;
-import static qux.lang.Bool.TRUE;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -25,7 +23,7 @@ public final class Record extends AbstractObj {
     private Record(Record record) {
         fields = new TreeMap<>();
         for (Map.Entry<String, AbstractObj> field : record.fields.entrySet()) {
-            fields.put(field.getKey(), field.getValue()._dup_());
+            fields.put(field.getKey(), field.getValue().dup());
         }
     }
 
@@ -36,7 +34,11 @@ public final class Record extends AbstractObj {
         this.fields = new TreeMap<>(fields);
     }
 
-    public void _assign_(String field, AbstractObj value) {
+    public AbstractObj _get(String field) {
+        return get(field);
+    }
+
+    public void _set(String field, AbstractObj value) {
         put(field, value);
     }
 
@@ -44,15 +46,15 @@ public final class Record extends AbstractObj {
      * {@inheritDoc}
      */
     @Override
-    public Int _comp_(AbstractObj obj) {
+    public int compareTo(AbstractObj obj) {
         if (!(obj instanceof Record)) {
-            return meta()._comp_(obj.meta());
+            return meta().compareTo(obj.meta());
         }
 
         Record that = (Record) obj;
 
-        Int comp = Int.valueOf(fields.size() - that.fields.size());
-        if (!comp.equals(Int.ZERO)) {
+        int comp = fields.size() - that.fields.size();
+        if (comp != 0) {
             return comp;
         }
 
@@ -63,25 +65,53 @@ public final class Record extends AbstractObj {
             Map.Entry<String, AbstractObj> thisField = thisIt.next();
             Map.Entry<String, AbstractObj> thatField = thatIt.next();
 
-            comp = Int.valueOf(thisField.getKey().compareTo(thatField.getKey()));
-            if (!comp.equals(Int.ZERO)) {
+            comp = thisField.getKey().compareTo(thatField.getKey());
+            if (comp != 0) {
                 return comp;
             }
 
-            comp = thisField.getValue()._comp_(thatField.getValue());
-            if (!comp.equals(Int.ZERO)) {
+            comp = thisField.getValue().compareTo(thatField.getValue());
+            if (comp != 0) {
                 return comp;
             }
         }
 
-        return Int.ZERO;
+        return 0;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Str _desc_() {
+    public Record dup() {
+        return new Record(this);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (!super.equals(obj)) {
+            return false;
+        }
+
+        return fields.equals(((Record) obj).fields);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return fields.hashCode();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
         StringBuilder sb = new StringBuilder();
 
         sb.append("{");
@@ -98,38 +128,14 @@ public final class Record extends AbstractObj {
         }
         sb.append("}");
 
-        return Str.valueOf(sb.toString());
+        return sb.toString();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Record _dup_() {
-        return new Record(this);
+    public static Record valueOf(Map<String, AbstractObj> fields) {
+        return new Record(fields);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Bool _eq_(AbstractObj obj) {
-        if (super._eq_(obj) == FALSE) {
-            return FALSE;
-        }
-
-        return fields.equals(((Record) obj).fields) ? TRUE : FALSE;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Int _hash_() {
-        return Int.valueOf(fields.hashCode());
-    }
-
-    public synchronized AbstractObj get(String field) {
+    synchronized AbstractObj get(String field) {
         checkArgument(fields.containsKey(field), "record does not contain field '%s'", field);
 
         return fields.get(field);
@@ -139,7 +145,7 @@ public final class Record extends AbstractObj {
      * {@inheritDoc}
      */
     @Override
-    public Meta meta() {
+    Meta meta() {
         Map<String, Meta> fields = new HashMap<>();
 
         for (Map.Entry<String, AbstractObj> field : this.fields.entrySet()) {
@@ -147,10 +153,6 @@ public final class Record extends AbstractObj {
         }
 
         return Meta.forRecord(fields);
-    }
-
-    public static Record valueOf(Map<String, AbstractObj> fields) {
-        return new Record(fields);
     }
 
     synchronized void put(String field, AbstractObj value) {

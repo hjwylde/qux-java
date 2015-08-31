@@ -1,0 +1,16 @@
+package qux.lang
+
+type bit is int where this >= 0 and this <= 1
+
+type byte is int where this >= -0x80 and this < 0x80
+type ubyte is int where this >= 0 and this <= 0xff
+
+type int16 is int where this >= -0x8000 and this < 0x8000
+type uint16 is int where this >= 0 and this <= 0xffff
+
+type int32 is int where this >= -0x80000000 and this < 0x80000000
+type uint32 is int where this >= 0 and this <= 0xffffffff
+
+type int64 is int where this >= -0x8000000000000000 and this < 0x8000000000000000
+type uint64 is int where this >= 0 and this <= 0xffffffffffffffff
+

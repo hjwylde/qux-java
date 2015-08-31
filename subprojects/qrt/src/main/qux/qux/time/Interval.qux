@@ -1,0 +1,13 @@
+package qux.time
+
+type Interval is {Instant start, Instant end}
+
+Interval::new(Instant start, Instant end):
+    return {start: start, end: end}
+
+bool Interval::isNegative():
+    return start > end
+
+bool Interval::isPositive():
+    return start <= end
+

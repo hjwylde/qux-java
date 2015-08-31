@@ -1,0 +1,10 @@
+package qux.lang
+
+import qux.lang.AbstractObj
+
+str desc(any t):
+    return AbstractObj$desc(t)
+
+int hash(any t):
+    return AbstractObj$hash(t)
+

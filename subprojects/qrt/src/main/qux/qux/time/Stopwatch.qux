@@ -1,0 +1,25 @@
+package qux.time
+
+import qux.lang.Nat$nat
+
+type Stopwatch is {nat elapsed, [nat] splits}
+
+Stopwatch::new():
+    return {elapsed: 0, splits: []}
+
+nat Stopwatch::getElapsed():
+    return this.elapsed
+
+[nat] Stopwatch::getSplits():
+    return this.splits
+
+void Stopwatch::reset():
+    this = newStopwatch()
+
+void Stopwatch::split():
+    this.splits += [this.elapsed]
+
+void Stopwatch::start():
+
+void Stopwatch::stop():
+

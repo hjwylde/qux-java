@@ -10,10 +10,11 @@ import static java.util.Arrays.copyOfRange;
 import static qux.lang.Bool.FALSE;
 import static qux.lang.Bool.TRUE;
 
-import java.math.BigInteger;
+import com.google.common.base.Joiner;
+import com.google.common.collect.Iterables;
 
-import qux.util.Iterable;
-import qux.util.Iterator;
+import java.math.BigInteger;
+import java.util.Iterator;
 
 /**
  * TODO: Documentation
@@ -21,7 +22,7 @@ import qux.util.Iterator;
  * @author Henry J. Wylde
  * @since 0.1.3
  */
-public final class Set extends AbstractObj implements Iterable {
+public final class Set extends AbstractObj implements Iterable<AbstractObj> {
 
     private AbstractObj[] data;
     private int count;
@@ -53,80 +54,73 @@ public final class Set extends AbstractObj implements Iterable {
         }
     }
 
-    public AbstractObj _access_(Int index) {
-        return get(index);
-    }
-
-    public Set _add_(Set set) {
+    public Set _add(Set set) {
         Set union = new Set(this);
 
-        union.ensureCapacity(set._len_());
+        union.ensureCapacity(set._len());
 
-        for (Iterator it = set._iter_(); it.hasNext() == TRUE; ) {
-            union.add(it.next());
-        }
+        set.forEach(union::add);
 
         return union;
     }
 
+    public Bool _contains(AbstractObj obj) {
+        return indexOf(obj) >= 0 ? TRUE : FALSE;
+    }
+
+    public AbstractObj _get(Int index) {
+        return get(index);
+    }
+
+    public Int _len() {
+        return Int.valueOf(count);
+    }
+
+    public Set _slice(Int from, Int to) {
+        return subset(from, to);
+    }
+
+    public Set _sub(Set set) {
+        Set difference = new Set(this);
+
+        set.forEach(difference::remove);
+
+        return difference;
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
-    public Int _comp_(AbstractObj obj) {
+    public int compareTo(AbstractObj obj) {
         if (!(obj instanceof Set)) {
-            return meta()._comp_(obj.meta());
+            return meta().compareTo(obj.meta());
         }
 
         Set that = (Set) obj;
 
-        Int comp = _len_()._comp_(that._len_());
-        if (!comp.equals(Int.ZERO)) {
+        int comp = _len().compareTo(that._len());
+        if (comp != 0) {
             return comp;
         }
 
-        Iterator thisIt = _iter_();
-        Iterator thatIt = that._iter_();
+        Iterator<AbstractObj> it = that.iterator();
 
-        while (thisIt.hasNext() == TRUE) {
-            comp = thisIt.next()._comp_(thatIt.next());
-            if (comp._eq_(Int.ZERO) == FALSE) {
+        for (AbstractObj datum : this) {
+            comp = datum.compareTo(it.next());
+            if (comp != 0) {
                 return comp;
             }
         }
 
-        return Int.ZERO;
-    }
-
-    public Bool _contains_(AbstractObj obj) {
-        return indexOf(obj) >= 0 ? TRUE : FALSE;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Str _desc_() {
-        StringBuilder sb = new StringBuilder();
-
-        sb.append("{");
-        for (Iterator it = _iter_(); it.hasNext() == TRUE; ) {
-            sb.append(it.next()._desc_());
-
-            if (it.hasNext() == TRUE) {
-                sb.append(", ");
-            }
-        }
-        sb.append("}");
-
-        return Str.valueOf(sb.toString());
+        return 0;
     }
 
     /**
      * {@inheritDocn}
      */
     @Override
-    public Set _dup_() {
+    public Set dup() {
         return new Set(this);
     }
 
@@ -134,38 +128,25 @@ public final class Set extends AbstractObj implements Iterable {
      * {@inheritDoc}
      */
     @Override
-    public Bool _eq_(AbstractObj obj) {
-        if (super._eq_(obj) == FALSE) {
-            return FALSE;
+    public boolean equals(Object obj) {
+        if (!super.equals(obj)) {
+            return false;
         }
 
         Set that = (Set) obj;
 
-        if (!_len_().equals(that._len_())) {
-            return FALSE;
-        }
-
-        Iterator thisIt = _iter_();
-        Iterator thatIt = that._iter_();
-
-        while (thisIt.hasNext() == TRUE) {
-            if (thisIt.next()._eq_(thatIt.next()) == FALSE) {
-                return FALSE;
-            }
-        }
-
-        return TRUE;
+        return Iterables.elementsEqual(this, that);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Int _hash_() {
-        Int hash = Int.ZERO;
+    public int hashCode() {
+        int hash = 0;
 
-        for (Iterator it = _iter_(); it.hasNext() == TRUE; ) {
-            hash = hash._add_(it.next()._hash_());
+        for (AbstractObj datum : this) {
+            hash += datum.hashCode();
         }
 
         return hash;
@@ -175,19 +156,19 @@ public final class Set extends AbstractObj implements Iterable {
      * {@inheritDoc}
      */
     @Override
-    public synchronized Iterator _iter_() {
+    public synchronized Iterator<AbstractObj> iterator() {
         refs++;
 
-        return new Iterator() {
+        return new Iterator<AbstractObj>() {
 
             private AbstractObj[] data = Set.this.data;
             private int count = Set.this.count;
             private int index = 0;
 
             @Override
-            public Bool hasNext() {
+            public boolean hasNext() {
                 if (index < count) {
-                    return TRUE;
+                    return true;
                 }
 
                 // Check if the set is still the same, if it is we can decrement the refs count
@@ -195,7 +176,7 @@ public final class Set extends AbstractObj implements Iterable {
                     refs--;
                 }
 
-                return FALSE;
+                return false;
             }
 
             @Override
@@ -205,47 +186,12 @@ public final class Set extends AbstractObj implements Iterable {
         };
     }
 
-    public Int _len_() {
-        return Int.valueOf(count);
-    }
-
-    public Set _slice_(Int from, Int to) {
-        return subset(from, to);
-    }
-
-    public Set _sub_(Set set) {
-        Set difference = new Set(this);
-
-        for (Iterator it = set._iter_(); it.hasNext() == TRUE; ) {
-            difference.remove(it.next());
-        }
-
-        return difference;
-    }
-
     /**
      * {@inheritDoc}
      */
     @Override
-    public Meta meta() {
-        Set types = new Set();
-
-        for (Iterator it = _iter_(); it.hasNext() == TRUE; ) {
-            types.add(it.next().meta());
-        }
-
-        // TODO: Normalise the set before the checks
-        // The normalisation should happen in the Meta.forSet methods
-
-        if (types.isEmpty() == TRUE) {
-            return Meta.forSet(Meta.META_ANY);
-        }
-
-        if (types._len_().equals(Int.ONE)) {
-            return Meta.forSet((Meta) types.data[0]);
-        }
-
-        return Meta.forSet(Meta.forUnion(types));
+    public String toString() {
+        return "{" + Joiner.on(", ").join(this) + "}";
     }
 
     public static Set valueOf(AbstractObj... data) {
@@ -274,7 +220,7 @@ public final class Set extends AbstractObj implements Iterable {
     }
 
     AbstractObj get(Int index) {
-        return get(index._value_());
+        return get(index.value());
     }
 
     synchronized AbstractObj get(int index) {
@@ -291,6 +237,29 @@ public final class Set extends AbstractObj implements Iterable {
 
     Bool isEmpty() {
         return count == 0 ? TRUE : FALSE;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    Meta meta() {
+        Set types = new Set();
+
+        forEach(e -> types.add(e.meta()));
+
+        // TODO: Normalise the set before the checks
+        // The normalisation should happen in the Meta.forSet methods
+
+        if (types.isEmpty() == TRUE) {
+            return Meta.forSet(Meta.META_ANY);
+        }
+
+        if (types._len().equals(Int.ONE)) {
+            return Meta.forSet((Meta) types.data[0]);
+        }
+
+        return Meta.forSet(Meta.forUnion(types));
     }
 
     synchronized void remove(AbstractObj obj) {
@@ -310,7 +279,7 @@ public final class Set extends AbstractObj implements Iterable {
     }
 
     Set subset(Int from, Int to) {
-        return subset(from._value_(), to._value_());
+        return subset(from.value(), to.value());
     }
 
     synchronized Set subset(int from, int to) {
@@ -341,7 +310,7 @@ public final class Set extends AbstractObj implements Iterable {
     }
 
     private synchronized void ensureCapacity(Int capacity) {
-        ensureCapacity(capacity._value_());
+        ensureCapacity(capacity.value());
     }
 
     private synchronized void ensureCapacity(BigInteger capacity) {
@@ -373,7 +342,7 @@ public final class Set extends AbstractObj implements Iterable {
 
         if (obj.equals(data[mid])) {
             return mid;
-        } else if (obj._comp_(data[mid])._lt_(Int.ZERO) == TRUE) {
+        } else if (obj.compareTo(data[mid]) < 0) {
             high = mid;
         } else {
             low = mid + 1;

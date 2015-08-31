@@ -1,0 +1,16 @@
+package qux.lang
+
+type Table is [R: [C: V]]
+
+{C} Table::cols():
+    return this::cols(this::keys())
+
+{C} Table::cols(R row):
+    return this[row]::keys()
+
+{C} Table::cols({R} rows):
+    return map(&keys, this::values(rows))
+
+{R} Table::rows():
+    return this::keys()
+

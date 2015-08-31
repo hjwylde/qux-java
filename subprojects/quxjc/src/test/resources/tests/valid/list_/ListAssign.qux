@@ -5,6 +5,11 @@ package valid.list_
 
     return xs
 
+[[int]] g([[int]] xs):
+    xs[0][0] = 5
+
+    return xs
+
 void main([str] args):
     xs = [0, 1, 2]
     print xs[0]
@@ -30,4 +35,9 @@ void main([str] args):
     print ys
     ys[0] = 'foo'
     print ys
+
+    zs = [[0, 1, 2]]
+    print zs
+    print g(zs)
+    print zs
 

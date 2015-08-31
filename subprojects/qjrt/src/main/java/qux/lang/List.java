@@ -10,17 +10,18 @@ import static java.util.Arrays.copyOfRange;
 import static qux.lang.Bool.FALSE;
 import static qux.lang.Bool.TRUE;
 
-import java.math.BigInteger;
+import com.google.common.base.Joiner;
+import com.google.common.collect.Iterables;
 
-import qux.util.Iterable;
-import qux.util.Iterator;
+import java.math.BigInteger;
+import java.util.Iterator;
 
 /**
  * TODO: Documentation
  *
  * @author Henry J. Wylde
  */
-public final class List extends AbstractObj implements Iterable {
+public final class List extends AbstractObj implements Iterable<AbstractObj> {
 
     private AbstractObj[] data;
     private int count;
@@ -53,84 +54,77 @@ public final class List extends AbstractObj implements Iterable {
         }
     }
 
-    public AbstractObj _access_(Int index) {
-        return get(index);
-    }
-
-    public List _add_(List list) {
+    public List _add(List list) {
         List union = new List(this);
 
-        union.ensureCapacity(list._len_());
+        union.ensureCapacity(list._len());
 
-        for (Iterator it = list._iter_(); it.hasNext() == TRUE; ) {
-            union.add(it.next());
-        }
+        list.forEach(union::add);
 
         return union;
     }
 
-    public void _assign_(Int index, AbstractObj value) {
+    public Bool _contains(AbstractObj obj) {
+        return indexOf(obj) >= 0 ? TRUE : FALSE;
+    }
+
+    public AbstractObj _get(Int index) {
+        return get(index);
+    }
+
+    public Int _len() {
+        return Int.valueOf(count);
+    }
+
+    public void _set(Int index, AbstractObj value) {
         set(index, value);
+    }
+
+    public List _slice(Int from, Int to) {
+        return sublist(from, to);
+    }
+
+    public List _sub(List list) {
+        List difference = new List(this);
+
+        list.forEach(difference::remove);
+
+        return difference;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Int _comp_(AbstractObj obj) {
+    public int compareTo(AbstractObj obj) {
         if (!(obj instanceof List)) {
-            return meta()._comp_(obj.meta());
+            return meta().compareTo(obj.meta());
         }
 
         List that = (List) obj;
 
-        Int comp = _len_()._comp_(that._len_());
-        if (!comp.equals(Int.ZERO)) {
+        int comp = count - that.count;
+        if (comp != 0) {
             return comp;
         }
 
-        Iterator thisIt = _iter_();
-        Iterator thatIt = that._iter_();
+        Iterator<AbstractObj> it = that.iterator();
 
-        while (thisIt.hasNext() == TRUE) {
-            comp = thisIt.next()._comp_(thatIt.next());
-            if (!comp.equals(Int.ZERO)) {
+        for (AbstractObj datum : this) {
+            comp = datum.compareTo(it.next());
+            if (comp != 0) {
                 return comp;
             }
         }
 
-        return Int.ZERO;
-    }
-
-    public Bool _contains_(AbstractObj obj) {
-        return indexOf(obj) >= 0 ? TRUE : FALSE;
+        return 0;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Str _desc_() {
-        StringBuilder sb = new StringBuilder();
-
-        sb.append("[");
-        for (Iterator it = _iter_(); it.hasNext() == TRUE; ) {
-            sb.append(it.next()._desc_());
-
-            if (it.hasNext() == TRUE) {
-                sb.append(", ");
-            }
-        }
-        sb.append("]");
-
-        return Str.valueOf(sb.toString());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public List _dup_() {
+    public List dup() {
         return new List(this);
     }
 
@@ -138,38 +132,25 @@ public final class List extends AbstractObj implements Iterable {
      * {@inheritDoc}
      */
     @Override
-    public Bool _eq_(AbstractObj obj) {
-        if (super._eq_(obj) == FALSE) {
-            return FALSE;
+    public boolean equals(Object obj) {
+        if (!super.equals(obj)) {
+            return false;
         }
 
         List that = (List) obj;
 
-        if (!_len_().equals(that._len_())) {
-            return FALSE;
-        }
-
-        Iterator thisIt = _iter_();
-        Iterator thatIt = that._iter_();
-
-        while (thisIt.hasNext() == TRUE) {
-            if (!thisIt.next().equals(thatIt.next())) {
-                return FALSE;
-            }
-        }
-
-        return TRUE;
+        return Iterables.elementsEqual(this, that);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Int _hash_() {
-        Int hash = Int.ZERO;
+    public int hashCode() {
+        int hash = 0;
 
-        for (Iterator it = _iter_(); it.hasNext() == TRUE; ) {
-            hash = hash._add_(it.next()._hash_());
+        for (AbstractObj datum : this) {
+            hash += datum.hashCode();
         }
 
         return hash;
@@ -179,19 +160,19 @@ public final class List extends AbstractObj implements Iterable {
      * {@inheritDoc}
      */
     @Override
-    public synchronized Iterator _iter_() {
+    public synchronized Iterator<AbstractObj> iterator() {
         refs++;
 
-        return new Iterator() {
+        return new Iterator<AbstractObj>() {
 
             private AbstractObj[] data = List.this.data;
             private int count = List.this.count;
             private int index = 0;
 
             @Override
-            public Bool hasNext() {
+            public boolean hasNext() {
                 if (index < count) {
-                    return TRUE;
+                    return true;
                 }
 
                 // Check if the list is still the same, if it is we can decrement the refs count
@@ -199,7 +180,7 @@ public final class List extends AbstractObj implements Iterable {
                     refs--;
                 }
 
-                return FALSE;
+                return false;
             }
 
             @Override
@@ -209,44 +190,12 @@ public final class List extends AbstractObj implements Iterable {
         };
     }
 
-    public Int _len_() {
-        return Int.valueOf(count);
-    }
-
-    public List _slice_(Int from, Int to) {
-        return sublist(from, to);
-    }
-
-    public List _sub_(List list) {
-        List difference = new List(this);
-
-        for (Iterator it = list._iter_(); it.hasNext() == TRUE; ) {
-            difference.remove(it.next());
-        }
-
-        return difference;
-    }
-
     /**
      * {@inheritDoc}
      */
     @Override
-    public Meta meta() {
-        Set types = Set.valueOf();
-
-        for (Iterator it = _iter_(); it.hasNext() == TRUE; ) {
-            types.add(it.next().meta());
-        }
-
-        if (types.isEmpty() == TRUE) {
-            return Meta.forSet(Meta.META_ANY);
-        }
-
-        if (types._len_().equals(Int.ONE)) {
-            return Meta.forSet((Meta) types._iter_().next());
-        }
-
-        return Meta.forSet(Meta.forUnion(types));
+    public String toString() {
+        return "[" + Joiner.on(", ").join(this) + "]";
     }
 
     public static List valueOf(AbstractObj... data) {
@@ -262,7 +211,7 @@ public final class List extends AbstractObj implements Iterable {
     }
 
     AbstractObj get(Int index) {
-        return get(index._value_());
+        return get(index.value());
     }
 
     synchronized AbstractObj get(int index) {
@@ -279,8 +228,8 @@ public final class List extends AbstractObj implements Iterable {
 
     int indexOf(AbstractObj obj) {
         int index = 0;
-        for (Iterator it = _iter_(); it.hasNext() == TRUE; ) {
-            if (it.next().equals(obj)) {
+        for (AbstractObj datum : this) {
+            if (datum.equals(obj)) {
                 return index;
             }
 
@@ -292,6 +241,26 @@ public final class List extends AbstractObj implements Iterable {
 
     Bool isEmpty() {
         return count == 0 ? TRUE : FALSE;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    Meta meta() {
+        Set types = Set.valueOf();
+
+        forEach(e -> types.add(e.meta()));
+
+        if (types.isEmpty() == TRUE) {
+            return Meta.forSet(Meta.META_ANY);
+        }
+
+        if (types._len().equals(Int.ONE)) {
+            return Meta.forSet((Meta) types.iterator().next());
+        }
+
+        return Meta.forSet(Meta.forUnion(types));
     }
 
     synchronized void remove(AbstractObj obj) {
@@ -309,7 +278,7 @@ public final class List extends AbstractObj implements Iterable {
     }
 
     void set(Int index, AbstractObj value) {
-        set(index._value_(), value);
+        set(index.value(), value);
     }
 
     synchronized void set(int index, AbstractObj value) {
@@ -327,7 +296,7 @@ public final class List extends AbstractObj implements Iterable {
     }
 
     List sublist(Int from, Int to) {
-        return sublist(from._value_(), to._value_());
+        return sublist(from.value(), to.value());
     }
 
     synchronized List sublist(int from, int to) {
@@ -358,7 +327,7 @@ public final class List extends AbstractObj implements Iterable {
     }
 
     private synchronized void ensureCapacity(Int capacity) {
-        ensureCapacity(capacity._value_());
+        ensureCapacity(capacity.value());
     }
 
     private synchronized void ensureCapacity(BigInteger capacity) {

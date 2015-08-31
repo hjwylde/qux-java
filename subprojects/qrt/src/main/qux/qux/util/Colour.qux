@@ -1,0 +1,15 @@
+package qux.util
+
+import qux.lang.Ints$ubyte
+
+type Rgb is {ubyte red, ubyte green, ubyte blue}
+type Rgba is {ubyte red, ubyte green, ubyte blue, ubyte alpha}
+
+type Colour is Rgb | Rgba
+
+str Rgb::toHex():
+    return '#' + this.red::toHex() + this.green::toHex() + this.blue::toHex()
+
+str Rgba::toHex():
+    return '#' + this.alpha::toHex() + this.red::toHex() + this.green::toHex() + this.blue::toHex()
+

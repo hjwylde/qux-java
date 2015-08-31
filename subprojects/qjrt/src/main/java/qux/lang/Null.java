@@ -1,7 +1,5 @@
 package qux.lang;
 
-import static qux.lang.Bool.FALSE;
-import static qux.lang.Bool.TRUE;
 import static qux.lang.Meta.META_NULL;
 
 /**
@@ -19,23 +17,15 @@ public final class Null extends AbstractObj {
      * {@inheritDoc}
      */
     @Override
-    public Int _comp_(AbstractObj obj) {
-        return meta()._comp_(obj.meta());
+    public int compareTo(AbstractObj obj) {
+        return meta().compareTo(obj.meta());
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Str _desc_() {
-        return Str.valueOf("null");
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Null _dup_() {
+    public Null dup() {
         return this;
     }
 
@@ -43,27 +33,31 @@ public final class Null extends AbstractObj {
      * {@inheritDoc}
      */
     @Override
-    public Bool _eq_(AbstractObj obj) {
-        if (super._eq_(obj) == FALSE) {
-            return FALSE;
-        }
-
-        return this == obj ? TRUE : FALSE;
+    public boolean equals(Object obj) {
+        return this == obj;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Int _hash_() {
-        return Int.M_ONE;
+    public int hashCode() {
+        return -1;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Meta meta() {
+    public String toString() {
+        return "null";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    Meta meta() {
         return META_NULL;
     }
 }

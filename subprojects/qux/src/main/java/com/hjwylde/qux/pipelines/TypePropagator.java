@@ -62,9 +62,11 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * TODO: Documentation
@@ -138,6 +140,15 @@ public final class TypePropagator extends Pipeline {
                 source.getSource(), source.getLine(), source.getCol(), source.getLength());
     }
 
+    private Type.Function getFunctionType(ExprNode.Binary expr) {
+        ExprNode.Meta owner = new ExprNode.Meta(getOwner(getType(expr.getLhs())));
+        Identifier name = new Identifier("_" + expr.getOp().name().toLowerCase(Locale.ENGLISH));
+        List<ExprNode> arguments = asList(expr.getRhs());
+
+        return getFunctionType(new ExprNode.Function(owner, name, arguments, false,
+                expr.getAttributes()));
+    }
+
     private Type.Function getFunctionType(ExprNode.Function function) {
         List<Identifier> owner = function.getOwner().getId();
 
@@ -154,6 +165,33 @@ public final class TypePropagator extends Pipeline {
 
         throw CompilerErrors.noFunctionFound(Joiner.on('.').join(owner), function.getName().getId(),
                 source.getSource(), source.getLine(), source.getCol(), source.getLength());
+    }
+
+    private static List<Identifier> getOwner(Type type) {
+        List<String> ids;
+        if (type instanceof Type.Bool) {
+            ids = asList("qux", "lang", "Bool");
+        } else if (type instanceof Type.Int) {
+            ids = asList("qux", "lang", "Int");
+        } else if (type instanceof Type.List) {
+            ids = asList("qux", "lang", "List");
+        } else if (type instanceof Type.Null) {
+            ids = asList("qux", "lang", "Null");
+        } else if (type instanceof Type.Obj) {
+            ids = asList("qux", "lang", "Obj");
+        } else if (type instanceof Type.Rat) {
+            ids = asList("qux", "lang", "Rat");
+        } else if (type instanceof Type.Record) {
+            ids = asList("qux", "lang", "Record");
+        } else if (type instanceof Type.Set) {
+            ids = asList("qux", "lang", "Set");
+        } else if (type instanceof Type.Str) {
+            ids = asList("qux", "lang", "Str");
+        } else {
+            throw new MethodNotImplementedError(type.getClass().toString());
+        }
+
+        return ids.stream().map(Identifier::new).collect(Collectors.toList());
     }
 
     private Resource.Single getResource(List<Identifier> id) {
@@ -385,6 +423,8 @@ public final class TypePropagator extends Pipeline {
                 default:
                     throw new MethodNotImplementedError(expr.getOp().toString());
             }
+
+            expr.addAttributes(new Attribute.Function(getFunctionType(expr)));
         }
 
         /**

@@ -3,80 +3,80 @@ package qux.lang;
 import static qux.lang.Bool.FALSE;
 import static qux.lang.Bool.TRUE;
 
-import java.math.BigInteger;
-
 /**
  * TODO: Documentation
  *
  * @author Henry J. Wylde
  */
-public abstract class AbstractObj {
+public abstract class AbstractObj implements Comparable<AbstractObj> {
 
     /**
      * This class may only be extended locally.
      */
     AbstractObj() {}
 
-    public abstract Int _comp_(AbstractObj obj);
-
-    public abstract Str _desc_();
-
-    public abstract AbstractObj _dup_();
-
-    public Bool _eq_(AbstractObj obj) {
-        if (this == obj) {
-            return TRUE;
-        }
-
-        return (obj != null && getClass() == obj.getClass()) ? TRUE : FALSE;
+    public final Bool _eq(AbstractObj obj) {
+        return equals(obj) ? TRUE : FALSE;
     }
 
-    public Bool _gt_(AbstractObj obj) {
-        return _comp_(obj)._gt_(Int.ZERO);
+    public final Bool _gt(AbstractObj obj) {
+        return compareTo(obj) > 0 ? TRUE : FALSE;
     }
 
-    public Bool _gte_(AbstractObj obj) {
-        return _comp_(obj)._gte_(Int.ZERO);
+    public final Bool _gte(AbstractObj obj) {
+        return compareTo(obj) >= 0 ? TRUE : FALSE;
     }
 
-    public abstract Int _hash_();
-
-    public Bool _lt_(AbstractObj obj) {
-        return _comp_(obj)._lt_(Int.ZERO);
+    public final Bool _lt(AbstractObj obj) {
+        return compareTo(obj) < 0 ? TRUE : FALSE;
     }
 
-    public Bool _lte_(AbstractObj obj) {
-        return _comp_(obj)._lte_(Int.ZERO);
+    public final Bool _lte(AbstractObj obj) {
+        return compareTo(obj) <= 0 ? TRUE : FALSE;
     }
 
-    public Bool _neq_(AbstractObj obj) {
-        return _eq_(obj)._not_();
+    public final Bool _neq(AbstractObj obj) {
+        return _eq(obj)._not();
     }
+
+    public static Str desc(AbstractObj obj) {
+        return Str.valueOf(obj.toString());
+    }
+
+    public abstract AbstractObj dup();
 
     /**
      * {@inheritDoc}
      */
     @Override
     public boolean equals(Object obj) {
-        return _eq_((AbstractObj) obj) == TRUE;
+        if (this == obj) {
+            return true;
+        }
+
+        return obj != null && getClass() == obj.getClass();
+    }
+
+    public static Int hash(AbstractObj obj) {
+        return Int.valueOf(obj.hashCode());
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public int hashCode() {
-        return _hash_()._value_().mod(BigInteger.valueOf(Integer.MAX_VALUE)).intValue();
-    }
+    public abstract int hashCode();
 
-    public abstract Meta meta();
+    public static Meta meta(AbstractObj obj) {
+        return obj.meta();
+    }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public String toString() {
-        return _desc_().toString();
-    }
+    public abstract String toString();
+
+    abstract Meta meta();
 }
 

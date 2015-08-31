@@ -142,12 +142,12 @@ public abstract class ExprNode extends Node {
 
         private final boolean isMethodCall;
 
-        public Function(Meta owner, Identifier name, java.util.List<ExprNode> arguments,
+        public Function(Meta owner, Identifier name, java.util.List<? extends ExprNode> arguments,
                 boolean isMethodCall, Attribute... attributes) {
             this(owner, name, arguments, isMethodCall, asList(attributes));
         }
 
-        public Function(Meta owner, Identifier name, java.util.List<ExprNode> arguments,
+        public Function(Meta owner, Identifier name, java.util.List<? extends ExprNode> arguments,
                 boolean isMethodCall, Collection<? extends Attribute> attributes) {
             super(attributes);
 

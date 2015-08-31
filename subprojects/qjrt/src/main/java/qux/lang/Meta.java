@@ -2,7 +2,6 @@ package qux.lang;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static qux.lang.Bool.FALSE;
 import static qux.lang.Bool.TRUE;
 
 import com.google.common.base.Joiner;
@@ -12,8 +11,6 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
 
 import java.util.Map;
-
-import qux.util.Iterator;
 
 /**
  * TODO: Documentation
@@ -80,27 +77,19 @@ public class Meta extends AbstractObj {
      * {@inheritDoc}
      */
     @Override
-    public qux.lang.Int _comp_(AbstractObj obj) {
+    public int compareTo(AbstractObj obj) {
         if (!(obj instanceof Meta)) {
-            return meta()._comp_(obj.meta());
+            return meta().compareTo(obj.meta());
         }
 
-        return _desc_()._comp_(obj._desc_());
+        return toString().compareTo(obj.toString());
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public qux.lang.Str _desc_() {
-        return qux.lang.Str.valueOf("meta");
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Meta _dup_() {
+    public Meta dup() {
         return this;
     }
 
@@ -108,20 +97,8 @@ public class Meta extends AbstractObj {
      * {@inheritDoc}
      */
     @Override
-    public qux.lang.Bool _eq_(AbstractObj obj) {
-        if (super._eq_(obj) == FALSE) {
-            return FALSE;
-        }
-
-        return this == obj ? TRUE : FALSE;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public qux.lang.Int _hash_() {
-        return _desc_()._hash_();
+    public boolean equals(Object obj) {
+        return this == obj;
     }
 
     public static Meta forList(Meta innerType) {
@@ -148,7 +125,23 @@ public class Meta extends AbstractObj {
      * {@inheritDoc}
      */
     @Override
-    public Meta meta() {
+    public int hashCode() {
+        return toString().hashCode();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        return "meta";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    Meta meta() {
         return META_META;
     }
 
@@ -193,8 +186,8 @@ public class Meta extends AbstractObj {
          * {@inheritDoc}
          */
         @Override
-        public qux.lang.Str _desc_() {
-            return qux.lang.Str.valueOf("any");
+        public String toString() {
+            return "any";
         }
     }
 
@@ -210,8 +203,8 @@ public class Meta extends AbstractObj {
          * {@inheritDoc}
          */
         @Override
-        public qux.lang.Str _desc_() {
-            return qux.lang.Str.valueOf("bool");
+        public String toString() {
+            return "bool";
         }
     }
 
@@ -227,8 +220,8 @@ public class Meta extends AbstractObj {
          * {@inheritDoc}
          */
         @Override
-        public qux.lang.Str _desc_() {
-            return qux.lang.Str.valueOf("int");
+        public String toString() {
+            return "int";
         }
     }
 
@@ -250,31 +243,31 @@ public class Meta extends AbstractObj {
          * {@inheritDoc}
          */
         @Override
-        public qux.lang.Str _desc_() {
-            return qux.lang.Str.valueOf("[" + innerType + "]");
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public qux.lang.Bool _eq_(AbstractObj obj) {
-            if (super._eq_(obj) == FALSE) {
-                return FALSE;
+        public boolean equals(Object obj) {
+            if (!super.equals(obj)) {
+                return false;
             }
 
-            return innerType._eq_(((List) obj).innerType);
+            return innerType.equals(((List) obj).innerType);
         }
 
         /**
          * {@inheritDoc}
          */
         @Override
-        public qux.lang.Int _hash_() {
-            return innerType._hash_();
+        public int hashCode() {
+            return innerType.hashCode();
         }
 
-        public Meta getInnerType() {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String toString() {
+            return "[" + innerType + "]";
+        }
+
+        Meta getInnerType() {
             return innerType;
         }
     }
@@ -291,8 +284,8 @@ public class Meta extends AbstractObj {
          * {@inheritDoc}
          */
         @Override
-        public qux.lang.Str _desc_() {
-            return qux.lang.Str.valueOf("null");
+        public String toString() {
+            return "null";
         }
     }
 
@@ -308,8 +301,8 @@ public class Meta extends AbstractObj {
          * {@inheritDoc}
          */
         @Override
-        public qux.lang.Str _desc_() {
-            return qux.lang.Str.valueOf("obj");
+        public String toString() {
+            return "obj";
         }
     }
 
@@ -325,8 +318,8 @@ public class Meta extends AbstractObj {
          * {@inheritDoc}
          */
         @Override
-        public qux.lang.Str _desc_() {
-            return qux.lang.Str.valueOf("rat");
+        public String toString() {
+            return "rat";
         }
     }
 
@@ -352,7 +345,27 @@ public class Meta extends AbstractObj {
          * {@inheritDoc}
          */
         @Override
-        public qux.lang.Str _desc_() {
+        public boolean equals(Object obj) {
+            if (!super.equals(obj)) {
+                return false;
+            }
+
+            return fields.equals(((Record) obj).fields);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int hashCode() {
+            return fields.hashCode();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String toString() {
             StringBuilder sb = new StringBuilder();
 
             sb.append("{");
@@ -369,30 +382,10 @@ public class Meta extends AbstractObj {
             }
             sb.append("}");
 
-            return qux.lang.Str.valueOf(sb.toString());
+            return sb.toString();
         }
 
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public qux.lang.Bool _eq_(AbstractObj obj) {
-            if (super._eq_(obj) == FALSE) {
-                return FALSE;
-            }
-
-            return fields.equals(((Record) obj).fields) ? TRUE : FALSE;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public qux.lang.Int _hash_() {
-            return qux.lang.Int.valueOf(fields.hashCode());
-        }
-
-        public ImmutableMap<String, Meta> getFields() {
+        ImmutableMap<String, Meta> getFields() {
             return fields;
         }
     }
@@ -415,31 +408,31 @@ public class Meta extends AbstractObj {
          * {@inheritDoc}
          */
         @Override
-        public qux.lang.Str _desc_() {
-            return qux.lang.Str.valueOf("{" + innerType + "}");
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public qux.lang.Bool _eq_(AbstractObj obj) {
-            if (super._eq_(obj) == FALSE) {
-                return FALSE;
+        public boolean equals(Object obj) {
+            if (!super.equals(obj)) {
+                return false;
             }
 
-            return innerType._eq_(((Set) obj).innerType);
+            return innerType.equals(((Set) obj).innerType);
         }
 
         /**
          * {@inheritDoc}
          */
         @Override
-        public qux.lang.Int _hash_() {
-            return innerType._hash_();
+        public int hashCode() {
+            return innerType.hashCode();
         }
 
-        public Meta getInnerType() {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String toString() {
+            return "{" + innerType + "}";
+        }
+
+        Meta getInnerType() {
             return innerType;
         }
     }
@@ -456,8 +449,8 @@ public class Meta extends AbstractObj {
          * {@inheritDoc}
          */
         @Override
-        public qux.lang.Str _desc_() {
-            return qux.lang.Str.valueOf("str");
+        public String toString() {
+            return "str";
         }
     }
 
@@ -472,61 +465,41 @@ public class Meta extends AbstractObj {
         private final qux.lang.List types;
 
         public Tuple(qux.lang.List types) {
-            checkArgument(types._len_()._gte_(qux.lang.Int.TWO) == TRUE,
+            checkArgument(types._len()._gte(qux.lang.Int.TWO) == TRUE,
                     "types must have at least 2 elements");
 
-            this.types = types;
+            this.types = types.dup();
         }
 
         /**
          * {@inheritDoc}
          */
         @Override
-        public qux.lang.Str _desc_() {
-            java.util.Iterator<AbstractObj> it = new java.util.Iterator<AbstractObj>() {
-
-                Iterator it = types._iter_();
-
-                @Override
-                public boolean hasNext() {
-                    return it.hasNext() == TRUE;
-                }
-
-                @Override
-                public AbstractObj next() {
-                    return it.next();
-                }
-
-                @Override
-                public void remove() {
-                    throw new UnsupportedOperationException();
-                }
-            };
-
-            return qux.lang.Str.valueOf(Joiner.on("|").join(it));
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public qux.lang.Bool _eq_(AbstractObj obj) {
-            if (super._eq_(obj) == FALSE) {
-                return FALSE;
+        public boolean equals(Object obj) {
+            if (!super.equals(obj)) {
+                return false;
             }
 
-            return types.equals(((Tuple) obj).types) ? TRUE : FALSE;
+            return types.equals(((Tuple) obj).types);
         }
 
         /**
          * {@inheritDoc}
          */
         @Override
-        public qux.lang.Int _hash_() {
-            return qux.lang.Int.valueOf(types.hashCode());
+        public int hashCode() {
+            return types.hashCode();
         }
 
-        public qux.lang.List getTypes() {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String toString() {
+            return Joiner.on("|").join(types);
+        }
+
+        qux.lang.List getTypes() {
             return types;
         }
     }
@@ -542,61 +515,41 @@ public class Meta extends AbstractObj {
         private final qux.lang.Set types;
 
         public Union(qux.lang.Set types) {
-            checkArgument(types._len_()._gte_(qux.lang.Int.TWO) == TRUE,
+            checkArgument(types._len()._gte(qux.lang.Int.TWO) == TRUE,
                     "types must have at least 2 elements");
 
-            this.types = types;
+            this.types = types.dup();
         }
 
         /**
          * {@inheritDoc}
          */
         @Override
-        public qux.lang.Str _desc_() {
-            java.util.Iterator<AbstractObj> it = new java.util.Iterator<AbstractObj>() {
-
-                Iterator it = types._iter_();
-
-                @Override
-                public boolean hasNext() {
-                    return it.hasNext() == TRUE;
-                }
-
-                @Override
-                public AbstractObj next() {
-                    return it.next();
-                }
-
-                @Override
-                public void remove() {
-                    throw new UnsupportedOperationException();
-                }
-            };
-
-            return qux.lang.Str.valueOf(Joiner.on("|").join(it));
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public qux.lang.Bool _eq_(AbstractObj obj) {
-            if (super._eq_(obj) == FALSE) {
-                return FALSE;
+        public boolean equals(Object obj) {
+            if (!super.equals(obj)) {
+                return false;
             }
 
-            return types.equals(((Union) obj).types) ? TRUE : FALSE;
+            return types.equals(((Union) obj).types);
         }
 
         /**
          * {@inheritDoc}
          */
         @Override
-        public qux.lang.Int _hash_() {
-            return qux.lang.Int.valueOf(types.hashCode());
+        public int hashCode() {
+            return types.hashCode();
         }
 
-        public qux.lang.Set getTypes() {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String toString() {
+            return Joiner.on("|").join(types);
+        }
+
+        qux.lang.Set getTypes() {
             return types;
         }
     }

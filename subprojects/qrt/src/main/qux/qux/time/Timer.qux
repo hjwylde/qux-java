@@ -1,0 +1,13 @@
+package qux.time
+
+import qux.lang.Nat$nat
+
+type Timer is {nat remaining, void() task}
+
+bool Timer::isFinished():
+    return remaining == 0
+
+void Timer::start():
+
+void Timer::stop():
+

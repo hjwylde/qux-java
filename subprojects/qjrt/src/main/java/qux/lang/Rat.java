@@ -1,7 +1,6 @@
 package qux.lang;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static qux.lang.Bool.FALSE;
 import static qux.lang.Bool.TRUE;
 import static qux.lang.Meta.META_RAT;
 
@@ -21,11 +20,11 @@ public final class Rat extends AbstractObj {
 
     private static final LoadingCache<Tuple, Rat> cache =
             CacheBuilder.<Tuple, Rat>newBuilder().weakKeys().build(new CacheLoader<Tuple, Rat>() {
-                        @Override
-                        public Rat load(Tuple key) throws Exception {
-                            return new Rat((Int) key.get(0), (Int) key.get(1));
-                        }
-                    });
+                @Override
+                public Rat load(Tuple key) throws Exception {
+                    return new Rat((Int) key.get(0), (Int) key.get(1));
+                }
+            });
 
     private final Int num;
     private final Int den;
@@ -38,58 +37,51 @@ public final class Rat extends AbstractObj {
 
         // Normalise the values
         Int gcd = num.gcd(den);
-        num = num._idiv_(gcd);
-        den = den._idiv_(gcd);
+        num = num._idiv(gcd);
+        den = den._idiv(gcd);
 
         // Normalise the signs
-        if (den._lt_(Int.ZERO) == TRUE) {
-            num = num._neg_();
-            den = den._neg_();
+        if (den._lt(Int.ZERO) == TRUE) {
+            num = num._neg();
+            den = den._neg();
         }
 
         this.num = num;
         this.den = den;
     }
 
-    public Rat _add_(Rat t) {
-        Int a = num._mul_(t.den)._add_(den._mul_(t.num));
-        Int b = den._mul_(t.den);
+    public Rat _add(Rat t) {
+        Int a = num._mul(t.den)._add(den._mul(t.num));
+        Int b = den._mul(t.den);
 
         return valueOf(a, b);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Int _comp_(AbstractObj obj) {
-        if (!(obj instanceof Rat)) {
-            return meta()._comp_(obj.meta());
-        }
-
-        Rat that = (Rat) obj;
-
-        Int a = num._mul_(that.den);
-        Int b = den._mul_(that.num);
-
-        return a._comp_(b);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Str _desc_() {
-        return Str.valueOf(num + "/" + den);
-    }
-
-    public Rat _div_(Rat t) {
+    public Rat _div(Rat t) {
         if (t.den.equals(Int.ZERO)) {
             throw new InternalError("attempted division by zero");
         }
 
-        Int a = num._mul_(t.den);
-        Int b = den._mul_(t.num);
+        Int a = num._mul(t.den);
+        Int b = den._mul(t.num);
+
+        return valueOf(a, b);
+    }
+
+    public Rat _mul(Rat t) {
+        Int a = num._mul(t.num);
+        Int b = den._mul(t.den);
+
+        return valueOf(a, b);
+    }
+
+    public Rat _neg() {
+        return valueOf(num._neg(), den);
+    }
+
+    public Rat _sub(Rat t) {
+        Int a = num._mul(t.den)._sub(den._mul(t.num));
+        Int b = den._mul(t.den);
 
         return valueOf(a, b);
     }
@@ -98,7 +90,28 @@ public final class Rat extends AbstractObj {
      * {@inheritDoc}
      */
     @Override
-    public Rat _dup_() {
+    public int compareTo(AbstractObj obj) {
+        if (!(obj instanceof Rat)) {
+            return meta().compareTo(obj.meta());
+        }
+
+        Rat that = (Rat) obj;
+
+        Int a = num._mul(that.den);
+        Int b = den._mul(that.num);
+
+        return a.compareTo(b);
+    }
+
+    public static Int den(Rat ths) {
+        return ths.den;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Rat dup() {
         return this;
     }
 
@@ -106,56 +119,34 @@ public final class Rat extends AbstractObj {
      * {@inheritDoc}
      */
     @Override
-    public Bool _eq_(AbstractObj obj) {
-        if (super._eq_(obj) == FALSE) {
-            return FALSE;
+    public boolean equals(Object obj) {
+        if (!super.equals(obj)) {
+            return false;
         }
 
         Rat that = (Rat) obj;
 
-        return num.equals(that.num) && den.equals(that.den) ? TRUE : FALSE;
+        return num.equals(that.num) && den.equals(that.den);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Int _hash_() {
-        return num._hash_()._mul_(den._hash_());
+    public int hashCode() {
+        return num.hashCode() * den.hashCode();
     }
 
-    public Rat _mul_(Rat t) {
-        Int a = num._mul_(t.num);
-        Int b = den._mul_(t.den);
-
-        return valueOf(a, b);
-    }
-
-    public Rat _neg_() {
-        return valueOf(num._neg_(), den);
-    }
-
-    public Rat _sub_(Rat t) {
-        Int a = num._mul_(t.den)._sub_(den._mul_(t.num));
-        Int b = den._mul_(t.den);
-
-        return valueOf(a, b);
-    }
-
-    public Int den() {
-        return den;
+    public static Int num(Rat ths) {
+        return ths.num;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Meta meta() {
-        return META_RAT;
-    }
-
-    public Int num() {
-        return num;
+    public String toString() {
+        return num + "/" + den;
     }
 
     public static Rat valueOf(Int num, Int den) {
@@ -196,5 +187,13 @@ public final class Rat extends AbstractObj {
 
     public static Rat valueOf(BigDecimal value) {
         return valueOf(value.unscaledValue(), BigInteger.TEN.pow(value.scale()));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    Meta meta() {
+        return META_RAT;
     }
 }

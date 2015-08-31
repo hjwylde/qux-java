@@ -1,0 +1,30 @@
+package qux.lang
+
+import qux.lang.Nat$nat
+
+type Queue is {[T] data}
+
+void Queue::clear():
+    this.data = []
+
+T|null Queue::peek():
+    if |this| == 0:
+        return null
+
+    return this.data[0]
+
+T|null Queue::poll():
+    if |this| == 0:
+        return null
+
+    t = this.data[0]
+    this.data = this.data[1:]
+
+    return t
+
+void Queue::offer(T t):
+    this.data += [t]
+
+nat Queue::_len():
+    return |this.data|
+

@@ -1,8 +1,6 @@
 package qux.lang;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static qux.lang.Bool.FALSE;
-import static qux.lang.Bool.TRUE;
 import static qux.lang.Meta.META_OBJ;
 
 /**
@@ -28,60 +26,60 @@ public final class Obj extends AbstractObj {
      * {@inheritDoc}
      */
     @Override
-    public Int _comp_(AbstractObj obj) {
+    public int compareTo(AbstractObj obj) {
         if (!(obj instanceof Obj)) {
-            return meta()._comp_(obj.meta());
+            return meta().compareTo(obj.meta());
         }
 
-        return Int.valueOf(id.compareTo(((Obj) obj).id));
+        return id.compareTo(((Obj) obj).id);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Str _desc_() {
-        return Str.valueOf("obj");
+    public Obj dup() {
+        return this;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Obj _dup_() {
-        return valueOf(id);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Bool _eq_(AbstractObj obj) {
-        if (super._eq_(obj) == FALSE) {
-            return FALSE;
+    public boolean equals(Object obj) {
+        if (!super.equals(obj)) {
+            return false;
         }
 
-        return id.equals(((Obj) obj).id) ? TRUE : FALSE;
+        return id.equals(((Obj) obj).id);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Int _hash_() {
-        return Int.valueOf(id.hashCode());
+    public int hashCode() {
+        return id.hashCode();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Meta meta() {
-        return META_OBJ;
+    public String toString() {
+        return "obj";
     }
 
     public static Obj valueOf(String id) {
         return new Obj(id);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    Meta meta() {
+        return META_OBJ;
     }
 }
 

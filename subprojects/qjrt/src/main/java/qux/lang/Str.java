@@ -30,31 +30,11 @@ public final class Str extends AbstractObj {
         this.value = checkNotNull(value, "value cannot be null");
     }
 
-    public Str _access_(Int index) {
-        return get(index);
-    }
-
-    public Str _add_(Str str) {
+    public Str _add(Str str) {
         return valueOf(value.concat(str.value));
     }
 
-    public void _assign_(Int index, AbstractObj value) {
-        set(index, value);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Int _comp_(AbstractObj obj) {
-        if (!(obj instanceof Str)) {
-            return meta()._comp_(obj.meta());
-        }
-
-        return Int.valueOf(value.compareTo(((Str) obj).value));
-    }
-
-    public Bool _contains_(AbstractObj obj) {
+    public Bool _contains(AbstractObj obj) {
         if (!(obj instanceof Str)) {
             return FALSE;
         }
@@ -62,72 +42,44 @@ public final class Str extends AbstractObj {
         return value.contains(((Str) obj).value) ? TRUE : FALSE;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Str _desc_() {
-        return this;
+    public Str _get(Int index) {
+        return get(index);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Str _dup_() {
-        return valueOf(value);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Bool _eq_(AbstractObj obj) {
-        if (super._eq_(obj) == FALSE) {
-            return FALSE;
-        }
-
-        return value.equals(((Str) obj).value) ? TRUE : FALSE;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Int _hash_() {
-        return Int.valueOf(value.hashCode());
-    }
-
-    public Int _len_() {
+    public Int _len() {
         return Int.valueOf(value.length());
     }
 
-    public synchronized Str _mul_(Int value) {
-        checkArgument(value._gte_(Int.ZERO) == TRUE, "cannot multiply a str by negative value");
+    public synchronized Str _mul(Int value) {
+        checkArgument(value._gte(Int.ZERO) == TRUE, "cannot multiply a str by negative value");
 
         if (value.equals(Int.ZERO)) {
             return valueOf("");
         }
 
-        if (value._value_().bitLength() <= 31) {
-            return valueOf(Strings.repeat(this.value, value._value_().intValue()));
+        if (value.value().bitLength() <= 31) {
+            return valueOf(Strings.repeat(this.value, value.value().intValue()));
         }
 
         Str ret = this;
-        while (value._gt_(Int.ONE) == TRUE) {
-            ret = ret._add_(this);
+        while (value._gt(Int.ONE) == TRUE) {
+            ret = ret._add(this);
 
-            value = value._sub_(Int.ONE);
+            value = value._sub(Int.ONE);
         }
 
         return ret;
     }
 
-    public Str _slice_(Int from, Int to) {
+    public void _set(Int index, AbstractObj value) {
+        set(index, value);
+    }
+
+    public Str _slice(Int from, Int to) {
         return substring(from, to);
     }
 
-    public Str _sub_(Str str) {
+    public Str _sub(Str str) {
         if (value.endsWith(str.value)) {
             return valueOf(value.substring(0, value.length() - str.value.length()));
         }
@@ -135,65 +87,44 @@ public final class Str extends AbstractObj {
         return this;
     }
 
-    public Str get(Int index) {
-        return get(index._value_());
-    }
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int compareTo(AbstractObj obj) {
+        if (!(obj instanceof Str)) {
+            return meta().compareTo(obj.meta());
+        }
 
-    public Str get(int index) {
-        checkElementIndex(index, value.length());
-
-        return valueOf(value.charAt(index));
-    }
-
-    public Str get(BigInteger index) {
-        checkArgument(index.bitLength() < 32, "strings of size larger than 32 bits is unsupported");
-
-        return get(index.intValue());
+        return value.compareTo(((Str) obj).value);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Meta meta() {
-        return META_STR;
+    public Str dup() {
+        return valueOf(value);
     }
 
-    public void set(Int index, AbstractObj value) {
-        set(index._value_(), value);
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (!super.equals(obj)) {
+            return false;
+        }
+
+        return value.equals(((Str) obj).value);
     }
 
-    public synchronized void set(int index, AbstractObj value) {
-        checkElementIndex(index, this.value.length());
-
-        this.value = this.value.substring(0, index) + value.toString() + this.value.substring(
-                index + 1);
-    }
-
-    public void set(BigInteger index, AbstractObj value) {
-        checkArgument(index.bitLength() < 32, "lists of size larger than 32 bits is unsupported");
-
-        set(index.intValue(), value);
-    }
-
-    public Str substring(Int from, Int to) {
-        return substring(from._value_(), to._value_());
-    }
-
-    public Str substring(int from, int to) {
-        checkPositionIndex(from, value.length(), "from");
-        checkPositionIndex(to, value.length(), "to");
-        checkArgument(from <= to, "from must be less than or equal to to (from=%s, to=%s)", from,
-                to);
-
-        return valueOf(value.substring(from, to));
-    }
-
-    public Str substring(BigInteger from, BigInteger to) {
-        checkArgument(from.bitLength() < 32, "strings of size larger than 32 bits is unsupported");
-        checkArgument(to.bitLength() < 32, "strings of size larger than 32 bits is unsupported");
-
-        return substring(from.intValue(), to.intValue());
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return value.hashCode();
     }
 
     /**
@@ -210,6 +141,67 @@ public final class Str extends AbstractObj {
 
     public static Str valueOf(char value) {
         return valueOf(String.valueOf(value));
+    }
+
+    Str get(Int index) {
+        return get(index.value());
+    }
+
+    Str get(int index) {
+        checkElementIndex(index, value.length());
+
+        return valueOf(value.charAt(index));
+    }
+
+    Str get(BigInteger index) {
+        checkArgument(index.bitLength() < 32, "strings of size larger than 32 bits is unsupported");
+
+        return get(index.intValue());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    Meta meta() {
+        return META_STR;
+    }
+
+    void set(Int index, AbstractObj value) {
+        set(index.value(), value);
+    }
+
+    synchronized void set(int index, AbstractObj value) {
+        checkElementIndex(index, this.value.length());
+
+        this.value = this.value.substring(0, index) + value.toString() + this.value.substring(
+                index + 1);
+    }
+
+    void set(BigInteger index, AbstractObj value) {
+        checkArgument(index.bitLength() < 32, "lists of size larger than 32 bits is unsupported");
+
+        set(index.intValue(), value);
+    }
+
+    Str substring(Int from, Int to) {
+        return substring(from.value(), to.value());
+    }
+
+    Str substring(int from, int to) {
+        checkPositionIndex(from, value.length(), "from");
+        checkPositionIndex(to, value.length(), "to");
+        checkArgument(from <= to, "from must be less than or equal to to (from=%s, to=%s)", from,
+                to);
+
+        return valueOf(value.substring(from, to));
+    }
+
+    Str substring(BigInteger from, BigInteger to) {
+        checkArgument(from.bitLength() < 32, "strings of size larger than 32 bits is unsupported");
+        checkArgument(to.bitLength() < 32, "strings of size larger than 32 bits is unsupported");
+
+        return substring(from.intValue(), to.intValue());
     }
 }
 
